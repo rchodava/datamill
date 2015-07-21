@@ -1,28 +1,15 @@
 package org.chodavarapu.datamill.reflection;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.beans.PropertyDescriptor;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Property<T> {
-    private final Method getter;
-    private final Method setter;
-    private final Field field;
+    private final PropertyDescriptor descriptor;
 
-    public Property(Field field) {
-        this.getter = null;
-        this.setter = null;
-
-        this.field = field;
-    }
-
-    public Property(Method getter, Method setter) {
-        this.getter = getter;
-        this.setter = setter;
-
-        this.field = null;
+    public Property(PropertyDescriptor descriptor) {
+        this.descriptor = descriptor;
     }
 
     public T get() {
@@ -33,11 +20,16 @@ public class Property<T> {
 
     }
 
-    public boolean isScalar() {
-        return false;
+    public boolean isReadOnly() {
+        return descriptor.getWriteMethod() == null;
+    }
+
+    public boolean isSimple() {
+        Class<?> propertyType = descriptor.getPropertyType();
+        return propertyType.isPrimitive() || propertyType.isEnum() || propertyType == String.class;
     }
 
     public String getName() {
-        return "";
+        return descriptor.getName();
     }
 }

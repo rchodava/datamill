@@ -18,7 +18,7 @@ public class Main {
                         case GET:
                             r.entity().asJson().mapToObject(new User(), (j, u) -> {
                                 u.properties().stream().forEach(p -> {
-                                    if (p.isScalar()) {
+                                    if (p.isSimple()) {
                                         p.set(j.get(p.getName()));
                                     } else {
                                     }
