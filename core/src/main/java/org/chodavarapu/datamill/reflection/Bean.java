@@ -1,5 +1,7 @@
 package org.chodavarapu.datamill.reflection;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -14,5 +16,9 @@ public class Bean<T> {
 
     public Optional<Property> property(String name) {
         return Optional.empty();
+    }
+
+    public Collection<Property> properties() {
+        return Collections.emptyList();
     }
 }

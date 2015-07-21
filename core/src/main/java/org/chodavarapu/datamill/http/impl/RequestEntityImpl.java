@@ -1,7 +1,9 @@
 package org.chodavarapu.datamill.http.impl;
 
+import com.google.common.io.CharStreams;
 import org.chodavarapu.datamill.http.RequestEntity;
 import org.chodavarapu.datamill.http.HttpException;
+import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonElement;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -16,6 +18,11 @@ public class RequestEntityImpl implements RequestEntity {
 
     public RequestEntityImpl(HttpServletRequest request) {
         this.request = request;
+    }
+
+    @Override
+    public JsonElement asJson() {
+        return null;
     }
 
     @Override
@@ -38,6 +45,10 @@ public class RequestEntityImpl implements RequestEntity {
 
     @Override
     public String asString() {
-        return null;
+        try {
+            return CharStreams.toString(asReader());
+        } catch (IOException e) {
+            throw new HttpException(e);
+        }
     }
 }

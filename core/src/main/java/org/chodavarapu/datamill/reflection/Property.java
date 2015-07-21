@@ -32,4 +32,12 @@ public class Property<T> {
     public void set(T value) {
 
     }
+
+    public boolean isScalar() {
+        return false;
+    }
+
+    public String getName() {
+        return "";
+    }
 }
