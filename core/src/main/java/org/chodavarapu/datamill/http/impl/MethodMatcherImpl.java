@@ -1,6 +1,5 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.MethodMatcher;
 import org.chodavarapu.datamill.http.Request;
 import org.chodavarapu.datamill.http.Response;
@@ -19,33 +18,43 @@ public class MethodMatcherImpl implements MethodMatcher {
     }
 
     @Override
-    public Method get() {
-        return Method.valueOf(request.servletRequest().getMethod());
+    public String get() {
+        return request.servletRequest().getMethod();
     }
 
     @Override
     public boolean isGet() {
-        return get() == Method.GET;
+        return "GET".equals(get());
     }
 
     @Override
     public boolean isHead() {
-        return get() == Method.HEAD;
+        return "HEAD".equals(get());
+    }
+
+    @Override
+    public boolean isOptions() {
+        return "OPTIONS".equals(get());
+    }
+
+    @Override
+    public boolean isPatch() {
+        return "PATCH".equals(get());
     }
 
     @Override
     public boolean isPost() {
-        return get() == Method.POST;
+        return "POST".equals(get());
     }
 
     @Override
     public boolean isPut() {
-        return get() == Method.PUT;
+        return "PUT".equals(get());
     }
 
     @Override
     public boolean isDelete() {
-        return get() == Method.DELETE;
+        return "DELETE".equals(get());
     }
 
     @Override
@@ -57,6 +66,17 @@ public class MethodMatcherImpl implements MethodMatcher {
     public Optional<Response> ifHead(Function<Request, Response> handler) {
         return isHead() ? Optional.ofNullable(handler.apply(request)) : Optional.empty();
     }
+
+    @Override
+    public Optional<Response> ifOptions(Function<Request, Response> handler) {
+        return isOptions() ? Optional.ofNullable(handler.apply(request)) : Optional.empty();
+    }
+
+    @Override
+    public Optional<Response> ifPatch(Function<Request, Response> handler) {
+        return isPatch() ? Optional.ofNullable(handler.apply(request)) : Optional.empty();
+    }
+
 
     @Override
     public Optional<Response> ifPost(Function<Request, Response> handler) {

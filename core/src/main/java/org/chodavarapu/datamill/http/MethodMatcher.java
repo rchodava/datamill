@@ -7,17 +7,21 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface MethodMatcher {
-    Method get();
+    String get();
 
+    boolean isDelete();
     boolean isGet();
     boolean isHead();
+    boolean isOptions();
+    boolean isPatch();
     boolean isPost();
     boolean isPut();
-    boolean isDelete();
 
+    Optional<Response> ifDelete(Function<Request, Response> handler);
     Optional<Response> ifGet(Function<Request, Response> handler);
     Optional<Response> ifHead(Function<Request, Response> handler);
+    Optional<Response> ifOptions(Function<Request, Response> handler);
+    Optional<Response> ifPatch(Function<Request, Response> handler);
     Optional<Response> ifPost(Function<Request, Response> handler);
     Optional<Response> ifPut(Function<Request, Response> handler);
-    Optional<Response> ifDelete(Function<Request, Response> handler);
 }
