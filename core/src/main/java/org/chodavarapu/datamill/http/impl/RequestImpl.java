@@ -1,9 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.MethodMatcher;
-import org.chodavarapu.datamill.http.Request;
-import org.chodavarapu.datamill.http.RequestEntity;
-import org.chodavarapu.datamill.http.ResponseBuilder;
+import org.chodavarapu.datamill.http.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -35,5 +32,10 @@ public class RequestImpl implements Request {
     @Override
     public HttpServletRequest servletRequest() {
         return request;
+    }
+
+    @Override
+    public UriMatcher<Response> uri() {
+        return null;
     }
 }

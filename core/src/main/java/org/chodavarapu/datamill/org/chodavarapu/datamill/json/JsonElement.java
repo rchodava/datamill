@@ -9,14 +9,10 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface JsonElement extends JsonMappers {
+public interface JsonElement extends JsonValue {
     boolean isArray();
-    boolean isBoolean();
     boolean isField();
-    boolean isNumeric();
     boolean isObject();
-
-    String asString();
 
     List<JsonElement> children();
     JsonElement get(String path);

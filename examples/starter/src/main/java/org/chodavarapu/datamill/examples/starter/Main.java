@@ -15,6 +15,20 @@ public class Main {
         Server server = new Server();
         server.addListener(8080,
                 r -> {
+                    r.uri().ifMatches("/users", (params) -> {
+                        switch (r.method().get()) {
+                            case "GET":
+                                return r.uri().ifMatches("{id}", (getParams) -> r.respond().ok());
+                            case "POST":
+                                return r.respond().ok();
+                            case "PUT":
+                            case "DELETE":
+                            default:
+                        }
+
+                        return r.respond().ok();
+                    });
+
                     switch (r.method().get()) {
                         case "GET":
                             r.entity().asJson().mapToObject(new User(), (j, u) -> {

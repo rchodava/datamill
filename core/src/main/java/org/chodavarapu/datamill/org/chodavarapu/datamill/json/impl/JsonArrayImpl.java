@@ -1,25 +1,49 @@
 package org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonElement;
-import org.chodavarapu.datamill.reflection.Bean;
-
-import java.util.function.BiConsumer;
+import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonValueType;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonArrayImpl extends JsonElementImpl {
+    public JsonArrayImpl() {
+        super(JsonValueType.ARRAY);
+    }
+
+    @Override
+    public long asLong() {
+        return 0;
+    }
+
+    @Override
+    public int asInteger() {
+        return 0;
+    }
+
+    @Override
+    public float asFloat() {
+        return 0;
+    }
+
+    @Override
+    public double asDouble() {
+        return 0;
+    }
+
+    @Override
+    public String asString() {
+        return "";
+    }
+
+    @Override
+    public boolean asBoolean() {
+        return false;
+    }
 
     @Override
     public boolean isArray() {
         return true;
-    }
-
-    @Override
-    public boolean isBoolean() {
-        return false;
     }
 
     @Override
@@ -28,12 +52,12 @@ public class JsonArrayImpl extends JsonElementImpl {
     }
 
     @Override
-    public boolean isNumeric() {
+    public boolean isObject() {
         return false;
     }
 
     @Override
-    public boolean isObject() {
+    public boolean isIntegral() {
         return false;
     }
 

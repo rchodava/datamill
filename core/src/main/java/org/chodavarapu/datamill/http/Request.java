@@ -13,4 +13,6 @@ public interface Request {
     ResponseBuilder respond();
 
     HttpServletRequest servletRequest();
+
+    UriMatcher<Response> uri();
 }
