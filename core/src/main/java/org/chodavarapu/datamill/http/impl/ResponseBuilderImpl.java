@@ -10,6 +10,16 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
     @Override
+    public Response noContent() {
+        return new ResponseImpl(HttpServletResponse.SC_NO_CONTENT);
+    }
+
+    @Override
+    public Response notFound() {
+        return new ResponseImpl(HttpServletResponse.SC_NOT_FOUND);
+    }
+
+    @Override
     public Response ok() {
         return new ResponseImpl(HttpServletResponse.SC_OK);
     }

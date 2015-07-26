@@ -1,3 +1,5 @@
+package org.chodavarapu.datamill.reflection;
+
 import org.chodavarapu.datamill.reflection.Bean;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;

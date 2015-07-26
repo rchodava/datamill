@@ -1,57 +1,24 @@
 package org.chodavarapu.datamill.examples.starter;
 
 import org.chodavarapu.datamill.http.Server;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonMappers;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Main {
-    private static class User {
-
-    }
-
     public static void main(String[] args) throws Exception {
         Server server = new Server();
-        server.addListener(8080,
-                r -> {
-                    r.uri().ifMatches("/users", (params) -> {
-                        switch (r.method().get()) {
-                            case "GET":
-                                return r.uri().ifMatches("{id}", (getParams) -> r.respond().ok());
-                            case "POST":
-                                return r.respond().ok();
-                            case "PUT":
-                            case "DELETE":
-                            default:
-                        }
+        server.addListener(8080, r ->
+                r.uri().ifMatches("/posts").and(r.method().isGet()).then(__ -> r.respond().ok())
+                        .elseIfUriMatches("/users").then(__ -> {
+                    return r.method().ifGet().then(___ -> r.respond().ok())
+                            .elseIfPost().then(___ -> r.respond().ok())
+                            .elseIfPut().then(___ -> r.respond().ok())
+                            .elseIfPatch().then(___ -> r.respond().ok())
+                            .elseIfDelete().then(___ -> r.respond().ok())
+                            .orElse(___ -> r.respond().ok());
+                }).orElse(r.respond().notFound()));
 
-                        return r.respond().ok();
-                    });
-
-                    switch (r.method().get()) {
-                        case "GET":
-                            r.entity().asJson().mapToObject(new User(), (j, u) -> {
-                                u.properties().stream().forEach(p -> {
-                                    if (p.isSimple()) {
-                                        p.set(j.get(p.getName()));
-                                    } else {
-                                    }
-                                });
-                            });
-                        case "PATCH":
-                            r.entity().asJson().map(JsonMappers.JSON_TO_JSON_PATCH_OPERATIONS);
-                        case "POST":
-                        case "PUT":
-                        case "DELETE":
-                        default:
-                    }
-
-                    return r.method().ifGet(g -> g.respond().ok()).
-                            orElse(r.respond().ok());
-                });
-
-        server.addListener(440, true, r -> r.respond().ok());
         server.start();
     }
 }

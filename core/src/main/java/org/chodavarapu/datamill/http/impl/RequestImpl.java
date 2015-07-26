@@ -1,6 +1,8 @@
 package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.*;
+import org.chodavarapu.datamill.http.matching.MethodMatcher;
+import org.chodavarapu.datamill.http.matching.UriMatcher;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -26,7 +28,7 @@ public class RequestImpl implements Request {
 
     @Override
     public MethodMatcher method() {
-        return new MethodMatcherImpl(this);
+        return new RequestMatcher(this);
     }
 
     @Override
@@ -35,7 +37,7 @@ public class RequestImpl implements Request {
     }
 
     @Override
-    public UriMatcher<Response> uri() {
-        return null;
+    public UriMatcher uri() {
+        return new RequestMatcher(this);
     }
 }
