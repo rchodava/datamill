@@ -13,8 +13,8 @@ import java.util.function.Supplier;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class GuardedHandlerImpl implements GuardedHandler {
-    private final Request request;
-    private final boolean matched;
+    protected final Request request;
+    protected final boolean matched;
 
     public GuardedHandlerImpl(Request request, boolean matched) {
         this.request = request;
@@ -33,16 +33,16 @@ public class GuardedHandlerImpl implements GuardedHandler {
 
     @Override
     public RequestMatchingChain then(Function<Request, Response> handler) {
-        return matched ? new RequestMatcher(request, handler.apply(request)) : new RequestMatcher(request);
+        return matched ? new NoopMatcher(request, handler.apply(request)) : new RequestMatcher(request);
     }
 
     @Override
     public RequestMatchingChain then(Supplier<Response> handler) {
-        return matched ? new RequestMatcher(request, handler.get()) : new RequestMatcher(request);
+        return matched ? new NoopMatcher(request, handler.get()) : new RequestMatcher(request);
     }
 
     @Override
     public RequestMatchingChain then(Response response) {
-        return matched ? new RequestMatcher(request, response) : new RequestMatcher(request);
+        return matched ? new NoopMatcher(request, response) : new RequestMatcher(request);
     }
 }

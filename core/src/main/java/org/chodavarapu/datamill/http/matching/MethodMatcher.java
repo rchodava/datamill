@@ -4,7 +4,7 @@ package org.chodavarapu.datamill.http.matching;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface MethodMatcher {
-    String get();
+    String name();
 
     GuardedHandler ifDelete();
     GuardedHandler ifGet();

@@ -1,12 +1,10 @@
 package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.http.matching.GuardedHandler;
+import org.chodavarapu.datamill.http.matching.*;
 import org.chodavarapu.datamill.http.Request;
-import org.chodavarapu.datamill.http.matching.MethodMatcher;
-import org.chodavarapu.datamill.http.matching.RequestMatchingChain;
-import org.chodavarapu.datamill.http.matching.UriMatcher;
 
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -34,6 +32,11 @@ public class RequestMatcher implements RequestMatchingChain, MethodMatcher, UriM
 
     @Override
     public String get() {
+        return request.servletRequest().getRequestURI();
+    }
+
+    @Override
+    public String name() {
         return request.servletRequest().getMethod();
     }
 
@@ -58,7 +61,7 @@ public class RequestMatcher implements RequestMatchingChain, MethodMatcher, UriM
     }
 
     @Override
-    public GuardedHandler ifMatches(String pattern) {
+    public UriMatchHandler ifMatches(String pattern) {
         return elseIfUriMatches(pattern);
     }
 
@@ -78,8 +81,10 @@ public class RequestMatcher implements RequestMatchingChain, MethodMatcher, UriM
     }
 
     @Override
-    public GuardedHandler elseIfUriMatches(String pattern) {
-        return new GuardedHandlerImpl(request, matchesPattern());
+    public UriMatchHandler elseIfUriMatches(String pattern) {
+        UriTemplate template = new UriTemplate(pattern);
+        Map<String, String> matchedParameters = template.match(request.uri().get());
+        return new UriMatchHandlerImpl(request, matchedParameters, matchedParameters != null);
     }
 
     @Override
@@ -119,37 +124,37 @@ public class RequestMatcher implements RequestMatchingChain, MethodMatcher, UriM
 
     @Override
     public boolean isDelete() {
-        return "DELETE".equals(get());
+        return "DELETE".equals(name());
     }
 
     @Override
     public boolean isGet() {
-        return "GET".equals(get());
+        return "GET".equals(name());
     }
 
     @Override
     public boolean isHead() {
-        return "HEAD".equals(get());
+        return "HEAD".equals(name());
     }
 
     @Override
     public boolean isOptions() {
-        return "OPTIONS".equals(get());
+        return "OPTIONS".equals(name());
     }
 
     @Override
     public boolean isPatch() {
-        return "PATCH".equals(get());
+        return "PATCH".equals(name());
     }
 
     @Override
     public boolean isPost() {
-        return "POST".equals(get());
+        return "POST".equals(name());
     }
 
     @Override
     public boolean isPut() {
-        return "PUT".equals(get());
+        return "PUT".equals(name());
     }
 
     private boolean matchesPattern() {
@@ -158,16 +163,16 @@ public class RequestMatcher implements RequestMatchingChain, MethodMatcher, UriM
 
     @Override
     public Response orElse(Function<Request, Response> handler) {
-        return null;
+        return matched ? response : handler.apply(request);
     }
 
     @Override
     public Response orElse(Supplier<Response> handler) {
-        return null;
+        return matched ? response : handler.get();
     }
 
     @Override
     public Response orElse(Response response) {
-        return null;
+        return matched ? this.response : response;
     }
 }

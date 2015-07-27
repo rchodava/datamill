@@ -6,5 +6,5 @@ package org.chodavarapu.datamill.http.matching;
 public interface UriMatcher {
     String get();
 
-    GuardedHandler ifMatches(String pattern);
+    UriMatchHandler ifMatches(String pattern);
 }

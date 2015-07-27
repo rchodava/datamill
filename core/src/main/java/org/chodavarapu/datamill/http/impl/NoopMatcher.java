@@ -4,19 +4,21 @@ import org.chodavarapu.datamill.http.Request;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.matching.*;
 
+import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatcher, GuardedHandler {
+public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatcher, UriMatchHandler {
     private final Request request;
-    private final Response response;
+    private final Response matchedResponse;
 
     public NoopMatcher(Request request, Response response) {
         this.request = request;
-        this.response = response;
+        this.matchedResponse = response;
     }
 
     @Override
@@ -26,6 +28,11 @@ public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatc
 
     @Override
     public String get() {
+        return request.servletRequest().getRequestURI();
+    }
+
+    @Override
+    public String name() {
         return request.servletRequest().getMethod();
     }
 
@@ -50,7 +57,7 @@ public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatc
     }
 
     @Override
-    public GuardedHandler ifMatches(String pattern) {
+    public UriMatchHandler ifMatches(String pattern) {
         return this;
     }
 
@@ -70,7 +77,7 @@ public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatc
     }
 
     @Override
-    public GuardedHandler elseIfUriMatches(String pattern) {
+    public UriMatchHandler elseIfUriMatches(String pattern) {
         return this;
     }
 
@@ -111,37 +118,37 @@ public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatc
 
     @Override
     public boolean isDelete() {
-        return "DELETE".equals(get());
+        return "DELETE".equals(name());
     }
 
     @Override
     public boolean isGet() {
-        return "GET".equals(get());
+        return "GET".equals(name());
     }
 
     @Override
     public boolean isHead() {
-        return "HEAD".equals(get());
+        return "HEAD".equals(name());
     }
 
     @Override
     public boolean isOptions() {
-        return "OPTIONS".equals(get());
+        return "OPTIONS".equals(name());
     }
 
     @Override
     public boolean isPatch() {
-        return "PATCH".equals(get());
+        return "PATCH".equals(name());
     }
 
     @Override
     public boolean isPost() {
-        return "POST".equals(get());
+        return "POST".equals(name());
     }
 
     @Override
     public boolean isPut() {
-        return "PUT".equals(get());
+        return "PUT".equals(name());
     }
 
     private boolean matchesPattern() {
@@ -155,17 +162,22 @@ public class NoopMatcher implements RequestMatchingChain, MethodMatcher, UriMatc
 
     @Override
     public Response orElse(Function<Request, Response> handler) {
-        return response;
+        return matchedResponse;
     }
 
     @Override
     public Response orElse(Supplier<Response> handler) {
-        return response;
+        return matchedResponse;
     }
 
     @Override
     public Response orElse(Response response) {
-        return response;
+        return matchedResponse;
+    }
+
+    @Override
+    public RequestMatchingChain then(BiFunction<Request, Map<String, String>, Response> handler) {
+        return this;
     }
 
     @Override

@@ -12,5 +12,5 @@ public interface UriMatchingChain {
      *                description of the syntax for these templates. For example, these can look like: "/users/{id}",
      *                "/users/{name:\w+}".
      */
-    GuardedHandler elseIfUriMatches(String pattern);
+    UriMatchHandler elseIfUriMatches(String pattern);
 }

@@ -30,81 +30,7 @@ public class UriTemplate {
         return "";
     }
 
-    private static class TemplateRegion {
-        private final String variable;
-        private final String content;
-        private final Pattern pattern;
-
-        public TemplateRegion(String content) {
-            this.variable = null;
-            this.content = content;
-            this.pattern = null;
-        }
-
-        public TemplateRegion(String variable, String content) {
-            this.variable = variable;
-            this.content = content;
-
-            if (content != null) {
-                this.pattern = Pattern.compile(content);
-            } else {
-                this.pattern = null;
-            }
-        }
-
-        public boolean isFixedContent() {
-            return variable == null;
-        }
-
-        public boolean isDefaultPattern() {
-            return content == null;
-        }
-
-        public int match(String uri, int start) {
-            if (isFixedContent()) {
-                return matchFixedContent(uri, start);
-            } else {
-                if (isDefaultPattern()) {
-                    return matchDefaultPatternContent(uri, start);
-                } else {
-                    return matchCustomPatternContent(uri, start);
-                }
-            }
-        }
-
-        private int matchCustomPatternContent(String uri, int start) {
-            Matcher matcher = pattern.matcher(uri);
-            if (matcher.find(start) && matcher.start() == start) {
-                return matcher.end();
-            }
-
-            return -1;
-        }
-
-        private int matchDefaultPatternContent(String uri, int start) {
-            int position = start;
-            int uriLength = uri.length();
-            while (position < uriLength && uri.charAt(position) != '/') {
-                position++;
-            }
-
-            return position;
-        }
-
-        private int matchFixedContent(String uri, int start) {
-            if (start + content.length() > uri.length()) {
-                return -1;
-            }
-
-            if (uri.substring(start, start + content.length()).equals(content)) {
-                return start + content.length();
-            } else {
-                return -1;
-            }
-        }
-    }
-
-    private final List<TemplateRegion> regions = new ArrayList<>();
+    private final List<UriTemplateRegion> regions = new ArrayList<>();
 
     public UriTemplate(String template) {
         computeTemplateRegions(template);
@@ -120,7 +46,7 @@ public class UriTemplate {
             int regionEnd = matcher.end();
 
             if (previousRegion < regionStart) {
-                regions.add(new TemplateRegion(template.substring(previousRegion, regionStart)));
+                regions.add(new UriTemplateRegion(template.substring(previousRegion, regionStart)));
             }
 
             addMatchedVariableRegion(matcher);
@@ -129,7 +55,7 @@ public class UriTemplate {
         }
 
         if (previousRegion < template.length()) {
-            regions.add(new TemplateRegion(template.substring(previousRegion)));
+            regions.add(new UriTemplateRegion(template.substring(previousRegion)));
         }
     }
 
@@ -138,9 +64,9 @@ public class UriTemplate {
         String regex = matcher.group(3);
 
         if (regex == null) {
-            regions.add(new TemplateRegion(variableName, null));
+            regions.add(new UriTemplateRegion(variableName, null));
         } else {
-            regions.add(new TemplateRegion(variableName, regex));
+            regions.add(new UriTemplateRegion(variableName, regex));
         }
     }
 
@@ -151,7 +77,7 @@ public class UriTemplate {
 
         int uriLength = uri.length();
         int position = 0;
-        for (TemplateRegion region : regions) {
+        for (UriTemplateRegion region : regions) {
             if (position > uriLength) {
                 return null;
             }
@@ -166,7 +92,7 @@ public class UriTemplate {
                     matches = new HashMap<>();
                 }
 
-                matches.put(region.variable, uri.substring(position, regionEnd));
+                matches.put(region.getVariable(), uri.substring(position, regionEnd));
             }
 
             position = regionEnd;

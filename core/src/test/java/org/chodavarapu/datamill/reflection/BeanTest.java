@@ -1,11 +1,13 @@
 package org.chodavarapu.datamill.reflection;
 
-import org.chodavarapu.datamill.reflection.Bean;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.stream.Collectors;
+
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -32,15 +34,15 @@ public class BeanTest {
     @Test
     public void testGetProperties() {
         TestBeanClass bean = new TestBeanClass();
-        Assert.assertThat(new Bean<>(bean).properties().stream().map(p -> p.getName()).collect(Collectors.toList()),
-                CoreMatchers.hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
+        assertThat(new Bean<>(bean).properties().stream().map(p -> p.getName()).collect(Collectors.toList()),
+                hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
     }
 
     @Test
     public void testGetProperty() {
         TestBeanClass bean = new TestBeanClass();
-        Assert.assertTrue(new Bean<>(bean).property("readWriteProperty").isPresent());
-        Assert.assertTrue(new Bean<>(bean).property("booleanProperty").isPresent());
-        Assert.assertFalse(new Bean<>(bean).property("undefinedProperty").isPresent());
+        assertTrue(new Bean<>(bean).property("readWriteProperty").isPresent());
+        assertTrue(new Bean<>(bean).property("booleanProperty").isPresent());
+        assertFalse(new Bean<>(bean).property("undefinedProperty").isPresent());
     }
 }
