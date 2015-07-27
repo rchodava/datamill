@@ -1,7 +1,7 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl;
+package org.chodavarapu.datamill.json.impl;
 
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonValue;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonValueType;
+import org.chodavarapu.datamill.json.JsonValue;
+import org.chodavarapu.datamill.json.JsonValueType;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)

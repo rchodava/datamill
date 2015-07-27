@@ -1,7 +1,7 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json;
+package org.chodavarapu.datamill.json;
 
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.patch.Operation;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.patch.OperationType;
+import org.chodavarapu.datamill.json.patch.OperationType;
+import org.chodavarapu.datamill.json.patch.Operation;
 
 import java.util.function.Function;
 import java.util.stream.Stream;

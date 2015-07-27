@@ -3,7 +3,7 @@ package org.chodavarapu.datamill.http.impl;
 import com.google.common.io.CharStreams;
 import org.chodavarapu.datamill.http.RequestEntity;
 import org.chodavarapu.datamill.http.HttpException;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonElement;
+import org.chodavarapu.datamill.json.JsonElement;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;

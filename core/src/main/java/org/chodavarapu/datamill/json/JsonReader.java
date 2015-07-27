@@ -1,12 +1,10 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json;
+package org.chodavarapu.datamill.json;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.JsonTokenId;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl.JsonArrayImpl;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl.JsonElementImpl;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl.JsonObjectImpl;
+import org.chodavarapu.datamill.json.impl.JsonArrayImpl;
+import org.chodavarapu.datamill.json.impl.JsonObjectImpl;
 
 import java.io.IOException;
 import java.io.Reader;

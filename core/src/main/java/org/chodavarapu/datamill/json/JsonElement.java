@@ -1,4 +1,4 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json;
+package org.chodavarapu.datamill.json;
 
 import org.chodavarapu.datamill.reflection.Bean;
 

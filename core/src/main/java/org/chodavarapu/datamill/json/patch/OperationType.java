@@ -1,4 +1,4 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json.patch;
+package org.chodavarapu.datamill.json.patch;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)

@@ -1,7 +1,7 @@
-package org.chodavarapu.datamill.org.chodavarapu.datamill.json.impl;
+package org.chodavarapu.datamill.json.impl;
 
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonElement;
-import org.chodavarapu.datamill.org.chodavarapu.datamill.json.JsonValueType;
+import org.chodavarapu.datamill.json.JsonElement;
+import org.chodavarapu.datamill.json.JsonValueType;
 import org.chodavarapu.datamill.reflection.Bean;
 
 import java.util.List;
