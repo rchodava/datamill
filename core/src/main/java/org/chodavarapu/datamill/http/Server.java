@@ -1,76 +1,52 @@
 package org.chodavarapu.datamill.http;
 
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.http.HttpServer;
+import org.chodavarapu.datamill.http.builder.RouteBuilder;
 import org.chodavarapu.datamill.http.impl.RequestImpl;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.HttpChannel;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.chodavarapu.datamill.http.impl.RouteBuilderImpl;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class Server {
-    private final org.eclipse.jetty.server.Server embeddedServer;
-    private final Map<Connector, Function<Request, Response>> listeners = new HashMap<Connector, Function<Request, Response>>();
+public class Server extends AbstractVerticle {
+    private HttpServer server;
 
-    public Server() {
-        embeddedServer = new org.eclipse.jetty.server.Server();
-        embeddedServer.setHandler(new AbstractHandler() {
-            public void handle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-                Server.this.handle(baseRequest, request, response);
-            }
-        });
+    private final Function<RouteBuilder, Route> routeConstructor;
+
+    public Server(Function<RouteBuilder, Route> routeConstructor) {
+        this.routeConstructor = routeConstructor;
     }
 
-    public Server addListener(String host, int port, boolean secure, Function<Request, Response> listener) {
-        ServerConnector connector = new ServerConnector(embeddedServer);
-        connector.setHost(host);
-        connector.setPort(port);
+    @Override
+    public void start(Future<Void> startFuture) throws Exception {
+        Route route = routeConstructor.apply(new RouteBuilderImpl());
 
-        embeddedServer.addConnector(connector);
-        listeners.put(connector, listener);
+        server = vertx.createHttpServer();
+        server.requestHandler(r -> {
+            route.apply(new RequestImpl(r));
+        });
 
+        startFuture.complete();
+    }
+
+    public Server listen(String host, int port, boolean secure) {
+        server.listen(port, host);
         return this;
     }
 
-    public Server addListener(String host, int port, Function<Request, Response> listener) {
-        return addListener(host, port, false, listener);
+    public Server listen(String host, int port) {
+        return listen(host, port, false);
     }
 
-    public Server addListener(int port, Function<Request, Response> listener) {
-        return addListener("localhost", port, listener);
+    public Server listen(int port) {
+        return listen("localhost", port);
     }
 
-    public Server addListener(int port, boolean secure, Function<Request, Response> listener) {
-        return addListener("localhost", port, secure, listener);
-    }
-
-    private void handle(org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request, HttpServletResponse response) {
-        HttpChannel channel = baseRequest.getHttpChannel();
-        if (channel != null) {
-            Function<Request, Response> listener = listeners.get(channel.getConnector());
-            if (listener != null) {
-                Response generatedResponse = listener.apply(new RequestImpl(request));
-                if (generatedResponse instanceof Consumer) {
-                    ((Consumer) generatedResponse).accept(response);
-                }
-
-                baseRequest.setHandled(true);
-            }
-        }
-    }
-
-    public void start() throws Exception {
-        embeddedServer.start();
-        embeddedServer.join();
+    public Server listen(int port, boolean secure) {
+        return listen("localhost", port, secure);
     }
 }

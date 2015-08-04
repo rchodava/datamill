@@ -7,18 +7,17 @@ import org.chodavarapu.datamill.http.Server;
  */
 public class Main {
     public static void main(String[] args) throws Exception {
-        Server server = new Server();
-        server.addListener(8080, r ->
-                r.uri().ifMatches("/posts").and(r.method().isGet()).then(__ -> r.respond().ok())
-                        .elseIfUriMatches("/users").then(__ -> {
-                    return r.method().ifGet().then(___ -> r.respond().ok())
-                            .elseIfPost().then(___ -> r.respond().ok())
-                            .elseIfPut().then(___ -> r.respond().ok())
-                            .elseIfPatch().then(___ -> r.respond().ok())
-                            .elseIfDelete().then(___ -> r.respond().ok())
-                            .orElse(___ -> r.respond().ok());
-                }).orElse(r.respond().notFound()));
+        Server server = new Server(rb ->
+                rb.ifUriMatches("/posts").and(sb -> sb.ifGet().then(r -> r.respond().ok()).orElse(r -> r.respond().ok()))
+                        .elseIfUriMatches("/users").and(sb ->
+                                sb.ifGet().then(r -> r.respond().ok())
+                                        .elseIfPost().then(r -> r.respond().ok())
+                                        .elseIfPut().then(r -> r.respond().ok())
+                                        .elseIfPatch().then(r -> r.respond().ok())
+                                        .elseIfDelete().then(r -> r.respond().ok())
+                                        .orElse(r -> r.respond().ok())
+                ).orElse(r -> r.respond().notFound()));
 
-        server.start();
+        server.listen(8080);
     }
 }

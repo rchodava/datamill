@@ -1,9 +1,9 @@
-package org.chodavarapu.datamill.http.matching;
+package org.chodavarapu.datamill.http.builder;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface UriMatchingChain {
+public interface UriMatchingElseBuilder {
     /**
      * Try to match the URI against the specified pattern.
      *
@@ -12,5 +12,5 @@ public interface UriMatchingChain {
      *                description of the syntax for these templates. For example, these can look like: "/users/{id}",
      *                "/users/{name:\w+}".
      */
-    UriMatchHandler elseIfUriMatches(String pattern);
+    MatchHandlerBuilder elseIfUriMatches(String pattern);
 }

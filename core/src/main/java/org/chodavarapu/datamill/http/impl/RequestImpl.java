@@ -1,43 +1,47 @@
 package org.chodavarapu.datamill.http.impl;
 
+import io.vertx.core.http.HttpServerRequest;
 import org.chodavarapu.datamill.http.*;
-import org.chodavarapu.datamill.http.matching.MethodMatcher;
-import org.chodavarapu.datamill.http.matching.UriMatcher;
-
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RequestImpl implements Request {
-    private final HttpServletRequest request;
+    private final HttpServerRequest request;
 
-    public RequestImpl(HttpServletRequest request) {
+    public RequestImpl(HttpServerRequest request) {
         this.request = request;
     }
 
     @Override
     public RequestEntity entity() {
-        return new RequestEntityImpl(request);
+        return null;
+    }
+
+    @Override
+    public Method method() {
+        switch (request.method()) {
+            case OPTIONS: return Method.OPTIONS;
+            case GET: return Method.GET;
+            case HEAD: return Method.HEAD;
+            case POST: return Method.POST;
+            case PUT: return Method.PUT;
+            case DELETE: return Method.DELETE;
+            case TRACE: return Method.TRACE;
+            case CONNECT: return Method.CONNECT;
+            case PATCH: return Method.PATCH;
+        }
+
+        return null;
     }
 
     @Override
     public ResponseBuilder respond() {
-        return new ResponseBuilderImpl();
+        return null;
     }
 
     @Override
-    public MethodMatcher method() {
-        return new RequestMatcher(this);
-    }
-
-    @Override
-    public HttpServletRequest servletRequest() {
-        return request;
-    }
-
-    @Override
-    public UriMatcher uri() {
-        return new RequestMatcher(this);
+    public String uri() {
+        return request.uri();
     }
 }

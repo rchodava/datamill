@@ -2,8 +2,7 @@ package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
-
-import javax.servlet.http.HttpServletResponse;
+import org.chodavarapu.datamill.http.Status;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -11,16 +10,16 @@ import javax.servlet.http.HttpServletResponse;
 public class ResponseBuilderImpl implements ResponseBuilder {
     @Override
     public Response noContent() {
-        return new ResponseImpl(HttpServletResponse.SC_NO_CONTENT);
+        return new ResponseImpl(Status.NO_CONTENT);
     }
 
     @Override
     public Response notFound() {
-        return new ResponseImpl(HttpServletResponse.SC_NOT_FOUND);
+        return new ResponseImpl(Status.NOT_FOUND);
     }
 
     @Override
     public Response ok() {
-        return new ResponseImpl(HttpServletResponse.SC_OK);
+        return new ResponseImpl(Status.OK);
     }
 }

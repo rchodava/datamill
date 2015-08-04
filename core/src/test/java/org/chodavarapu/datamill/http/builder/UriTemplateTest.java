@@ -1,4 +1,4 @@
-package org.chodavarapu.datamill.http.matching;
+package org.chodavarapu.datamill.http.builder;
 
 import com.google.common.collect.ImmutableMap;
 import org.chodavarapu.datamill.http.impl.UriTemplate;
