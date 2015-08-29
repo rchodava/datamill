@@ -7,6 +7,8 @@ import org.chodavarapu.datamill.http.*;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RequestImpl implements Request {
+    private RequestEntity entity;
+
     private final HttpServerRequest request;
 
     public RequestImpl(HttpServerRequest request) {
@@ -15,7 +17,11 @@ public class RequestImpl implements Request {
 
     @Override
     public RequestEntity entity() {
-        return null;
+        if (entity == null) {
+            entity = new RequestEntityImpl(request);
+        }
+
+        return entity;
     }
 
     @Override
@@ -37,7 +43,7 @@ public class RequestImpl implements Request {
 
     @Override
     public ResponseBuilder respond() {
-        return null;
+        return new ResponseBuilderImpl();
     }
 
     @Override

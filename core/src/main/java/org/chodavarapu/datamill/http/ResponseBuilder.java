@@ -1,10 +1,12 @@
 package org.chodavarapu.datamill.http;
 
+import rx.Observable;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface ResponseBuilder {
-    Response noContent();
-    Response notFound();
-    Response ok();
+    Observable<Response> noContent();
+    Observable<Response> notFound();
+    Observable<Response> ok();
 }

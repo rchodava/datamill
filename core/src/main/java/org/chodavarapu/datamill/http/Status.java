@@ -45,7 +45,19 @@ public enum Status {
     GATEWAY_TIMEOUT(504, "Gateway Time-out"),
     HTTP_VERSION_NOT_SUPPORTED(505, "HTTP Version not supported");
 
-    Status(int code, String description) {
+    private final int code;
+    private final String description;
 
+    Status(int code, String description) {
+        this.code = code;
+        this.description = description;
+    }
+
+    public int getCode() {
+        return code;
+    }
+
+    public String getDescription() {
+        return description;
     }
 }

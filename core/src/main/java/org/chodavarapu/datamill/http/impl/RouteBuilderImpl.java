@@ -5,76 +5,66 @@ import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import org.chodavarapu.datamill.http.builder.*;
 import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.reflection.Bean;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class RouteBuilderImpl implements RouteBuilder, ElseBuilder, MatchHandlerBuilder {
+public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     private static abstract class Matcher {
-        private Function<Request, Response> handler;
+        private Route route;
 
         public abstract boolean matches(Request request);
 
-        public void setHandler(Function<Request, Response> handler) {
-            this.handler = handler;
-        }
-
-        public void setHandler(Supplier<Response> handler) {
-            this.handler = r -> handler.get();
-        }
-
-        public void setResponse(Response response) {
-            this.handler = r -> response;
+        protected Matcher(Route route) {
+            this.route = route;
         }
     }
 
-    private static class MethodMatcher extends Matcher {
+    private static class MethodAndUriMatcher extends Matcher {
         private final Method method;
+        private final UriTemplate uriTemplate;
 
-        public MethodMatcher(Method method) {
+        public MethodAndUriMatcher(Method method, String pattern, Route route) {
+            super(route);
+
             this.method = method;
+
+            if (pattern != null) {
+                this.uriTemplate = new UriTemplate(pattern);
+            } else {
+                this.uriTemplate = null;
+            }
         }
 
         @Override
         public boolean matches(Request request) {
-            return request.method() == method;
+            return (method != null ? request.method() == method : true) &&
+                    (uriTemplate != null ? uriTemplate.match(request.uri()) != null : true);
         }
     }
 
     private static class TautologyMatcher extends Matcher {
-        public TautologyMatcher(Function<Request, Response> handler) {
-            setHandler(handler);
+        public TautologyMatcher(Route route) {
+            super(route);
         }
 
-        public TautologyMatcher(Supplier<Response> handler) {
-            setHandler(handler);
+        public TautologyMatcher(Observable<Response> response) {
+            super(r -> response);
         }
 
         public TautologyMatcher(Response response) {
-            setResponse(response);
+            super(r -> Observable.just(response));
         }
 
         @Override
         public boolean matches(Request request) {
             return true;
-        }
-    }
-
-    private static class UriMatcher extends Matcher {
-        private final UriTemplate template;
-
-        public UriMatcher(String template) {
-            this.template = new UriTemplate(template);
-        }
-
-        @Override
-        public boolean matches(Request request) {
-            return template.match(request.uri()) != null;
         }
     }
 
@@ -86,126 +76,69 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder, MatchHandler
         }
 
         @Override
-        public Response apply(Request request) {
+        public Observable<Response> apply(Request request) {
             for (Matcher matcher : matchers) {
                 if (matcher.matches(request)) {
-                    return matcher.handler.apply(request);
+                    return matcher.route.apply(request);
                 }
             }
 
-            return null;
+            return Observable.empty();
         }
     }
 
     private final List<Matcher> matchers = new ArrayList<>();
 
-    private Matcher getCurrentMatcher() {
-        return matchers.get(matchers.size() - 1);
+    @Override
+    public ElseBuilder elseIfMethodAndUriMatch(Method method, String pattern, Route route) {
+        matchers.add(new MethodAndUriMatcher(method, pattern, route));
+        return this;
     }
 
     @Override
-    public ElseBuilder and(Function<RouteBuilder, Route> subRouteBuilder) {
+    public ElseBuilder elseIfMethodMatches(Method method, Route route) {
+        matchers.add(new MethodAndUriMatcher(method, null, route));
+        return this;
+    }
 
+    @Override
+    public ElseBuilder elseIfUriMatches(String pattern, Route route) {
+        matchers.add(new MethodAndUriMatcher(null, pattern, route));
+        return this;
+    }
+
+    @Override
+    public ElseBuilder ifMatchesBeanMethod(Bean bean, BiFunction<Request, Method, Observable<Response>> route) {
         return null;
     }
 
     @Override
-    public MatchHandlerBuilder elseIfDelete() {
-        matchers.add(new MethodMatcher(Method.DELETE));
+    public ElseBuilder ifMethodAndUriMatch(Method method, String pattern, Route route) {
+        matchers.add(new MethodAndUriMatcher(method, pattern, route));
         return this;
     }
 
     @Override
-    public MatchHandlerBuilder elseIfGet() {
-        matchers.add(new MethodMatcher(Method.GET));
+    public ElseBuilder ifMethodMatches(Method method, Route route) {
+        matchers.add(new MethodAndUriMatcher(method, null, route));
         return this;
     }
 
     @Override
-    public MatchHandlerBuilder elseIfHead() {
-        matchers.add(new MethodMatcher(Method.HEAD));
+    public ElseBuilder ifUriMatches(String pattern, Route route) {
+        matchers.add(new MethodAndUriMatcher(null, pattern, route));
         return this;
     }
 
     @Override
-    public MatchHandlerBuilder elseIfOptions() {
-        matchers.add(new MethodMatcher(Method.OPTIONS));
-        return this;
-    }
-
-    @Override
-    public MatchHandlerBuilder elseIfPatch() {
-        matchers.add(new MethodMatcher(Method.PATCH));
-        return this;
-    }
-
-    @Override
-    public MatchHandlerBuilder elseIfPost() {
-        matchers.add(new MethodMatcher(Method.POST));
-        return this;
-    }
-
-    @Override
-    public MatchHandlerBuilder elseIfPut() {
-        matchers.add(new MethodMatcher(Method.PUT));
-        return this;
-    }
-
-    @Override
-    public MatchHandlerBuilder elseIfUriMatches(String pattern) {
-        matchers.add(new UriMatcher(pattern));
-        return this;
-    }
-
-    @Override
-    public MatchHandlerBuilder ifDelete() {
-        return elseIfDelete();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifGet() {
-        return elseIfGet();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifHead() {
-        return elseIfHead();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifOptions() {
-        return elseIfOptions();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifPatch() {
-        return elseIfPatch();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifPost() {
-        return elseIfPost();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifPut() {
-        return elseIfPut();
-    }
-
-    @Override
-    public MatchHandlerBuilder ifUriMatches(String pattern) {
-        return elseIfUriMatches(pattern);
-    }
-
-    @Override
-    public Route orElse(Function<Request, Response> handler) {
-        matchers.add(new TautologyMatcher(handler));
+    public Route orElse(Route route) {
+        matchers.add(new TautologyMatcher(route));
         return new MatcherBasedRoute(matchers);
     }
 
     @Override
-    public Route orElse(Supplier<Response> handler) {
-        matchers.add(new TautologyMatcher(handler));
+    public Route orElse(Observable<Response> response) {
+        matchers.add(new TautologyMatcher(response));
         return new MatcherBasedRoute(matchers);
     }
 
@@ -213,23 +146,5 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder, MatchHandler
     public Route orElse(Response response) {
         matchers.add(new TautologyMatcher(response));
         return new MatcherBasedRoute(matchers);
-    }
-
-    @Override
-    public ElseBuilder then(Function<Request, Response> handler) {
-        getCurrentMatcher().setHandler(handler);
-        return this;
-    }
-
-    @Override
-    public ElseBuilder then(Supplier<Response> handler) {
-        getCurrentMatcher().setHandler(handler);
-        return this;
-    }
-
-    @Override
-    public ElseBuilder then(Response response) {
-        getCurrentMatcher().setResponse(response);
-        return this;
     }
 }
