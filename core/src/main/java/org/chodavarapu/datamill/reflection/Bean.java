@@ -11,10 +11,19 @@ import java.util.*;
  */
 public class Bean<T> {
     private final T instance;
+    private Collection<Method> methods;
     private Map<String, Property> properties;
 
     public Bean(T instance) {
         this.instance = instance;
+    }
+
+    private Collection<Method> getMethods() {
+        if (methods == null) {
+            introspectMethods();
+        }
+
+        return methods;
     }
 
     private Map<String, Property> getProperties() {
@@ -23,6 +32,19 @@ public class Bean<T> {
         }
 
         return properties;
+    }
+
+    private void introspectMethods() {
+        methods = new ArrayList<>();
+
+        try {
+            java.lang.reflect.Method[] classMethods = instance.getClass().getMethods();
+            for (java.lang.reflect.Method method : classMethods) {
+                methods.add(new Method(method));
+            }
+        } catch (SecurityException e) {
+            throw new ReflectionException(e);
+        }
     }
 
     private void introspectProperties() {
@@ -36,6 +58,10 @@ public class Bean<T> {
         } catch (IntrospectionException e) {
             throw new ReflectionException(e);
         }
+    }
+
+    public Collection<Method> methods() {
+        return getMethods();
     }
 
     public Optional<Property> property(String name) {

@@ -16,5 +16,7 @@ public interface RouteBuilder {
     ElseBuilder ifUriMatches(String pattern, Route route);
     ElseBuilder ifMethodMatches(Method method, Route route);
     ElseBuilder ifMethodAndUriMatch(Method method, String pattern, Route route);
-    ElseBuilder ifMatchesBeanMethod(Bean bean, BiFunction<Request, Method, Observable<Response>> route);
+    ElseBuilder ifMatchesBeanMethod(
+            Bean bean,
+            BiFunction<Request, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route);
 }

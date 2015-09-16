@@ -5,6 +5,6 @@ import rx.Observable;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface Connection extends QueryBuilder {
-    Observable<Row> query(String sql);
+public interface WhereBuilder {
+    Observable<Row> all();
 }

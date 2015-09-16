@@ -1,9 +1,11 @@
 package org.chodavarapu.datamill.reflection;
 
+import java.lang.annotation.Annotation;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class Method<T> {
+public class Method {
     private final java.lang.reflect.Method method;
 
     public Method(java.lang.reflect.Method method) {
@@ -12,5 +14,9 @@ public class Method<T> {
 
     public String getName() {
         return method.getName();
+    }
+
+    public boolean hasAnnotation(Class<? extends Annotation> annotationClass) {
+        return method.getAnnotation(annotationClass) != null;
     }
 }

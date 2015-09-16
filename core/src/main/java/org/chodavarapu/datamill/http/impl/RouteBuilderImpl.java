@@ -16,76 +16,6 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
-    private static abstract class Matcher {
-        private Route route;
-
-        public abstract boolean matches(Request request);
-
-        protected Matcher(Route route) {
-            this.route = route;
-        }
-    }
-
-    private static class MethodAndUriMatcher extends Matcher {
-        private final Method method;
-        private final UriTemplate uriTemplate;
-
-        public MethodAndUriMatcher(Method method, String pattern, Route route) {
-            super(route);
-
-            this.method = method;
-
-            if (pattern != null) {
-                this.uriTemplate = new UriTemplate(pattern);
-            } else {
-                this.uriTemplate = null;
-            }
-        }
-
-        @Override
-        public boolean matches(Request request) {
-            return (method != null ? request.method() == method : true) &&
-                    (uriTemplate != null ? uriTemplate.match(request.uri()) != null : true);
-        }
-    }
-
-    private static class TautologyMatcher extends Matcher {
-        public TautologyMatcher(Route route) {
-            super(route);
-        }
-
-        public TautologyMatcher(Observable<Response> response) {
-            super(r -> response);
-        }
-
-        public TautologyMatcher(Response response) {
-            super(r -> Observable.just(response));
-        }
-
-        @Override
-        public boolean matches(Request request) {
-            return true;
-        }
-    }
-
-    private static class MatcherBasedRoute implements Route {
-        private final List<Matcher> matchers;
-
-        public MatcherBasedRoute(List<Matcher> matchers) {
-            this.matchers = matchers;
-        }
-
-        @Override
-        public Observable<Response> apply(Request request) {
-            for (Matcher matcher : matchers) {
-                if (matcher.matches(request)) {
-                    return matcher.route.apply(request);
-                }
-            }
-
-            return Observable.empty();
-        }
-    }
 
     private final List<Matcher> matchers = new ArrayList<>();
 
@@ -108,7 +38,9 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     }
 
     @Override
-    public ElseBuilder ifMatchesBeanMethod(Bean bean, BiFunction<Request, Method, Observable<Response>> route) {
+    public ElseBuilder ifMatchesBeanMethod(
+            Bean bean,
+            BiFunction<Request, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
         return null;
     }
 
