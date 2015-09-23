@@ -20,9 +20,9 @@ class MatcherBasedRoute implements Route {
     @Override
     public Observable<Response> apply(Request request) {
         for (Matcher matcher : matchers) {
-            if (matcher.applyIfMatches(request)) {
+//            if (matcher.applyIfMatches(request)) {
                 return matcher.getRoute().apply(request);
-            }
+//            }
         }
 
         return Observable.empty();

@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.examples.starter;
 
-import org.chodavarapu.datamill.db.Connection;
+import org.chodavarapu.datamill.db.QueryRunner;
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Server;
 
@@ -18,7 +18,7 @@ public class Main {
                         .elseIfMethodMatches(Method.DELETE, r -> r.respond().ok())
                         .orElse(r -> r.respond().notFound()));
 
-        Connection connection = null;
+        QueryRunner connection = null;
         connection.select("name", "price").from("plan").all();
         server.listen(8080);
     }

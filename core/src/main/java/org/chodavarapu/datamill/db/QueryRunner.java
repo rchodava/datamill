@@ -5,6 +5,7 @@ import rx.Observable;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface Connection extends QueryBuilder {
+public interface QueryRunner {
     Observable<Row> query(String sql);
+    Observable<Row> query(String sql, Object... parameters);
 }

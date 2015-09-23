@@ -22,7 +22,7 @@ class TautologyMatcher extends Matcher {
     }
 
     @Override
-    public boolean applyIfMatches(Request request) {
-        return true;
+    public Observable<Response> applyIfMatches(Request request) {
+        return null;
     }
 }
