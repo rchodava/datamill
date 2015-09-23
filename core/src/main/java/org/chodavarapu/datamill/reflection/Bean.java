@@ -45,7 +45,7 @@ public class Bean<T> {
         if (beanClass != null) {
             return beanClass;
         } else {
-            return null;// instance.getClass();
+            return (Class<T>) instance.getClass();
         }
     }
 
