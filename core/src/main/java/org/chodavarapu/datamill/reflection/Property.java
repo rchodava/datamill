@@ -1,6 +1,9 @@
 package org.chodavarapu.datamill.reflection;
 
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -10,14 +13,6 @@ public class Property<T> {
 
     public Property(PropertyDescriptor descriptor) {
         this.descriptor = descriptor;
-    }
-
-    public T get() {
-        return null;
-    }
-
-    public void set(T value) {
-
     }
 
     public boolean isReadOnly() {
@@ -31,5 +26,35 @@ public class Property<T> {
 
     public String getName() {
         return descriptor.getName();
+    }
+
+    private void performSecure(Runnable runnable) {
+        if (System.getSecurityManager() != null) {
+            AccessController.doPrivileged((PrivilegedAction<?>) () -> {
+                runnable.run();
+                return null;
+            });
+        } else {
+            runnable.run();
+        }
+    }
+
+    public <P> void set(T instance, P value) {
+        java.lang.reflect.Method writeMethod = descriptor.getWriteMethod();
+        if (writeMethod != null) {
+            if (!writeMethod.isAccessible()) {
+                performSecure(() -> writeMethod.setAccessible(true));
+            }
+
+            performSecure(() -> {
+                try {
+                    writeMethod.invoke(instance, value);
+                } catch (InvocationTargetException e) {
+                    throw new ReflectionException(e);
+                } catch (IllegalAccessException e) {
+                    throw new ReflectionException(e);
+                }
+            });
+        }
     }
 }

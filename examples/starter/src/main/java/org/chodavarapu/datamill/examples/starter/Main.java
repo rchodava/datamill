@@ -19,7 +19,6 @@ public class Main {
                         .orElse(r -> r.respond().notFound()));
 
         QueryRunner connection = null;
-        connection.select("name", "price").from("plan").all();
         server.listen(8080);
     }
 }

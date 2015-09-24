@@ -28,7 +28,7 @@ public abstract class JsonElementImpl extends JsonValueImpl implements JsonEleme
 
     @Override
     public <T> T mapToObject(T object, BiConsumer<JsonElement, Bean<T>> mapper) {
-        mapper.accept(this, new Bean<>(object));
+        mapper.accept(this, null);
         return object;
     }
 

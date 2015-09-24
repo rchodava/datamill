@@ -28,23 +28,23 @@ class BeanMethodMatcher extends Matcher {
     }
 
     private void createBeanMethodMatchers(Bean<?> bean) {
-        bean.methods().stream().forEach(method -> {
-            if (method.hasAnnotation(DELETE.class)) {
-
-            } else if (method.hasAnnotation(GET.class)) {
-
-            } else if (method.hasAnnotation(HEAD.class)) {
-
-            } else if (method.hasAnnotation(OPTIONS.class)) {
-
-            } else if (method.hasAnnotation(PATCH.class)) {
-
-            } else if (method.hasAnnotation(POST.class)) {
-
-            } else if (method.hasAnnotation(PUT.class)) {
-
-            }
-        });
+//        bean.methods().stream().forEach(method -> {
+//            if (method.hasAnnotation(DELETE.class)) {
+//
+//            } else if (method.hasAnnotation(GET.class)) {
+//
+//            } else if (method.hasAnnotation(HEAD.class)) {
+//
+//            } else if (method.hasAnnotation(OPTIONS.class)) {
+//
+//            } else if (method.hasAnnotation(PATCH.class)) {
+//
+//            } else if (method.hasAnnotation(POST.class)) {
+//
+//            } else if (method.hasAnnotation(PUT.class)) {
+//
+//            }
+//        });
     }
 
     @Override
