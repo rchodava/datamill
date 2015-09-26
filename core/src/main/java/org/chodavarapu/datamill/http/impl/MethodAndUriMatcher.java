@@ -2,14 +2,12 @@ package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Request;
-import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
-import rx.Observable;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-class MethodAndUriMatcher extends Matcher {
+public class MethodAndUriMatcher extends RouteMatcher {
     private final Method method;
     private final UriTemplate uriTemplate;
 
@@ -26,12 +24,15 @@ class MethodAndUriMatcher extends Matcher {
     }
 
     @Override
-    public Observable<Response> applyIfMatches(Request request) {
-        boolean matches = (method != null ? request.method() == method : true) &&
-                (uriTemplate != null ? uriTemplate.match(request.uri()) != null : true);
-        if (matches) {
-            return getRoute().apply(request);
-        }
-        return null;
+    public boolean matches(Request request) {
+        return matchesMethod(request) && matchesUri(request);
+    }
+
+    private boolean matchesUri(Request request) {
+        return uriTemplate != null ? uriTemplate.match(request.uri()) != null : true;
+    }
+
+    private boolean matchesMethod(Request request) {
+        return method != null ? request.method() == method : true;
     }
 }

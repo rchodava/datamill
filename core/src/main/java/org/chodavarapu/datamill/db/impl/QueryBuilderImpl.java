@@ -8,15 +8,15 @@ import org.chodavarapu.datamill.db.WhereBuilder;
 import rx.Observable;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class QueryBuilderImpl implements QueryBuilder {
+public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_SELECT = "SELECT ";
+    private static final String SQL_FROM = " FROM ";
 
-    private static class SelectQuery implements SelectBuilder, WhereBuilder {
+    private class SelectQuery implements SelectBuilder, WhereBuilder {
         private final StringBuilder query = new StringBuilder();
 
         public SelectQuery() {
@@ -24,22 +24,25 @@ public class QueryBuilderImpl implements QueryBuilder {
             query.append('*');
         }
 
-        public SelectQuery(Iterator<String> columns) {
+        public SelectQuery(Iterable<String> columns) {
             query.append(SQL_SELECT);
             query.append(Joiner.on(',').join(columns));
-            query.append(' ');
         }
 
         @Override
         public Observable<Row> all() {
-            return null;
+            return QueryBuilderImpl.this.query(query.toString());
         }
 
         @Override
         public WhereBuilder from(String table) {
+            query.append(SQL_FROM);
+            query.append(table);
             return this;
         }
     }
+
+    protected abstract Observable<Row> query(String query);
 
     @Override
     public SelectBuilder select(String column) {
@@ -53,7 +56,7 @@ public class QueryBuilderImpl implements QueryBuilder {
 
     @Override
     public SelectBuilder select(Iterable<String> columns) {
-        return new SelectQuery();
+        return new SelectQuery(columns);
     }
 
     @Override

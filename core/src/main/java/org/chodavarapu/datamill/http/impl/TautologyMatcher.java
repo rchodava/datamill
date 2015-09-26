@@ -8,7 +8,7 @@ import rx.Observable;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-class TautologyMatcher extends Matcher {
+public class TautologyMatcher extends RouteMatcher {
     public TautologyMatcher(Route route) {
         super(route);
     }
@@ -22,7 +22,7 @@ class TautologyMatcher extends Matcher {
     }
 
     @Override
-    public Observable<Response> applyIfMatches(Request request) {
-        return null;
+    protected boolean matches(Request request) {
+        return true;
     }
 }

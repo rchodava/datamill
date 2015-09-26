@@ -2,10 +2,12 @@ package org.chodavarapu.datamill.http;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import org.chodavarapu.datamill.http.builder.RouteBuilder;
 import org.chodavarapu.datamill.http.impl.RequestImpl;
 import org.chodavarapu.datamill.http.impl.RouteBuilderImpl;
+import rx.Observable;
 
 import java.util.function.Function;
 
@@ -27,14 +29,30 @@ public class Server extends AbstractVerticle {
 
         server = vertx.createHttpServer();
         server.requestHandler(r -> {
-            route.apply(new RequestImpl(r));
+            Observable<Response> responseObservable = route.apply(new RequestImpl(r));
+            if (responseObservable != null) {
+                try {
+                    Response response = responseObservable.toBlocking().lastOrDefault(null);
+                    if (response != null) {
+                        r.response().setStatusCode(response.getStatus().getCode()).end();
+                        return;
+                    }
+                } catch (Exception e) {
+                    r.response().setStatusCode(500).end();
+                    return;
+                }
+            }
+
+            r.response().setStatusCode(404).end();
         });
 
         startFuture.complete();
     }
 
     public Server listen(String host, int port, boolean secure) {
-        server.listen(port, host);
+        Vertx.vertx().deployVerticle(this, (verticle) -> {
+            server.listen(port, host);
+        });
         return this;
     }
 

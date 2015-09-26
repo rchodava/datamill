@@ -2,7 +2,6 @@ package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.Request;
 import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.http.annotations.*;
 import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.reflection.Method;
 import rx.Observable;
@@ -14,12 +13,12 @@ import java.util.function.BiFunction;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-class BeanMethodMatcher extends Matcher {
+public class BeanMethodMatcher implements Matcher {
     private final Bean<?> bean;
-    private final List<Matcher> matchers = new ArrayList<>();
+    private final List<RouteMatcher> matchers = new ArrayList<>();
 
     public BeanMethodMatcher(Bean<?> bean, BiFunction<Request, Method, Observable<Response>> route) {
-        setRoute(request -> routeToBeanMethod(request));
+//        setRoute(request -> routeToBeanMethod(request));
         this.bean = bean;
     }
 

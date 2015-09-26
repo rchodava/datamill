@@ -13,6 +13,7 @@ public class ResponseImpl implements Response {
         this.status = status;
     }
 
+    @Override
     public Status getStatus() {
         return status;
     }

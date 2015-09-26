@@ -16,7 +16,6 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
-
     private final List<Matcher> matchers = new ArrayList<>();
 
     @Override

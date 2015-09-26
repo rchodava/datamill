@@ -13,13 +13,5 @@ public interface Value {
     long asLong();
     String asString();
 
-    boolean isBoolean();
-    boolean isFloat();
-    boolean isInteger();
-    boolean isIntegral();
-    boolean isLong();
-    boolean isNumeric();
-    boolean isString();
-
-    <T> T map(Function<? extends Value, T> mapper);
+    <T> T map(Function<Value, T> mapper);
 }

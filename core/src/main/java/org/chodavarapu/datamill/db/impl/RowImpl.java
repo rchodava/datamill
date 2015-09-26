@@ -14,24 +14,102 @@ import java.util.function.Function;
 public class RowImpl implements Row {
     private final ResultSet resultSet;
 
-    private abstract class IndexedColumnValue implements Value {
-        private final int index;
-        public IndexedColumnValue(int index) {
-            this.index = index;
+    @FunctionalInterface
+    private interface ResultSetValueRetriever<K, R> {
+        R retrieve(K key) throws SQLException;
+    }
+
+    private abstract class KeyedColumnValue<K> implements Value {
+        protected final K key;
+
+        public KeyedColumnValue(K key) {
+            this.key = key;
         }
 
-        @Override
-        public long asLong() {
+        protected <T> T safeRetrieve(ResultSetValueRetriever<K, T> retriever) {
             try {
-                return resultSet.getLong(index);
+                return retriever.retrieve(key);
             } catch (SQLException e) {
                 throw new DatabaseException(e);
             }
         }
 
         @Override
-        public <T> T map(Function<? extends Value, T> mapper) {
-            return null;
+        public <T> T map(Function<Value, T> mapper) {
+            return mapper.apply(this);
+        }
+    }
+
+
+    private class IndexedColumnValue extends KeyedColumnValue<Integer> {
+        public IndexedColumnValue(int index) {
+            super(index);
+        }
+
+        @Override
+        public double asDouble() {
+            return safeRetrieve(k -> resultSet.getDouble(key));
+        }
+
+        @Override
+        public long asLong() {
+            return safeRetrieve(k -> resultSet.getLong(key));
+        }
+
+        @Override
+        public int asInteger() {
+            return safeRetrieve(k -> resultSet.getInt(key));
+        }
+
+        @Override
+        public float asFloat() {
+            return safeRetrieve(k -> resultSet.getFloat(key));
+        }
+
+        @Override
+        public boolean asBoolean() {
+            return safeRetrieve(k -> resultSet.getBoolean(key));
+        }
+
+        @Override
+        public String asString() {
+            return safeRetrieve(k -> resultSet.getString(key));
+        }
+    }
+
+    private class LabeledColumnValue extends KeyedColumnValue<String> {
+        public LabeledColumnValue(String label) {
+            super(label);
+        }
+
+        @Override
+        public double asDouble() {
+            return safeRetrieve(k -> resultSet.getDouble(key));
+        }
+
+        @Override
+        public long asLong() {
+            return safeRetrieve(k -> resultSet.getLong(key));
+        }
+
+        @Override
+        public int asInteger() {
+            return safeRetrieve(k -> resultSet.getInt(key));
+        }
+
+        @Override
+        public float asFloat() {
+            return safeRetrieve(k -> resultSet.getFloat(key));
+        }
+
+        @Override
+        public boolean asBoolean() {
+            return safeRetrieve(k -> resultSet.getBoolean(key));
+        }
+
+        @Override
+        public String asString() {
+            return safeRetrieve(k -> resultSet.getString(key));
         }
     }
 
@@ -41,12 +119,12 @@ public class RowImpl implements Row {
 
     @Override
     public Value column(int index) {
-        return null;
+        return new IndexedColumnValue(index);
     }
 
     @Override
     public Value column(String name) {
-        return null;
+        return new LabeledColumnValue(name);
     }
 
     @Override

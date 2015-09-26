@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-class MatcherBasedRoute implements Route {
+public class MatcherBasedRoute implements Route {
     private final List<Matcher> matchers;
 
     public MatcherBasedRoute(List<Matcher> matchers) {
@@ -20,9 +20,10 @@ class MatcherBasedRoute implements Route {
     @Override
     public Observable<Response> apply(Request request) {
         for (Matcher matcher : matchers) {
-//            if (matcher.applyIfMatches(request)) {
-                return matcher.getRoute().apply(request);
-//            }
+            Observable<Response> responseObservable = matcher.applyIfMatches(request);
+            if (responseObservable != null) {
+                return responseObservable;
+            }
         }
 
         return Observable.empty();
