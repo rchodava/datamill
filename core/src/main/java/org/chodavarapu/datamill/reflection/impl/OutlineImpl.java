@@ -24,6 +24,19 @@ import java.util.function.Consumer;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class OutlineImpl<T> implements Outline<T> {
+    private static Method OBJECT_GET_CLASS_METHOD;
+    private static Method getObjectGetClassMethod() {
+        if (OBJECT_GET_CLASS_METHOD == null) {
+            try {
+                OBJECT_GET_CLASS_METHOD = Object.class.getMethod("getClass");
+            } catch (Exception e) {
+                OBJECT_GET_CLASS_METHOD = null;
+            }
+        }
+
+        return OBJECT_GET_CLASS_METHOD;
+    }
+
     private final boolean camelCased;
     private final ThreadLocal<String> lastInvokedMethod = new ThreadLocal<>();
     private final T members;
@@ -71,7 +84,10 @@ public class OutlineImpl<T> implements Outline<T> {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(getOutlinedClass());
             for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-                properties.put(descriptor.getName(), new Property(descriptor));
+                properties.put(camelCased ?
+                                descriptor.getName() :
+                                CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName()),
+                        new Property(descriptor, camelCased));
             }
         } catch (IntrospectionException e) {
             throw new ReflectionException(e);
@@ -139,7 +155,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public <P> Property property(P property) {
-        return getProperties().get(camelCasedName(property));
+        return getProperties().get(name(property));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package org.chodavarapu.datamill.reflection;
 
+import com.google.common.base.CaseFormat;
+
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
@@ -9,10 +11,12 @@ import java.security.PrivilegedAction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Property<T> {
+    private final boolean camelCased;
     private final PropertyDescriptor descriptor;
 
-    public Property(PropertyDescriptor descriptor) {
+    public Property(PropertyDescriptor descriptor, boolean camelCased) {
         this.descriptor = descriptor;
+        this.camelCased = camelCased;
     }
 
     public boolean isReadOnly() {
@@ -25,7 +29,8 @@ public class Property<T> {
     }
 
     public String getName() {
-        return descriptor.getName();
+        return camelCased ?
+                descriptor.getName() : CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName());
     }
 
     private void performSecure(Runnable runnable) {

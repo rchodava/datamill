@@ -54,19 +54,55 @@ public class OutlineImplTest {
     }
 
     @Test
-    public void getProperties() {
-        assertThat(new OutlineBuilder<>(TestBeanClass.class).build().properties().stream().map(p -> p.getName()).collect(Collectors.toList()),
+    public void propertyNamesCamelCased() {
+        assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultCamelCased().build().propertyNames(),
                 hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
 
         assertEquals(0, actualBeanMethodInvocations);
     }
 
     @Test
-    public void getProperty() {
-        Outline<TestBeanClass> outline = new OutlineBuilder<>(TestBeanClass.class).build();
+    public void propertyNamesSnakeCased() {
+        assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultSnakeCased().build().propertyNames(),
+                hasItems("read_write_property", "read_only_property", "boolean_property"));
+
+        assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
+    public void getPropertiesCamelCased() {
+        assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultCamelCased().build().properties().stream()
+                        .map(p -> p.getName()).collect(Collectors.toList()),
+                hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
+
+        assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
+    public void getPropertiesSnakeCased() {
+        assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultSnakeCased().build().properties().stream()
+                        .map(p -> p.getName()).collect(Collectors.toList()),
+                hasItems("read_write_property", "read_only_property", "boolean_property"));
+
+        assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
+    public void getPropertyCamelCased() {
+        Outline<TestBeanClass> outline = new OutlineBuilder<>(TestBeanClass.class).defaultCamelCased().build();
         assertEquals("readWriteProperty", outline.property(outline.members().getReadWriteProperty()).getName());
         assertEquals("booleanProperty", outline.property(outline.members().isBooleanProperty()).getName());
         assertEquals("readWriteProperty", outline.property(outline.members().getReadWriteProperty()).getName());
+
+        assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
+    public void getPropertySnakeCased() {
+        Outline<TestBeanClass> outline = new OutlineBuilder<>(TestBeanClass.class).defaultSnakeCased().build();
+        assertEquals("read_write_property", outline.property(outline.members().getReadWriteProperty()).getName());
+        assertEquals("boolean_property", outline.property(outline.members().isBooleanProperty()).getName());
+        assertEquals("read_write_property", outline.property(outline.members().getReadWriteProperty()).getName());
 
         assertEquals(0, actualBeanMethodInvocations);
     }
