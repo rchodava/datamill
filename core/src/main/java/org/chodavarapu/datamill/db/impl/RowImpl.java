@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.db.impl;
 
-import org.chodavarapu.datamill.Value;
+import org.chodavarapu.datamill.values.Value;
 import org.chodavarapu.datamill.db.DatabaseException;
 import org.chodavarapu.datamill.db.Row;
 

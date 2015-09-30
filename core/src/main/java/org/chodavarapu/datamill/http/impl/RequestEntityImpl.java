@@ -4,7 +4,7 @@ import com.google.common.io.CharStreams;
 import io.vertx.core.http.HttpServerRequest;
 import org.chodavarapu.datamill.http.RequestEntity;
 import org.chodavarapu.datamill.http.HttpException;
-import org.chodavarapu.datamill.json.JsonElement;
+import org.chodavarapu.datamill.json.JsonObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ public class RequestEntityImpl implements RequestEntity {
     }
 
     @Override
-    public JsonElement asJson() {
+    public JsonObject asJson() {
         return null;
     }
 

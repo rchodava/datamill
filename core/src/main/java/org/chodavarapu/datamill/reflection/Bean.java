@@ -5,4 +5,6 @@ package org.chodavarapu.datamill.reflection;
  */
 public interface Bean<T> {
     <P> Bean<T> set(P property, P value);
+    <P> P get(P property);
+    T unwrap();
 }

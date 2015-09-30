@@ -84,10 +84,12 @@ public class OutlineImpl<T> implements Outline<T> {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(getOutlinedClass());
             for (PropertyDescriptor descriptor : beanInfo.getPropertyDescriptors()) {
-                properties.put(camelCased ?
-                                descriptor.getName() :
-                                CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName()),
-                        new Property(descriptor, camelCased));
+                if (!getObjectGetClassMethod().equals(descriptor.getReadMethod())) {
+                    properties.put(camelCased ?
+                                    descriptor.getName() :
+                                    CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName()),
+                            new Property(descriptor, camelCased));
+                }
             }
         } catch (IntrospectionException e) {
             throw new ReflectionException(e);
@@ -206,9 +208,19 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
+        public <P> P get(P property) {
+            return (P) OutlineImpl.this.property(property).get(instance);
+        }
+
+        @Override
         public <P> Bean<T> set(P property, P value) {
             OutlineImpl.this.property(property).set(instance, value);
             return this;
+        }
+
+        @Override
+        public T unwrap() {
+            return instance;
         }
     }
 

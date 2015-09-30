@@ -23,4 +23,9 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     public Observable<Response> ok() {
         return Observable.just(new ResponseImpl(Status.OK));
     }
+
+    @Override
+    public Observable<Response> ok(String content) {
+        return Observable.just(new ResponseImpl(Status.OK, content));
+    }
 }

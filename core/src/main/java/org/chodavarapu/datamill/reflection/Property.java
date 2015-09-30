@@ -6,6 +6,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.concurrent.Callable;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -33,6 +34,24 @@ public class Property<T> {
                 descriptor.getName() : CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName());
     }
 
+    private <T> T performSecureGet(Callable<T> runnable) {
+        if (System.getSecurityManager() != null) {
+            return AccessController.doPrivileged((PrivilegedAction<T>) () -> {
+                try {
+                    return runnable.call();
+                } catch (Exception e) {
+                    throw new ReflectionException(e);
+                }
+            });
+        } else {
+            try {
+                return runnable.call();
+            } catch (Exception e) {
+                throw new ReflectionException(e);
+            }
+        }
+    }
+
     private void performSecure(Runnable runnable) {
         if (System.getSecurityManager() != null) {
             AccessController.doPrivileged((PrivilegedAction<?>) () -> {
@@ -41,6 +60,27 @@ public class Property<T> {
             });
         } else {
             runnable.run();
+        }
+    }
+
+    public <P> P get(T instance) {
+        java.lang.reflect.Method readMethod = descriptor.getReadMethod();
+        if (readMethod != null) {
+            if (!readMethod.isAccessible()) {
+                performSecure(() -> readMethod.setAccessible(true));
+            }
+
+            return performSecureGet(() -> {
+                try {
+                    return (P) readMethod.invoke(instance);
+                } catch (InvocationTargetException e) {
+                    throw new ReflectionException(e);
+                } catch (IllegalAccessException e) {
+                    throw new ReflectionException(e);
+                }
+            });
+        } else {
+            throw new ReflectionException("Property does not have a getter!");
         }
     }
 

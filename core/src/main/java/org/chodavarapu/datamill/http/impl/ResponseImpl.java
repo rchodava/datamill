@@ -8,9 +8,20 @@ import org.chodavarapu.datamill.http.Status;
  */
 public class ResponseImpl implements Response {
     private Status status;
+    private Object entity;
 
     public ResponseImpl(Status status) {
         this.status = status;
+    }
+
+    public ResponseImpl(Status status, Object entity) {
+        this.status = status;
+        this.entity = entity;
+    }
+
+    @Override
+    public Object getEntity() {
+        return entity;
     }
 
     @Override

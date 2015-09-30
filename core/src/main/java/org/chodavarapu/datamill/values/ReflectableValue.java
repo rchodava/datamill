@@ -1,4 +1,4 @@
-package org.chodavarapu.datamill;
+package org.chodavarapu.datamill.values;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)

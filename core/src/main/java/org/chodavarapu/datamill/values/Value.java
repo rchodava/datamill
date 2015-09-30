@@ -1,4 +1,4 @@
-package org.chodavarapu.datamill;
+package org.chodavarapu.datamill.values;
 
 import java.util.function.Function;
 

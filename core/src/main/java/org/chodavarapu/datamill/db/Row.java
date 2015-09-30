@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.db;
 
-import org.chodavarapu.datamill.Value;
+import org.chodavarapu.datamill.values.Value;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)

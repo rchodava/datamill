@@ -9,4 +9,5 @@ public interface ResponseBuilder {
     Observable<Response> noContent();
     Observable<Response> notFound();
     Observable<Response> ok();
+    Observable<Response> ok(String content);
 }

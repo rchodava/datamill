@@ -7,6 +7,7 @@ import org.junit.Test;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.CoreMatchers.not;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -70,6 +71,15 @@ public class OutlineImplTest {
     }
 
     @Test
+    public void getPropertiesCamelCasedDoesNotHaveGetClass() {
+        assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultCamelCased().build().properties().stream()
+                        .map(p -> p.getName()).collect(Collectors.toList()),
+                not(hasItems("class")));
+
+        assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
     public void getPropertiesCamelCased() {
         assertThat(new OutlineBuilder<>(TestBeanClass.class).defaultCamelCased().build().properties().stream()
                         .map(p -> p.getName()).collect(Collectors.toList()),
@@ -119,6 +129,18 @@ public class OutlineImplTest {
         assertEquals("test_bean_class", outline.snakeCasedName());
 
         assertEquals(0, actualBeanMethodInvocations);
+    }
+
+    @Test
+    public void wrapAndBeanGt() {
+        OutlineBuilder<TestBeanClass> outlineBuilder = new OutlineBuilder<>(TestBeanClass.class);
+        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build();
+
+        TestBeanClass instance = new TestBeanClass();
+        instance.setReadWriteProperty("value1");
+
+        assertEquals("value1", outline.wrap(instance).get(outline.members().getReadWriteProperty()));
+        assertEquals(2, actualBeanMethodInvocations);
     }
 
     @Test

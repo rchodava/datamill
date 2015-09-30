@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.json.patch;
 
-import org.chodavarapu.datamill.json.JsonElement;
+import org.chodavarapu.datamill.json.JsonObject;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -8,7 +8,7 @@ import org.chodavarapu.datamill.json.JsonElement;
 public class Operation {
     private final OperationType type;
 
-    public Operation(OperationType type, String path, JsonElement value) {
+    public Operation(OperationType type, String path, JsonObject value) {
         this.type = type;
     }
 
