@@ -50,6 +50,7 @@ public class OutlineImplTest {
         assertEquals("readWriteProperty", outline.camelCasedName(members -> members.setReadWriteProperty("")));
 
         assertEquals("TestBeanClass", outline.camelCasedName());
+        assertEquals("TestBeanClasses", outline.camelCasedPluralName());
 
         assertEquals(0, actualBeanMethodInvocations);
     }
@@ -127,6 +128,7 @@ public class OutlineImplTest {
         assertEquals("read_write_property", outline.snakeCasedName(members -> members.setReadWriteProperty("")));
 
         assertEquals("test_bean_class", outline.snakeCasedName());
+        assertEquals("test_bean_classes", outline.snakeCasedPluralName());
 
         assertEquals(0, actualBeanMethodInvocations);
     }

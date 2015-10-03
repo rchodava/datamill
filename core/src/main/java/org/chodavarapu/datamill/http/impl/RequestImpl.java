@@ -2,6 +2,10 @@ package org.chodavarapu.datamill.http.impl;
 
 import io.vertx.core.http.HttpServerRequest;
 import org.chodavarapu.datamill.http.*;
+import org.chodavarapu.datamill.values.StringValue;
+import org.chodavarapu.datamill.values.Value;
+
+import java.util.Map;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -10,6 +14,8 @@ public class RequestImpl implements Request {
     private RequestEntity entity;
 
     private final HttpServerRequest request;
+
+    private Map<String, String> uriParameters;
 
     public RequestImpl(HttpServerRequest request) {
         this.request = request;
@@ -49,5 +55,20 @@ public class RequestImpl implements Request {
     @Override
     public String uri() {
         return request.uri();
+    }
+
+    void setUriParameters(Map<String, String> uriParameters) {
+        this.uriParameters = uriParameters;
+    }
+
+    @Override
+    public Value uriParameter(String parameter) {
+        if (uriParameters != null) {
+            String value = uriParameters.get(parameter);
+            if (value != null) {
+                return new StringValue(value);
+            }
+        }
+        return null;
     }
 }

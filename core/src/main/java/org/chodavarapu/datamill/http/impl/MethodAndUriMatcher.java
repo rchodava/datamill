@@ -4,6 +4,8 @@ import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Request;
 import org.chodavarapu.datamill.http.Route;
 
+import java.util.Map;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
@@ -29,7 +31,17 @@ public class MethodAndUriMatcher extends RouteMatcher {
     }
 
     private boolean matchesUri(Request request) {
-        return uriTemplate != null ? uriTemplate.match(request.uri()) != null : true;
+        if (uriTemplate != null) {
+            Map<String, String> uriParameters = uriTemplate.match(request.uri());
+            if (uriParameters != null) {
+                ((RequestImpl) request).setUriParameters(uriParameters);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return true;
+        }
     }
 
     private boolean matchesMethod(Request request) {

@@ -20,12 +20,12 @@ public class ResponseImpl implements Response {
     }
 
     @Override
-    public Object getEntity() {
+    public Object entity() {
         return entity;
     }
 
     @Override
-    public Status getStatus() {
+    public Status status() {
         return status;
     }
 }

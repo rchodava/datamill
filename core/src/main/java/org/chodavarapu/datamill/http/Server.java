@@ -34,8 +34,8 @@ public class Server extends AbstractVerticle {
                 try {
                     Response response = responseObservable.toBlocking().lastOrDefault(null);
                     if (response != null) {
-                        r.response().setStatusCode(response.getStatus().getCode());
-                        r.response().end(response.getEntity() == null ? "" : response.getEntity().toString());
+                        r.response().setStatusCode(response.status().getCode());
+                        r.response().end(response.entity() == null ? "" : response.entity().toString());
                         return;
                     }
                 } catch (Exception e) {

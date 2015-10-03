@@ -4,6 +4,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Defaults;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.Proxy;
+import org.atteo.evo.inflector.English;
 import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.reflection.Property;
@@ -53,6 +54,11 @@ public class OutlineImpl<T> implements Outline<T> {
     @Override
     public String camelCasedName() {
         return typeName();
+    }
+
+    @Override
+    public String camelCasedPluralName() {
+        return English.plural(camelCasedName());
     }
 
     @Override
@@ -156,6 +162,11 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     @Override
+    public String pluralName() {
+        return English.plural(name());
+    }
+
+    @Override
     public <P> Property property(P property) {
         return getProperties().get(name(property));
     }
@@ -184,6 +195,11 @@ public class OutlineImpl<T> implements Outline<T> {
     @Override
     public <P> String snakeCasedName(P member) {
         return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, lastInvokedMemberName());
+    }
+
+    @Override
+    public String snakeCasedPluralName() {
+        return English.plural(snakeCasedName());
     }
 
     private String typeName() {

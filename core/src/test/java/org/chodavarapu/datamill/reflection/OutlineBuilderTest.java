@@ -41,6 +41,7 @@ public class OutlineBuilderTest {
         assertEquals("read_write_property", outline.name(members -> members.setReadWriteProperty("")));
 
         assertEquals("test_bean_class", outline.name());
+        assertEquals("test_bean_classes", outline.pluralName());
 
         assertEquals(0, actualBeanMethodInvocations);
     }
@@ -55,6 +56,7 @@ public class OutlineBuilderTest {
         assertEquals("readWriteProperty", outline.name(members -> members.setReadWriteProperty("")));
 
         assertEquals("TestBeanClass", outline.name());
+        assertEquals("TestBeanClasses", outline.pluralName());
 
         assertEquals(0, actualBeanMethodInvocations);
     }
