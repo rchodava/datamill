@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.values;
 
+import java.util.UnknownFormatConversionException;
 import java.util.function.Function;
 
 /**
@@ -22,8 +23,22 @@ public class StringValue implements ReflectableValue {
     }
 
     @Override
+    public byte asByte() {
+        return Byte.parseByte(value);
+    }
+
+    @Override
     public boolean asBoolean() {
         return !isFalsy();
+    }
+
+    @Override
+    public char asCharacter() {
+        if (value.length() != 1) {
+            throw new UnknownFormatConversionException("Unable to convert string to character!");
+        }
+
+        return value.charAt(0);
     }
 
     @Override
@@ -47,6 +62,11 @@ public class StringValue implements ReflectableValue {
     }
 
     @Override
+    public short asShort() {
+        return Short.parseShort(value);
+    }
+
+    @Override
     public String asString() {
         return value;
     }
@@ -54,6 +74,31 @@ public class StringValue implements ReflectableValue {
     @Override
     public boolean isBoolean() {
         return "true".equals(value) || "false".equals(value) || "1".equals(value) || "0".equals(value);
+    }
+
+    @Override
+    public boolean isByte() {
+        try {
+            asByte();
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isCharacter() {
+        return value.length() == 1;
+    }
+
+    @Override
+    public boolean isDouble() {
+        try {
+            asDouble();
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     @Override
@@ -92,8 +137,13 @@ public class StringValue implements ReflectableValue {
     }
 
     @Override
-    public boolean isIntegral() {
-        return isLong();
+    public boolean isShort() {
+        try {
+            asShort();
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     @Override

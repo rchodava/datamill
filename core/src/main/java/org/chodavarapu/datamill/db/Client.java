@@ -56,6 +56,10 @@ public class Client extends QueryBuilderImpl implements QueryRunner {
         return flyway;
     }
 
+    public void clean() {
+        getFlyway().clean();
+    }
+
     public void migrate() {
         getFlyway().migrate();
     }

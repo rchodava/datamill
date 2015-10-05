@@ -30,6 +30,16 @@ public class JsonObject implements ReflectableValue {
     }
 
     @Override
+    public byte asByte() {
+        throw new JsonException("A JSON object cannot be converted to a byte!");
+    }
+
+    @Override
+    public char asCharacter() {
+        throw new JsonException("A JSON object cannot be converted to a character!");
+    }
+
+    @Override
     public float asFloat() {
         throw new JsonException("A JSON object cannot be converted to a float!");
     }
@@ -50,12 +60,32 @@ public class JsonObject implements ReflectableValue {
     }
 
     @Override
+    public short asShort() {
+        throw new JsonException("A JSON object cannot be converted to a short!");
+    }
+
+    @Override
     public String asString() {
         return object.encode();
     }
 
     @Override
     public boolean isBoolean() {
+        return false;
+    }
+
+    @Override
+    public boolean isByte() {
+        return false;
+    }
+
+    @Override
+    public boolean isCharacter() {
+        return false;
+    }
+
+    @Override
+    public boolean isDouble() {
         return false;
     }
 
@@ -70,17 +100,17 @@ public class JsonObject implements ReflectableValue {
     }
 
     @Override
-    public boolean isIntegral() {
-        return false;
-    }
-
-    @Override
     public boolean isLong() {
         return false;
     }
 
     @Override
     public boolean isNumeric() {
+        return false;
+    }
+
+    @Override
+    public boolean isShort() {
         return false;
     }
 

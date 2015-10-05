@@ -34,6 +34,10 @@ public class Property<T> {
                 descriptor.getName() : CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName());
     }
 
+    public Class<?> getType() {
+        return descriptor.getPropertyType();
+    }
+
     private <T> T performSecureGet(Callable<T> runnable) {
         if (System.getSecurityManager() != null) {
             return AccessController.doPrivileged((PrivilegedAction<T>) () -> {

@@ -5,10 +5,13 @@ package org.chodavarapu.datamill.values;
  */
 public interface ReflectableValue extends Value {
     boolean isBoolean();
+    boolean isByte();
+    boolean isCharacter();
+    boolean isDouble();
     boolean isFloat();
     boolean isInteger();
-    boolean isIntegral();
     boolean isLong();
     boolean isNumeric();
+    boolean isShort();
     boolean isString();
 }

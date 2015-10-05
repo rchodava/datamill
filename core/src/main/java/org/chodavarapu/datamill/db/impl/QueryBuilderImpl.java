@@ -38,7 +38,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             query.append(column);
             query.append(SQL_EQ);
             query.append(value);
-            return null;
+            return QueryBuilderImpl.this.query(query.toString());
         }
 
         @Override

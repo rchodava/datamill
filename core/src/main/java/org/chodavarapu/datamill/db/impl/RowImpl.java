@@ -14,6 +14,29 @@ import java.util.function.Function;
 public class RowImpl implements Row {
     private final ResultSet resultSet;
 
+    public RowImpl(ResultSet resultSet) {
+        this.resultSet = resultSet;
+    }
+
+    @Override
+    public Value column(int index) {
+        return new IndexedColumnValue(index);
+    }
+
+    @Override
+    public Value column(String name) {
+        return new LabeledColumnValue(name);
+    }
+
+    @Override
+    public int size() {
+        try {
+            return resultSet.getMetaData().getColumnCount();
+        } catch (SQLException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
     @FunctionalInterface
     private interface ResultSetValueRetriever<K, R> {
         R retrieve(K key) throws SQLException;
@@ -40,10 +63,19 @@ public class RowImpl implements Row {
         }
     }
 
-
     private class IndexedColumnValue extends KeyedColumnValue<Integer> {
         public IndexedColumnValue(int index) {
             super(index);
+        }
+
+        @Override
+        public byte asByte() {
+            return safeRetrieve(k -> resultSet.getByte(key));
+        }
+
+        @Override
+        public char asCharacter() {
+            return safeRetrieve(k -> (char) resultSet.getInt(key));
         }
 
         @Override
@@ -69,6 +101,11 @@ public class RowImpl implements Row {
         @Override
         public boolean asBoolean() {
             return safeRetrieve(k -> resultSet.getBoolean(key));
+        }
+
+        @Override
+        public short asShort() {
+            return safeRetrieve(k -> resultSet.getShort(key));
         }
 
         @Override
@@ -83,6 +120,16 @@ public class RowImpl implements Row {
         }
 
         @Override
+        public byte asByte() {
+            return safeRetrieve(k -> resultSet.getByte(key));
+        }
+
+        @Override
+        public char asCharacter() {
+            return safeRetrieve(k -> (char) resultSet.getInt(key));
+        }
+
+        @Override
         public double asDouble() {
             return safeRetrieve(k -> resultSet.getDouble(key));
         }
@@ -108,31 +155,13 @@ public class RowImpl implements Row {
         }
 
         @Override
+        public short asShort() {
+            return safeRetrieve(k -> resultSet.getShort(key));
+        }
+
+        @Override
         public String asString() {
             return safeRetrieve(k -> resultSet.getString(key));
-        }
-    }
-
-    public RowImpl(ResultSet resultSet) {
-        this.resultSet = resultSet;
-    }
-
-    @Override
-    public Value column(int index) {
-        return new IndexedColumnValue(index);
-    }
-
-    @Override
-    public Value column(String name) {
-        return new LabeledColumnValue(name);
-    }
-
-    @Override
-    public int size() {
-        try {
-            return resultSet.getMetaData().getColumnCount();
-        } catch (SQLException e) {
-            throw new DatabaseException(e);
         }
     }
 }

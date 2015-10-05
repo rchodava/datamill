@@ -9,6 +9,7 @@ import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.reflection.Property;
 import org.chodavarapu.datamill.reflection.ReflectionException;
+import org.chodavarapu.datamill.values.Value;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -226,6 +227,32 @@ public class OutlineImpl<T> implements Outline<T> {
         @Override
         public <P> P get(P property) {
             return (P) OutlineImpl.this.property(property).get(instance);
+        }
+
+        @Override
+        public <P> Bean<T> set(P property, Value value) {
+            Property descriptor = OutlineImpl.this.property(property);
+            Class<?> type = descriptor.getType();
+            if (type == boolean.class || type == Boolean.class) {
+                descriptor.set(instance, value.asBoolean());
+            } else if (type == byte.class || type == Byte.class) {
+                descriptor.set(instance, value.asByte());
+            } else if (type == char.class || type == Character.class) {
+                descriptor.set(instance, value.asCharacter());
+            } else if (type == short.class || type == Short.class) {
+                descriptor.set(instance, value.asShort());
+            } else if (type == int.class || type == Integer.class) {
+                descriptor.set(instance, value.asInteger());
+            } else if (type == long.class || type == Long.class) {
+                descriptor.set(instance, value.asLong());
+            } else if (type == float.class || type == Float.class) {
+                descriptor.set(instance, value.asFloat());
+            } else if (type == double.class || type == Double.class) {
+                descriptor.set(instance, value.asDouble());
+            } else {
+                descriptor.set(instance, value.asString());
+            }
+            return this;
         }
 
         @Override
