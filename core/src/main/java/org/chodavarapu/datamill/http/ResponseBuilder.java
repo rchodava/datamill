@@ -10,4 +10,5 @@ public interface ResponseBuilder {
     Observable<Response> notFound();
     Observable<Response> ok();
     Observable<Response> ok(String content);
+    Observable<Response> unauthorized();
 }

@@ -28,4 +28,9 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     public Observable<Response> ok(String content) {
         return Observable.just(new ResponseImpl(Status.OK, content));
     }
+
+    @Override
+    public Observable<Response> unauthorized() {
+        return Observable.just(new ResponseImpl(Status.UNAUTHORIZED));
+    }
 }

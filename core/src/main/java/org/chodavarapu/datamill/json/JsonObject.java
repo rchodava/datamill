@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.json;
 
+import io.vertx.core.json.Json;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 
@@ -69,6 +70,10 @@ public class JsonObject implements ReflectableValue {
         return object.encode();
     }
 
+    public Value get(String property) {
+        return new JsonProperty(property);
+    }
+
     @Override
     public boolean isBoolean() {
         return false;
@@ -132,5 +137,63 @@ public class JsonObject implements ReflectableValue {
     @Override
     public String toString() {
         return asString();
+    }
+
+    private class JsonProperty implements Value {
+        private String name;
+
+        public JsonProperty(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public boolean asBoolean() {
+            return object.getBoolean(name);
+        }
+
+        @Override
+        public byte asByte() {
+            return (byte) (int) object.getInteger(name);
+        }
+
+        @Override
+        public char asCharacter() {
+            return (char) (int) object.getInteger(name);
+        }
+
+        @Override
+        public double asDouble() {
+            return object.getDouble(name);
+        }
+
+        @Override
+        public float asFloat() {
+            return object.getFloat(name);
+        }
+
+        @Override
+        public int asInteger() {
+            return object.getInteger(name);
+        }
+
+        @Override
+        public long asLong() {
+            return object.getLong(name);
+        }
+
+        @Override
+        public short asShort() {
+            return (short) (int) object.getInteger(name);
+        }
+
+        @Override
+        public String asString() {
+            return object.getString(name);
+        }
+
+        @Override
+        public <T> T map(Function<Value, T> mapper) {
+            return null;
+        }
     }
 }
