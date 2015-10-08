@@ -1,11 +1,9 @@
 package org.chodavarapu.datamill.security;
 
-import org.jose4j.jwk.JsonWebKey;
-import org.jose4j.jwk.JsonWebKeySet;
-import org.jose4j.jwk.OctetSequenceJsonWebKey;
-import org.jose4j.jwk.RsaJsonWebKey;
+import org.jose4j.jwk.*;
 import org.jose4j.lang.JoseException;
 
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,10 +11,10 @@ import java.util.List;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class KeySet {
-    private static class KeyImpl implements Key {
-        private final JsonWebKey key;
+    private static class JsonKeyImpl implements JsonKey {
+        protected final JsonWebKey key;
 
-        public KeyImpl(JsonWebKey key) {
+        public JsonKeyImpl(JsonWebKey key) {
             this.key = key;
         }
 
@@ -33,22 +31,46 @@ public class KeySet {
         public String getId() {
             return key.getKeyId();
         }
+
+        @Override
+        public Key getKey() {
+            return key.getKey();
+        }
+    }
+
+    private static class JsonKeyPairImpl extends JsonKeyImpl implements JsonKeyPair {
+        public JsonKeyPairImpl(JsonWebKey key) {
+            super(key);
+
+            if (!(key instanceof PublicJsonWebKey)) {
+                throw new IllegalArgumentException("Specified key does not consist of a key pair!");
+            }
+        }
+
+        @Override
+        public Key getPrivateKey() {
+            return ((PublicJsonWebKey) key).getPrivateKey();
+        }
     }
     
-    private final List<Key> keys = new ArrayList<>();
+    private final List<JsonKey> keys = new ArrayList<>();
 
     public KeySet(String keySetJson) {
         try {
             JsonWebKeySet keySet = new JsonWebKeySet(keySetJson);
             for (JsonWebKey key : keySet.getJsonWebKeys()) {
-                keys.add(new KeyImpl(key));
+                if (key instanceof PublicJsonWebKey) {
+                    keys.add(new JsonKeyPairImpl(key));
+                } else {
+                    keys.add(new JsonKeyImpl(key));
+                }
             }
         } catch (JoseException e) {
             throw new SecurityException(e);
         }
     }
 
-    public List<Key> getKeys() {
+    public List<JsonKey> getKeys() {
         return keys;
     }
 }

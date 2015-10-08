@@ -1,8 +1,10 @@
 package org.chodavarapu.datamill.security;
 
+import java.security.Key;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface KeyPair extends Key {
-
+public interface JsonKeyPair extends JsonKey {
+    Key getPrivateKey();
 }
