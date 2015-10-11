@@ -11,9 +11,10 @@ import java.util.Arrays;
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_SELECT = "SELECT ";
-    private static final String SQL_FROM = " FROM ";
-    private static final String SQL_WHERE = " WHERE ";
     private static final String SQL_EQ = " = ";
+    private static final String SQL_FROM = " FROM ";
+    private static final String SQL_PARAMETER_PLACEHOLDER = "?";
+    private static final String SQL_WHERE = " WHERE ";
 
     private class SelectQuery implements SelectBuilder, WhereBuilder, ConditionBuilder {
         private final StringBuilder query = new StringBuilder();
@@ -37,7 +38,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         public <T> Observable<Row> eq(String column, T value) {
             query.append(column);
             query.append(SQL_EQ);
-            query.append('?');
+            query.append(SQL_PARAMETER_PLACEHOLDER);
             return QueryBuilderImpl.this.query(query.toString(), value);
         }
 
