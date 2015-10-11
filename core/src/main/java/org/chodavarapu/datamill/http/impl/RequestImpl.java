@@ -19,14 +19,11 @@ public class RequestImpl implements Request {
 
     public RequestImpl(HttpServerRequest request) {
         this.request = request;
+        this.entity = new RequestEntityImpl(request);
     }
 
     @Override
     public RequestEntity entity() {
-        if (entity == null) {
-            entity = new RequestEntityImpl(request);
-        }
-
         return entity;
     }
 

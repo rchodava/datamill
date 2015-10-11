@@ -12,21 +12,10 @@ public class JsonWebToken {
     private JsonKey key;
     private final JwtClaims claims = new JwtClaims();
 
-    public JsonWebToken() {
-        claims.setExpirationTimeMinutesInTheFuture(10);
-        claims.setGeneratedJwtId();
-        claims.setIssuedAtToNow();
-        claims.setNotBeforeMinutesInThePast(2);
-        claims.setSubject("subject");
-    }
-
-    public JsonWebToken setKey(JsonKey key) {
-        this.key = key;
-        return this;
-    }
-
     public String encoded() {
         JsonWebSignature signature = new JsonWebSignature();
+
+        signature.setPayload(claims.toJson());
         signature.setKeyIdHeaderValue(key.getId());
 
         switch (key.getType()) {
@@ -45,5 +34,53 @@ public class JsonWebToken {
         } catch (JoseException e) {
             throw new SecurityException(e);
         }
+    }
+
+    public JsonWebToken setDefaults() {
+        setGeneratedJwtId();
+        setIssuedAtToNow();
+        setNotBeforeMinutesInThePast(2);
+        setExpirationTimeMinutesInTheFuture(10);
+        return this;
+    }
+
+    public JsonWebToken setExpirationTimeMinutesInTheFuture(float minutes) {
+        claims.setExpirationTimeMinutesInTheFuture(minutes);
+        return this;
+    }
+
+    public JsonWebToken setGeneratedJwtId() {
+        claims.setGeneratedJwtId();
+        return this;
+    }
+
+    public JsonWebToken setIssuedAtToNow() {
+        claims.setIssuedAtToNow();
+        return this;
+    }
+
+    public JsonWebToken setIssuer(String issuer) {
+        claims.setIssuer(issuer);
+        return this;
+    }
+
+    public JsonWebToken setJwtId(String jwtId) {
+        claims.setJwtId(jwtId);
+        return this;
+    }
+
+    public JsonWebToken setKey(JsonKey key) {
+        this.key = key;
+        return this;
+    }
+
+    public JsonWebToken setNotBeforeMinutesInThePast(float minutes) {
+        claims.setNotBeforeMinutesInThePast(minutes);
+        return this;
+    }
+
+    public JsonWebToken setSubject(String subject) {
+        claims.setSubject(subject);
+        return this;
     }
 }

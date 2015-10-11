@@ -31,20 +31,16 @@ public class Server extends AbstractVerticle {
         server.requestHandler(r -> {
             Observable<Response> responseObservable = route.apply(new RequestImpl(r));
             if (responseObservable != null) {
-                try {
-                    Response response = responseObservable.toBlocking().lastOrDefault(null);
-                    if (response != null) {
-                        r.response().setStatusCode(response.status().getCode());
-                        r.response().end(response.entity() == null ? "" : response.entity().toString());
+                responseObservable.doOnNext(routeResponse -> {
+                    if (routeResponse != null) {
+                        r.response().setStatusCode(routeResponse.status().getCode());
+                        r.response().end(routeResponse.entity() == null ? "" : routeResponse.entity().toString());
                         return;
                     }
-                } catch (Exception e) {
-                    r.response().setStatusCode(500).end();
-                    return;
-                }
+                }).subscribe();
+            } else {
+                r.response().setStatusCode(404).end();
             }
-
-            r.response().setStatusCode(404).end();
         });
 
         startFuture.complete();

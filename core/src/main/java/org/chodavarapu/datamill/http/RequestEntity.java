@@ -6,8 +6,8 @@ import rx.Observable;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface RequestEntity {
-    byte[] asBytes();
-    JsonObject asJson();
+    Observable<byte[]> asBytes();
+    Observable<JsonObject> asJson();
     Observable<byte[]> asChunks();
-    String asString();
+    Observable<String> asString();
 }

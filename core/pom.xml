@@ -20,6 +20,11 @@
             <version>3.0.0</version>
         </dependency>
         <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-rx-java</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
             <groupId>com.github.davidmoten</groupId>
             <artifactId>rxjava-jdbc</artifactId>
             <version>0.6.5</version>

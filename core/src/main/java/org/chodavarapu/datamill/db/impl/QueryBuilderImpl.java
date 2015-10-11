@@ -37,8 +37,8 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         public <T> Observable<Row> eq(String column, T value) {
             query.append(column);
             query.append(SQL_EQ);
-            query.append(value);
-            return QueryBuilderImpl.this.query(query.toString());
+            query.append('?');
+            return QueryBuilderImpl.this.query(query.toString(), value);
         }
 
         @Override
@@ -56,6 +56,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     }
 
     protected abstract Observable<Row> query(String query);
+    protected abstract Observable<Row> query(String query, Object... parameters);
 
     @Override
     public SelectBuilder select(String column) {
