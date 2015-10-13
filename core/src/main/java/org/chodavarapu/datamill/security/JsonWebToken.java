@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.security;
 
+import org.chodavarapu.datamill.json.JsonObject;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
@@ -11,6 +12,10 @@ import org.jose4j.lang.JoseException;
 public class JsonWebToken {
     private JsonKey key;
     private final JwtClaims claims = new JwtClaims();
+
+    public JsonObject asJson() {
+        return new JsonObject(claims.getClaimsMap());
+    }
 
     public String encoded() {
         JsonWebSignature signature = new JsonWebSignature();

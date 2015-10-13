@@ -5,10 +5,21 @@ import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import rx.Observable;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
+    private final Map<String, String> headers = new HashMap<>();
+
+    @Override
+    public <T> ResponseBuilder header(String name, T value) {
+        headers.put(name, value.toString());
+        return this;
+    }
+
     @Override
     public Observable<Response> noContent() {
         return Observable.just(new ResponseImpl(Status.NO_CONTENT));

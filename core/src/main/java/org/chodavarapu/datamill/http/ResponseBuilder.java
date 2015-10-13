@@ -6,6 +6,7 @@ import rx.Observable;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface ResponseBuilder {
+    <T> ResponseBuilder header(String name, T value);
     Observable<Response> noContent();
     Observable<Response> notFound();
     Observable<Response> ok();

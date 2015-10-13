@@ -6,6 +6,7 @@ import org.chodavarapu.datamill.values.StringValue;
 import org.chodavarapu.datamill.values.Value;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -25,6 +26,17 @@ public class RequestImpl implements Request {
     @Override
     public RequestEntity entity() {
         return entity;
+    }
+
+    @Override
+    public Optional<Value> header(String header) {
+        String value = request.getHeader(header);
+        return Optional.ofNullable(value != null ? new StringValue(value) : null);
+    }
+
+    @Override
+    public Optional<Value> header(RequestHeaders header) {
+        return header(header.getName());
     }
 
     @Override
