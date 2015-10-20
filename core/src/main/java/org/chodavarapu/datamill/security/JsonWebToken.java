@@ -4,14 +4,43 @@ import org.chodavarapu.datamill.json.JsonObject;
 import org.jose4j.jws.AlgorithmIdentifiers;
 import org.jose4j.jws.JsonWebSignature;
 import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
 import org.jose4j.lang.JoseException;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonWebToken {
+    public static JsonWebTokenVerificationBuilder buildVerification() {
+        return new JsonWebTokenVerificationBuilder();
+    }
+
+    protected static abstract class AbstractJsonWebTokenVerificationBuilder {
+        protected AbstractJsonWebTokenVerificationBuilder() {
+        }
+
+        protected JsonWebToken verify(JwtConsumerBuilder builder, String jwt) {
+            try {
+                JwtClaims claims = builder.build().processToClaims(jwt);
+                return new JsonWebToken(claims);
+            } catch (InvalidJwtException e) {
+                throw new SecurityException(e);
+            }
+        }
+    }
+
     private JsonKey key;
-    private final JwtClaims claims = new JwtClaims();
+    private final JwtClaims claims;
+
+    public JsonWebToken() {
+        this.claims = new JwtClaims();
+    }
+
+    private JsonWebToken(JwtClaims claims) {
+        this.claims = claims;
+    }
 
     public JsonObject asJson() {
         return new JsonObject(claims.getClaimsMap());
@@ -37,6 +66,14 @@ public class JsonWebToken {
         try {
             return signature.getCompactSerialization();
         } catch (JoseException e) {
+            throw new SecurityException(e);
+        }
+    }
+
+    public String getSubject() {
+        try {
+            return claims.getSubject();
+        } catch (MalformedClaimException e) {
             throw new SecurityException(e);
         }
     }
