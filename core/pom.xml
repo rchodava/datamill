@@ -8,6 +8,10 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
+    <artifactId>core</artifactId>
+    <packaging>jar</packaging>
+    <name>Data Mill Core</name>
+
     <dependencies>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -77,7 +81,29 @@
         </dependency>
     </dependencies>
 
-    <artifactId>core</artifactId>
-    <packaging>jar</packaging>
-    <name>Data Mill Core</name>
+    <profiles>
+        <profile>
+            <id>travis</id>
+            <activation>
+                <property>
+                    <name>env.TRAVIS</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>0.7.5.201505241946</version>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.eluder.coveralls</groupId>
+                        <artifactId>coveralls-maven-plugin</artifactId>
+                        <version>4.0.0</version>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

@@ -5,16 +5,38 @@ import org.chodavarapu.datamill.db.*;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
+    private static final String SQL_INSERT_INTO = "INSERT INTO ";
     private static final String SQL_SELECT = "SELECT ";
     private static final String SQL_EQ = " = ";
     private static final String SQL_FROM = " FROM ";
     private static final String SQL_PARAMETER_PLACEHOLDER = "?";
     private static final String SQL_WHERE = " WHERE ";
+
+    private class InsertQuery implements InsertBuilder {
+        private final StringBuilder query = new StringBuilder();
+
+        public InsertQuery(String table) {
+            query.append(SQL_INSERT_INTO);
+            query.append(table);
+        }
+
+        @Override
+        public void row(Function<RowBuilder, Map<String, ?>> constructor) {
+            values(constructor.apply(new RowBuilderImpl()));
+        }
+
+        @Override
+        public void values(Map<String, ?>... values) {
+
+        }
+    }
 
     private class SelectQuery implements SelectBuilder, WhereBuilder, ConditionBuilder {
         private final StringBuilder query = new StringBuilder();
@@ -54,6 +76,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             query.append(SQL_WHERE);
             return this;
         }
+    }
+
+    @Override
+    public InsertBuilder insertInto(String table) {
+        return new InsertQuery(table);
     }
 
     protected abstract Observable<Row> query(String query);
