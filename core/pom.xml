@@ -81,21 +81,29 @@
         </dependency>
     </dependencies>
 
-    <profiles>
-        <profile>
-            <id>travis</id>
-            <activation>
-                <property>
-                    <name>environment</name>
-                    <value>travis</value>
-                </property>
-            </activation>
+    <!--<profiles>-->
+        <!--<profile>-->
+            <!--<id>travis</id>-->
+            <!--<activation>-->
+                <!--<property>-->
+                    <!--<name>environment</name>-->
+                    <!--<value>travis</value>-->
+                <!--</property>-->
+            <!--</activation>-->
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>0.7.5.201505241946</version>
+                        <!--<executions>-->
+                            <!--<execution>-->
+                                <!--<id>prepare-agent</id>-->
+                                <!--<goals>-->
+                                    <!--<goal>prepare-agent</goal>-->
+                                <!--</goals>-->
+                            <!--</execution>-->
+                        <!--</executions>-->
                     </plugin>
                     <plugin>
                         <groupId>org.eluder.coveralls</groupId>
@@ -104,6 +112,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-    </profiles>
+        <!--</profile>-->
+    <!--</profiles>-->
 </project>
