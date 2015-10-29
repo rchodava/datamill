@@ -25,36 +25,38 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.5.201505241946</version>
-                <!--<executions>-->
-                <!--<execution>-->
-                <!--<id>prepare-agent</id>-->
-                <!--<goals>-->
-                <!--<goal>prepare-agent</goal>-->
-                <!--</goals>-->
-                <!--</execution>-->
-                <!--</executions>-->
-            </plugin>
-            <plugin>
-                <groupId>org.eluder.coveralls</groupId>
-                <artifactId>coveralls-maven-plugin</artifactId>
-                <version>4.0.0</version>
-            </plugin>
         </plugins>
     </build>
 
-    <!--<profiles>-->
-    <!--<profile>-->
-    <!--<id>travis</id>-->
-    <!--<activation>-->
-    <!--<property>-->
-    <!--<name>environment</name>-->
-    <!--<value>travis</value>-->
-    <!--</property>-->
-    <!--</activation>-->
-    <!--</profile>-->
-    <!--</profiles>-->
+    <profiles>
+        <profile>
+            <id>travis</id>
+            <activation>
+                <property>
+                    <name>environment</name>
+                    <value>travis</value>
+                </property>
+            </activation>
+            <plugins>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.7.5.201505241946</version>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.eluder.coveralls</groupId>
+                    <artifactId>coveralls-maven-plugin</artifactId>
+                    <version>4.0.0</version>
+                </plugin>
+            </plugins>
+        </profile>
+    </profiles>
 </project>
