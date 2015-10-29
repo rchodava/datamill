@@ -1,5 +1,4 @@
-# datamill [![Build Status](https://travis-ci.org/rchodava/datamill.svg?branch=master)](https://travis-ci.org/rchodava/datamill)
-
+# datamill [![Build Status](https://travis-ci.org/rchodava/datamill.svg?branch=master)](https://travis-ci.org/rchodava/datamill) [![Coverage Status](https://coveralls.io/repos/rchodava/datamill/badge.svg?branch=master&service=github)](https://coveralls.io/github/rchodava/datamill?branch=master)
 ## Introduction
 
 datamill is a Java framework for data-driven web applications with a focus on making it easy to follow data as it flows through your application. It is a reaction and an alternative to black magic Java frameworks which make it impossible to understand your application logic without wading through complex framework code and documentation for hours.
