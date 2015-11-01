@@ -33,8 +33,8 @@ public class OutlineBuilderTest {
 
     @Test
     public void buildDefaultSnakeCased() {
-        OutlineBuilder<TestBeanClass> outlineBuilder = new OutlineBuilder<>(TestBeanClass.class);
-        Outline<TestBeanClass> outline = outlineBuilder.defaultSnakeCased().build();
+        OutlineBuilder outlineBuilder = new OutlineBuilder();
+        Outline<TestBeanClass> outline = outlineBuilder.defaultSnakeCased().build(TestBeanClass.class);
 
         assertEquals("read_only_property", outline.name(outline.members().getReadOnlyProperty()));
         assertEquals("boolean_property", outline.name(outline.members().isBooleanProperty()));
@@ -48,8 +48,8 @@ public class OutlineBuilderTest {
 
     @Test
     public void buildDefaultCamelCased() {
-        OutlineBuilder<TestBeanClass> outlineBuilder = new OutlineBuilder<>(TestBeanClass.class);
-        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build();
+        OutlineBuilder outlineBuilder = new OutlineBuilder();
+        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
 
         assertEquals("readOnlyProperty", outline.name(outline.members().getReadOnlyProperty()));
         assertEquals("booleanProperty", outline.name(outline.members().isBooleanProperty()));

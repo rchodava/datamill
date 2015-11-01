@@ -8,28 +8,26 @@ import org.objenesis.ObjenesisStd;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class OutlineBuilder<T> {
+public class OutlineBuilder {
     private static final Objenesis objenesis = new ObjenesisStd();
-    private final Class<T> outlinedClass;
     private boolean camelCased;
 
-    public OutlineBuilder(Class<T> outlinedClass) {
-        this.outlinedClass = outlinedClass;
+    public OutlineBuilder() {
     }
 
-    public OutlineBuilder<T> defaultCamelCased() {
+    public OutlineBuilder defaultCamelCased() {
         camelCased = true;
         return this;
     }
 
-    public OutlineBuilder<T> defaultSnakeCased() {
+    public OutlineBuilder defaultSnakeCased() {
         camelCased = false;
         return this;
     }
 
-    public Outline<T> build() {
+    public <T> Outline<T> build(Class<T> classToOutline) {
         ProxyFactory proxyFactory = new ProxyFactory();
-        proxyFactory.setSuperclass(outlinedClass);
+        proxyFactory.setSuperclass(classToOutline);
         Class<? extends T> outlineClass = proxyFactory.createClass();
         return new OutlineImpl<>(objenesis.newInstance(outlineClass), camelCased);
     }
