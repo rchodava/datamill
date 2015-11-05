@@ -4,18 +4,19 @@ import com.google.common.base.Joiner;
 import org.chodavarapu.datamill.db.*;
 import rx.Observable;
 
-import java.util.Arrays;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
+    private static final String SQL_DELETE_FROM = "DELETE FROM ";
     private static final String SQL_INSERT_INTO = "INSERT INTO ";
     private static final String SQL_SELECT = "SELECT ";
     private static final String SQL_EQ = " = ";
     private static final String SQL_FROM = " FROM ";
+    private static final String SQL_NULL = "NULL";
     private static final String SQL_PARAMETER_PLACEHOLDER = "?";
     private static final String SQL_WHERE = " WHERE ";
 
@@ -28,27 +29,64 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public void row(Function<RowBuilder, Map<String, ?>> constructor) {
-            values(constructor.apply(new RowBuilderImpl()));
+        public Observable<Row> row(Function<RowBuilder, Map<String, ?>> constructor) {
+            return values(constructor.apply(new RowBuilderImpl()));
         }
 
         @Override
-        public void values(Map<String, ?>... values) {
+        public Observable<Row> values(Map<String, ?>... rows) {
+            Set<String> columns = new LinkedHashSet<>();
+            for (Map<String, ?> row : rows) {
+                columns.addAll(row.keySet());
+            }
 
+            int numColumns = columns.size();
+            if (numColumns < 1) {
+                throw new IllegalArgumentException("Cannot insert rows that have no columns!");
+            }
+
+            query.append(" (");
+            Joiner.on(", ").appendTo(query, columns);
+            query.append(") VALUES ");
+
+            List<Object> parameters = new ArrayList<>(rows.length * numColumns);
+            List<String> valueSets = new ArrayList<>(rows.length);
+
+            for (Map<String, ?> row : rows) {
+                StringBuilder values = new StringBuilder("(");
+
+                int columnIndex = 0;
+                for (String column : columns) {
+                    Object value = row.get(column);
+                    if (value == null) {
+                        values.append(SQL_NULL);
+                    } else {
+                        values.append(SQL_PARAMETER_PLACEHOLDER);
+                        parameters.add(value);
+                    }
+
+                    if (columnIndex < numColumns - 1) {
+                        values.append(", ");
+                    }
+
+                    columnIndex++;
+                }
+
+                values.append(')');
+                valueSets.add(values.toString());
+            }
+
+            Joiner.on(", ").appendTo(query, valueSets);
+
+            return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
     }
 
-    private class SelectQuery implements SelectBuilder, WhereBuilder, ConditionBuilder {
-        private final StringBuilder query = new StringBuilder();
+    private class WhereClause implements WhereBuilder, ConditionBuilder {
+        private final StringBuilder query;
 
-        public SelectQuery() {
-            query.append(SQL_SELECT);
-            query.append('*');
-        }
-
-        public SelectQuery(Iterable<String> columns) {
-            query.append(SQL_SELECT);
-            query.append(Joiner.on(',').join(columns));
+        public WhereClause(StringBuilder query) {
+            this.query = query;
         }
 
         @Override
@@ -65,17 +103,36 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder from(String table) {
-            query.append(SQL_FROM);
-            query.append(table);
-            return this;
-        }
-
-        @Override
         public ConditionBuilder where() {
             query.append(SQL_WHERE);
             return this;
         }
+    }
+
+    private class SelectQuery implements SelectBuilder {
+        private final StringBuilder query = new StringBuilder();
+
+        public SelectQuery() {
+            query.append(SQL_SELECT);
+            query.append('*');
+        }
+
+        public SelectQuery(Iterable<String> columns) {
+            query.append(SQL_SELECT);
+            query.append(Joiner.on(", ").join(columns));
+        }
+
+        @Override
+        public WhereBuilder from(String table) {
+            query.append(SQL_FROM);
+            query.append(table);
+            return new WhereClause(query);
+        }
+    }
+
+    @Override
+    public WhereBuilder deleteFrom(String table) {
+        return new WhereClause(new StringBuilder(SQL_DELETE_FROM).append(table));
     }
 
     @Override
