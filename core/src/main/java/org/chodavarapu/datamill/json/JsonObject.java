@@ -1,6 +1,5 @@
 package org.chodavarapu.datamill.json;
 
-import io.vertx.core.json.Json;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 
@@ -158,7 +157,16 @@ public class JsonObject implements ReflectableValue {
 
         @Override
         public char asCharacter() {
-            return (char) (int) object.getInteger(name);
+            try {
+                return (char) (int) object.getInteger(name);
+            } catch (ClassCastException e) {
+                String value = object.getString(name);
+                if (value.length() == 1) {
+                    return value.charAt(0);
+                }
+
+                throw new JsonException("Property cannot be converted to a character!");
+            }
         }
 
         @Override

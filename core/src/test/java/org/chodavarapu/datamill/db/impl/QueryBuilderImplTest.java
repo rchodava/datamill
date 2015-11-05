@@ -137,4 +137,44 @@ public class QueryBuilderImplTest {
                 queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2, "value" }, queryBuilder.getLastParameters());
     }
+
+    @Test
+    public void updateQueries() {
+        TestQueryBuilderImpl queryBuilder = new TestQueryBuilderImpl();
+
+        queryBuilder.update("table_name").set(r -> r.put("int_column", 2).put("boolean_column", true).build()).all();
+        assertEquals("UPDATE table_name SET int_column = ?, boolean_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2, true }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(r -> r.put("boolean_column", true).put("int_column", 2).build()).all();
+        assertEquals("UPDATE table_name SET boolean_column = ?, int_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { true, 2 }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(r -> r.put("boolean_column", true).put("null_column", null).build()).all();
+        assertEquals("UPDATE table_name SET boolean_column = ?, null_column = NULL", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { true }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 2, "boolean_column", true)).all();
+        assertEquals("UPDATE table_name SET int_column = ?, boolean_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2, true }, queryBuilder.getLastParameters());
+
+        HashMap<String, Object> values = new LinkedHashMap<>();
+        values.put("int_column", 2);
+        values.put("boolean_column", null);
+        queryBuilder.update("table_name").set(values).all();
+        assertEquals("UPDATE table_name SET int_column = ?, boolean_column = NULL", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("int_column", 2);
+        assertEquals("UPDATE table_name SET int_column = ? WHERE int_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 1, 2 }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("boolean_column", true);
+        assertEquals("UPDATE table_name SET int_column = ? WHERE boolean_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 1, true }, queryBuilder.getLastParameters());
+
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("string_column", "value");
+        assertEquals("UPDATE table_name SET int_column = ? WHERE string_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 1, "value" }, queryBuilder.getLastParameters());
+    }
 }
