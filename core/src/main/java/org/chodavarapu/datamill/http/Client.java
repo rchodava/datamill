@@ -6,6 +6,8 @@ import org.chodavarapu.datamill.http.impl.RequestBuilderImpl;
 import org.chodavarapu.datamill.http.impl.ResponseImpl;
 import org.chodavarapu.datamill.http.impl.ValueEntity;
 import org.chodavarapu.datamill.values.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.schedulers.Schedulers;
 import rx.util.async.Async;
@@ -25,6 +27,8 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Client {
+    private static final Logger logger = LoggerFactory.getLogger(Client.class);
+
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
         return request(request.method(), request.headers(), request.uri(), request.entity());
@@ -53,6 +57,14 @@ public class Client {
 
             if (entity != null) {
                 writeEntityOutOverConnection(entity, httpConnection);
+            }
+
+            logger.debug("Making HTTP request {} {}", method.name(), uri);
+            if (headers != null && logger.isDebugEnabled()) {
+                logger.debug("    HTTP request headers:");
+                for (Map.Entry<String, String> header : headers.entrySet()) {
+                    logger.debug("    {}: {}", header.getKey(), header.getValue());
+                }
             }
 
             int responseCode = httpConnection.getResponseCode();
@@ -86,6 +98,7 @@ public class Client {
                 .doOnCompleted(() -> {
                     try {
                         outputStream.close();
+                        onEntitySendingCompletion(entity);
                     } catch (IOException e) {
                         throw new HttpException("Error while closing stream!", e);
                     }
@@ -93,7 +106,9 @@ public class Client {
                 .doOnError(e -> {
                     try {
                         outputStream.close();
+                        onErrorSendingEntity(entity);
                     } catch (IOException closing) {
+                        onErrorSendingEntity(entity);
                         throw new HttpException("Error while closing stream due to an original exception!", e);
                     }
 
@@ -113,6 +128,12 @@ public class Client {
 
     public Observable<Response> get(Function<RequestBuilder, Request> builder) {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.GET)));
+    }
+
+    protected void onErrorSendingEntity(Entity entity) {
+    }
+
+    protected void onEntitySendingCompletion(Entity entity) {
     }
 
     public Observable<Response> patch(String uri, Entity entity) {

@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URLConnection;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
@@ -179,6 +180,7 @@ public class ClientTest {
         private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         private String uri;
         private HttpURLConnection mockConnection;
+        private Semaphore entitySent = new Semaphore(1);
 
         public TestClient() {
             mockConnection = mock(HttpURLConnection.class);
@@ -203,7 +205,13 @@ public class ClientTest {
             return mockConnection;
         }
 
-        public String getLastOutputValue() {
+        @Override
+        protected void onEntitySendingCompletion(Entity entity) {
+            entitySent.release();
+        }
+
+        public String getLastOutputValue() throws InterruptedException {
+            entitySent.acquire();
             return new String(outputStream.toByteArray());
         }
     }
