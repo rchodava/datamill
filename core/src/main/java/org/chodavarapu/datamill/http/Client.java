@@ -115,6 +115,26 @@ public class Client {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.GET)));
     }
 
+    public Observable<Response> patch(String uri, Entity entity) {
+        return patch(uri, null, entity);
+    }
+
+    public Observable<Response> patch(String uri, Value entity) {
+        return patch(uri, null, entity);
+    }
+
+    public Observable<Response> patch(String uri, Map<String, String> headers, Entity entity) {
+        return request(Method.PATCH, headers, uri, entity);
+    }
+
+    public Observable<Response> patch(String uri, Map<String, String> headers, Value entity) {
+        return request(Method.PATCH, headers, uri, entity);
+    }
+
+    public Observable<Response> patch(Function<RequestBuilder, Request> builder) {
+        return request(requestBuilder -> builder.apply(requestBuilder.method(Method.PATCH)));
+    }
+
     public Observable<Response> post(String uri, Entity entity) {
         return post(uri, null, entity);
     }
