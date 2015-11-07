@@ -1,9 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Method;
-import org.chodavarapu.datamill.http.Request;
-import org.chodavarapu.datamill.http.RequestBuilder;
-import org.chodavarapu.datamill.http.RequestHeader;
+import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.values.Value;
 
 import java.util.HashMap;
@@ -13,7 +10,7 @@ import java.util.Map;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RequestBuilderImpl implements RequestBuilder {
-    private Value entity;
+    private Entity entity;
     private String method;
     private final Map<String, String> headers = new HashMap<>();
     private String uri;
@@ -24,8 +21,14 @@ public class RequestBuilderImpl implements RequestBuilder {
     }
 
     @Override
-    public RequestBuilder entity(Value entity) {
+    public RequestBuilder entity(Entity entity) {
         this.entity = entity;
+        return this;
+    }
+
+    @Override
+    public RequestBuilder entity(Value entity) {
+        this.entity = new ValueEntity(entity);
         return this;
     }
 

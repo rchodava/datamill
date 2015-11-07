@@ -104,4 +104,13 @@ public class UriTemplate {
 
         return matches;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder template = new StringBuilder();
+        for (UriTemplateRegion region : regions) {
+            template.append(region.toString());
+        }
+        return template.toString();
+    }
 }

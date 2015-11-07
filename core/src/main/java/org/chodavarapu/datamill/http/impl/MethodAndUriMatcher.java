@@ -3,6 +3,8 @@ package org.chodavarapu.datamill.http.impl;
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Route;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -10,6 +12,8 @@ import java.util.Map;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class MethodAndUriMatcher extends RouteMatcher {
+    private static final Logger logger = LoggerFactory.getLogger(MethodAndUriMatcher.class);
+
     private final Method method;
     private final UriTemplate uriTemplate;
 
@@ -35,11 +39,14 @@ public class MethodAndUriMatcher extends RouteMatcher {
             Map<String, String> uriParameters = uriTemplate.match(request.uri());
             if (uriParameters != null) {
                 ((ServerRequestImpl) request).setUriParameters(uriParameters);
+
+                logger.debug("Request matched {} {}", method, uriTemplate);
                 return true;
             } else {
                 return false;
             }
         } else {
+            logger.debug("Request matched {} *", method);
             return true;
         }
     }

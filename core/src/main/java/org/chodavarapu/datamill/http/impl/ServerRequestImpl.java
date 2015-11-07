@@ -16,7 +16,7 @@ import java.util.Optional;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestImpl implements ServerRequest {
-    private RequestEntity entity;
+    private Entity entity;
 
     private final HttpServerRequest request;
 
@@ -24,11 +24,11 @@ public class ServerRequestImpl implements ServerRequest {
 
     public ServerRequestImpl(HttpServerRequest request) {
         this.request = request;
-        this.entity = new RequestEntityImpl(request);
+        this.entity = new RequestEntity(request);
     }
 
     @Override
-    public RequestEntity entity() {
+    public Entity entity() {
         return entity;
     }
 

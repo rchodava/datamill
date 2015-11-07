@@ -3,6 +3,7 @@ package org.chodavarapu.datamill.http.impl;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
+import org.chodavarapu.datamill.values.StringValue;
 import rx.Observable;
 
 import java.util.HashMap;
@@ -37,7 +38,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Observable<Response> ok(String content) {
-        return Observable.just(new ResponseImpl(Status.OK, content));
+        return Observable.just(new ResponseImpl(Status.OK, null, new ValueEntity(new StringValue(content))));
     }
 
     @Override

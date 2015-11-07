@@ -9,7 +9,7 @@ import java.util.Optional;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface Request {
-    RequestEntity entity();
+    Entity entity();
 
     Map<String, String> headers();
 

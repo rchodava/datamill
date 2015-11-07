@@ -2,7 +2,7 @@ package org.chodavarapu.datamill.http.impl;
 
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.rx.java.RxHelper;
-import org.chodavarapu.datamill.http.RequestEntity;
+import org.chodavarapu.datamill.http.Entity;
 import org.chodavarapu.datamill.http.HttpException;
 import org.chodavarapu.datamill.json.JsonObject;
 import rx.Observable;
@@ -13,10 +13,10 @@ import java.io.IOException;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class RequestEntityImpl implements RequestEntity {
+public class RequestEntity implements Entity {
     private final HttpServerRequest request;
 
-    public RequestEntityImpl(HttpServerRequest request) {
+    public RequestEntity(HttpServerRequest request) {
         this.request = request;
     }
 

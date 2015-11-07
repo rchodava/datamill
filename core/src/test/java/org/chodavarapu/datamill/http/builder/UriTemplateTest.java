@@ -5,6 +5,7 @@ import org.chodavarapu.datamill.http.impl.UriTemplate;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
@@ -39,5 +40,13 @@ public class UriTemplateTest {
         assertThat(new UriTemplate("{id:\\w+}/users/{userId:\\w+}").match("/testIdContent/users/testUserIdContent/"),
                 equalTo(ImmutableMap.of("id", "testIdContent", "userId", "testUserIdContent")));
         assertNull(new UriTemplate("{id:\\w+}/users/{userId:\\w+}/").match("/testIdContent.32/users/testUserIdContent"));
+    }
+
+    @Test
+    public void templateAsString() {
+        assertEquals("{id}/users/{userId}", new UriTemplate("{id}/users/{userId}/").toString());
+        assertEquals("{id}/{userId}", new UriTemplate("{id}/{userId}/").toString());
+        assertEquals("{id}/{userId}", new UriTemplate("/{id}/{userId}/").toString());
+        assertEquals("fixed/{id}/{userId}/content", new UriTemplate("/fixed/{id}/{userId}/content/").toString());
     }
 }

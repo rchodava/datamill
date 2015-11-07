@@ -82,4 +82,17 @@ public class UriTemplateRegion {
             return -1;
         }
     }
+
+    @Override
+    public String toString() {
+        if (isFixedContent()) {
+            return content;
+        } else {
+            if (isDefaultPattern()) {
+                return new StringBuilder("{").append(variable).append('}').toString();
+            } else {
+                return new StringBuilder("{").append(variable).append(':').append(pattern).append('}').toString();
+            }
+        }
+    }
 }
