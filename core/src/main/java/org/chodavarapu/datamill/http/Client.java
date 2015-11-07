@@ -61,7 +61,7 @@ public class Client {
 
             logger.debug("Making HTTP request {} {}", method.name(), uri);
             if (headers != null && logger.isDebugEnabled()) {
-                logger.debug("    HTTP request headers:");
+                logger.debug("  HTTP request headers:");
                 for (Map.Entry<String, String> header : headers.entrySet()) {
                     logger.debug("    {}: {}", header.getKey(), header.getValue());
                 }

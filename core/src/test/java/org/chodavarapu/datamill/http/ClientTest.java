@@ -180,7 +180,7 @@ public class ClientTest {
         private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         private String uri;
         private HttpURLConnection mockConnection;
-        private Semaphore entitySent = new Semaphore(1);
+        private Semaphore entitySent = new Semaphore(0);
 
         public TestClient() {
             mockConnection = mock(HttpURLConnection.class);
@@ -210,8 +210,8 @@ public class ClientTest {
             entitySent.release();
         }
 
-        public String getLastOutputValue() throws InterruptedException {
-            entitySent.acquire();
+        public String getLastOutputValue() {
+            entitySent.acquireUninterruptibly();
             return new String(outputStream.toByteArray());
         }
     }
