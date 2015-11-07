@@ -4,7 +4,7 @@ import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import org.chodavarapu.datamill.http.builder.*;
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.reflection.Bean;
 import rx.Observable;
 
@@ -39,7 +39,7 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     @Override
     public ElseBuilder ifMatchesBeanMethod(
             Bean bean,
-            BiFunction<Request, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
+            BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
         return null;
     }
 

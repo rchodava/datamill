@@ -11,14 +11,14 @@ import javax.sql.DataSource;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class Client extends QueryBuilderImpl implements QueryRunner {
+public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     private final DataSource dataSource;
     private Database database;
     private final String password;
     private final String url;
     private final String username;
 
-    public Client(DataSource dataSource) {
+    public DatabaseClient(DataSource dataSource) {
         this.dataSource = dataSource;
 
         this.url = null;
@@ -26,7 +26,7 @@ public class Client extends QueryBuilderImpl implements QueryRunner {
         this.password = null;
     }
 
-    public Client(String url, String username, String password) {
+    public DatabaseClient(String url, String username, String password) {
         this.dataSource = null;
 
         this.url = url;

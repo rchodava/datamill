@@ -1,7 +1,7 @@
 package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.Method;
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Route;
 
 import java.util.Map;
@@ -26,15 +26,15 @@ public class MethodAndUriMatcher extends RouteMatcher {
     }
 
     @Override
-    public boolean matches(Request request) {
+    public boolean matches(ServerRequest request) {
         return matchesMethod(request) && matchesUri(request);
     }
 
-    private boolean matchesUri(Request request) {
+    private boolean matchesUri(ServerRequest request) {
         if (uriTemplate != null) {
             Map<String, String> uriParameters = uriTemplate.match(request.uri());
             if (uriParameters != null) {
-                ((RequestImpl) request).setUriParameters(uriParameters);
+                ((ServerRequestImpl) request).setUriParameters(uriParameters);
                 return true;
             } else {
                 return false;
@@ -44,7 +44,7 @@ public class MethodAndUriMatcher extends RouteMatcher {
         }
     }
 
-    private boolean matchesMethod(Request request) {
+    private boolean matchesMethod(ServerRequest request) {
         return method != null ? request.method() == method : true;
     }
 }

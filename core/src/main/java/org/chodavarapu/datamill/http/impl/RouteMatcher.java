@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import rx.Observable;
@@ -15,7 +15,7 @@ public abstract class RouteMatcher implements Matcher {
         this.route = route;
     }
 
-    public Observable<Response> applyIfMatches(Request request) {
+    public Observable<Response> applyIfMatches(ServerRequest request) {
         if (matches(request)) {
             return getRoute().apply(request);
         }
@@ -27,5 +27,5 @@ public abstract class RouteMatcher implements Matcher {
         return route;
     }
 
-    protected abstract boolean matches(Request request);
+    protected abstract boolean matches(ServerRequest request);
 }

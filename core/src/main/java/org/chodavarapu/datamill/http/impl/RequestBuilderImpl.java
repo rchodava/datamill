@@ -1,0 +1,65 @@
+package org.chodavarapu.datamill.http.impl;
+
+import org.chodavarapu.datamill.http.Method;
+import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.RequestBuilder;
+import org.chodavarapu.datamill.http.RequestHeader;
+import org.chodavarapu.datamill.values.Value;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author Ravi Chodavarapu (rchodava@gmail.com)
+ */
+public class RequestBuilderImpl implements RequestBuilder {
+    private Value entity;
+    private String method;
+    private final Map<String, String> headers = new HashMap<>();
+    private String uri;
+
+    @Override
+    public Request build() {
+        return new RequestImpl(method, headers, uri, entity);
+    }
+
+    @Override
+    public RequestBuilder entity(Value entity) {
+        this.entity = entity;
+        return this;
+    }
+
+    @Override
+    public RequestBuilder header(RequestHeader header, String value) {
+        return header(header.getName(), value);
+    }
+
+    @Override
+    public RequestBuilder header(String name, String value) {
+        headers.put(name, value);
+        return this;
+    }
+
+    @Override
+    public RequestBuilder method(Method method) {
+        this.method = method.name();
+        return this;
+    }
+
+    @Override
+    public RequestBuilder method(String method) {
+        this.method = method;
+        return this;
+    }
+
+    @Override
+    public RequestBuilder uri(String uri) {
+        this.uri = uri;
+        return this;
+    }
+
+    @Override
+    public <T> RequestBuilder uriParameter(String name, T value) {
+        return this;
+    }
+}

@@ -3,7 +3,7 @@ package org.chodavarapu.datamill.http;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public enum RequestHeaders {
+public enum RequestHeader {
     ACCEPT("Accept"),
     ACCEPT_CHARSET("Accept-Charset"),
     ACCEPT_ENCODING("Accept-Encoding"),
@@ -14,6 +14,7 @@ public enum RequestHeaders {
     COOKIE("Cookie"),
     CONTENT_LENGTH("Content-Length"),
     CONTENT_MD5("Content-MD5"),
+    CONTENT_TYPE("Content-Type"),
     DATE("Date"),
     DNT("DNT"),
     EXPECT("Expect"),
@@ -44,7 +45,7 @@ public enum RequestHeaders {
 
     private String name;
 
-    RequestHeaders(String name) {
+    RequestHeader(String name) {
         this.name = name;
     }
 

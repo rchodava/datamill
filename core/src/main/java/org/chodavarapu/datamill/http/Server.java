@@ -3,9 +3,10 @@ package org.chodavarapu.datamill.http;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpServer;
 import org.chodavarapu.datamill.http.builder.RouteBuilder;
-import org.chodavarapu.datamill.http.impl.RequestImpl;
+import org.chodavarapu.datamill.http.impl.ServerRequestImpl;
 import org.chodavarapu.datamill.http.impl.RouteBuilderImpl;
 import rx.Observable;
 
@@ -15,9 +16,8 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Server extends AbstractVerticle {
-    private HttpServer server;
-
     private final Function<RouteBuilder, Route> routeConstructor;
+    private HttpServer server;
 
     public Server(Function<RouteBuilder, Route> routeConstructor) {
         this.routeConstructor = routeConstructor;
@@ -29,7 +29,7 @@ public class Server extends AbstractVerticle {
 
         server = vertx.createHttpServer();
         server.requestHandler(r -> {
-            Observable<Response> responseObservable = route.apply(new RequestImpl(r));
+            Observable<Response> responseObservable = route.apply(new ServerRequestImpl(r));
             if (responseObservable != null) {
                 responseObservable.doOnNext(routeResponse -> {
                     if (routeResponse != null) {
@@ -47,9 +47,10 @@ public class Server extends AbstractVerticle {
     }
 
     public Server listen(String host, int port, boolean secure) {
-        Vertx.vertx().deployVerticle(this, (verticle) -> {
-            server.listen(port, host);
-        });
+        Vertx.vertx(new VertxOptions().setBlockedThreadCheckInterval(1000 * 60 * 60))
+                .deployVerticle(this, (verticle) -> {
+                    server.listen(port, host);
+                });
         return this;
     }
 

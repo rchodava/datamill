@@ -1,5 +1,8 @@
 package org.chodavarapu.datamill.http;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
@@ -59,5 +62,17 @@ public enum Status {
 
     public String getDescription() {
         return description;
+    }
+
+    private final static Map<Integer, Status> responseCodeToStatuses = new HashMap<>();
+
+    static {
+        for (Status status : Status.values()) {
+            responseCodeToStatuses.put(status.getCode(), status);
+        }
+    }
+
+    public static Status valueOf(int code) {
+        return responseCodeToStatuses.get(code);
     }
 }

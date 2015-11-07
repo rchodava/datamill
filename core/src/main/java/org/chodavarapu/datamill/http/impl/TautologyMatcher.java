@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import rx.Observable;
@@ -22,7 +22,7 @@ public class TautologyMatcher extends RouteMatcher {
     }
 
     @Override
-    protected boolean matches(Request request) {
+    protected boolean matches(ServerRequest request) {
         return true;
     }
 }

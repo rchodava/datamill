@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import rx.Observable;
@@ -18,7 +18,7 @@ public class MatcherBasedRoute implements Route {
     }
 
     @Override
-    public Observable<Response> apply(Request request) {
+    public Observable<Response> apply(ServerRequest request) {
         for (Matcher matcher : matchers) {
             Observable<Response> responseObservable = matcher.applyIfMatches(request);
             if (responseObservable != null) {

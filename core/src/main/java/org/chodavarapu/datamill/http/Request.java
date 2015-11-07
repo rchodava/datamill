@@ -2,6 +2,7 @@ package org.chodavarapu.datamill.http;
 
 import org.chodavarapu.datamill.values.Value;
 
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -10,13 +11,13 @@ import java.util.Optional;
 public interface Request {
     RequestEntity entity();
 
+    Map<String, String> headers();
+
     Optional<Value> header(String header);
 
-    Optional<Value> header(RequestHeaders header);
+    Optional<Value> header(RequestHeader header);
 
     Method method();
-
-    ResponseBuilder respond();
 
     String uri();
 

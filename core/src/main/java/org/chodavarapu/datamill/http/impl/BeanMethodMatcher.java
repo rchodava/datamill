@@ -1,6 +1,6 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Request;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.reflection.Method;
@@ -17,12 +17,12 @@ public class BeanMethodMatcher implements Matcher {
     private final Bean<?> bean;
     private final List<RouteMatcher> matchers = new ArrayList<>();
 
-    public BeanMethodMatcher(Bean<?> bean, BiFunction<Request, Method, Observable<Response>> route) {
+    public BeanMethodMatcher(Bean<?> bean, BiFunction<ServerRequest, Method, Observable<Response>> route) {
 //        setRoute(request -> routeToBeanMethod(request));
         this.bean = bean;
     }
 
-    private Observable<Response> routeToBeanMethod(Request request) {
+    private Observable<Response> routeToBeanMethod(ServerRequest request) {
         return Observable.just(null);
     }
 
@@ -47,7 +47,7 @@ public class BeanMethodMatcher implements Matcher {
     }
 
     @Override
-    public Observable<Response> applyIfMatches(Request request) {
+    public Observable<Response> applyIfMatches(ServerRequest request) {
         return null;
     }
 }
