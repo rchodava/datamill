@@ -8,4 +8,5 @@ import rx.Observable;
 public interface QueryRunner {
     Observable<Row> query(String sql);
     Observable<Row> query(String sql, Object... parameters);
+    UpdateQueryExecution update(String sql, Object... parameters);
 }

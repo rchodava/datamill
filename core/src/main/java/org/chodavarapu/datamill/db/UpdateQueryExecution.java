@@ -5,6 +5,7 @@ import rx.Observable;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface SelectBuilder {
-    WhereBuilder<Observable<Row>> from(String table);
+public interface UpdateQueryExecution {
+    Observable<Integer> count();
+    Observable<Long> getIds();
 }

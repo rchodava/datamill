@@ -11,6 +11,8 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
+    private static final UpdateQueryExecution EMPTY_UPDATE_EXECUTION = new EmptyUpdateQueryExecution();
+
     private static final String SQL_ASSIGNMENT = " = ";
     private static final String SQL_DELETE_FROM = "DELETE FROM ";
     private static final String SQL_EQ = " = ";
@@ -34,9 +36,9 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder set(Map<String, ?> values) {
+        public WhereBuilder<UpdateQueryExecution> set(Map<String, ?> values) {
             if (values.size() < 1) {
-                return new WhereClause(query, parameters);
+                return new UpdateWhereClause(query, parameters);
             }
 
             List<String> setters = new ArrayList<>(values.size());
@@ -58,11 +60,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
             Joiner.on(", ").appendTo(query, setters);
 
-            return new WhereClause(query, parameters);
+            return new UpdateWhereClause(query, parameters);
         }
 
         @Override
-        public WhereBuilder set(Function<RowBuilder, Map<String, ?>> rowConstructor) {
+        public WhereBuilder<UpdateQueryExecution> set(Function<RowBuilder, Map<String, ?>> rowConstructor) {
             return set(rowConstructor.apply(new RowBuilderImpl()));
         }
     }
@@ -76,14 +78,14 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public Observable<Row> row(Function<RowBuilder, Map<String, ?>> constructor) {
+        public UpdateQueryExecution row(Function<RowBuilder, Map<String, ?>> constructor) {
             return values(constructor.apply(new RowBuilderImpl()));
         }
 
         @Override
-        public Observable<Row> values(Map<String, ?>... rows) {
+        public UpdateQueryExecution values(Map<String, ?>... rows) {
             if (rows.length < 1) {
-                return Observable.empty();
+                return EMPTY_UPDATE_EXECUTION;
             }
 
             Set<String> columns = new LinkedHashSet<>();
@@ -93,7 +95,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
             int numColumns = columns.size();
             if (numColumns < 1) {
-                return Observable.empty();
+                return EMPTY_UPDATE_EXECUTION;
             }
 
             query.append(" (");
@@ -129,21 +131,38 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
             Joiner.on(", ").appendTo(query, valueSets);
 
-            return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
+            return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
     }
 
-    private class WhereClause implements WhereBuilder, ConditionBuilder {
-        private final StringBuilder query;
-        private final List<Object> parameters;
-
-        public WhereClause(StringBuilder query) {
-            this(query, new ArrayList<>());
+    private class UpdateWhereClause extends WhereClause<UpdateQueryExecution> {
+        public UpdateWhereClause(StringBuilder query) {
+            super(query);
         }
 
-        public WhereClause(StringBuilder query, List<Object> parameters) {
-            this.query = query;
-            this.parameters = parameters;
+        public UpdateWhereClause(StringBuilder query, List<Object> parameters) {
+            super(query, parameters);
+        }
+
+        @Override
+        public UpdateQueryExecution all() {
+            return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
+        }
+
+        @Override
+        public <T> UpdateQueryExecution eq(String column, T value) {
+            addEqualityClause(column, value);
+            return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
+        }
+    }
+
+    private class SelectWhereClause extends WhereClause<Observable<Row>> {
+        public SelectWhereClause(StringBuilder query) {
+            super(query);
+        }
+
+        public SelectWhereClause(StringBuilder query, List<Object> parameters) {
+            super(query, parameters);
         }
 
         @Override
@@ -157,17 +176,34 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
         @Override
         public <T> Observable<Row> eq(String column, T value) {
+            addEqualityClause(column, value);
+            return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
+        }
+    }
+
+    private abstract class WhereClause<R> implements WhereBuilder<R>, ConditionBuilder<R> {
+        protected final StringBuilder query;
+        protected final List<Object> parameters;
+
+        public WhereClause(StringBuilder query) {
+            this(query, new ArrayList<>());
+        }
+
+        public WhereClause(StringBuilder query, List<Object> parameters) {
+            this.query = query;
+            this.parameters = parameters;
+        }
+
+        protected <T> void addEqualityClause(String column, T value) {
             query.append(column);
             query.append(SQL_EQ);
             query.append(SQL_PARAMETER_PLACEHOLDER);
 
             parameters.add(value);
-
-            return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
 
         @Override
-        public ConditionBuilder where() {
+        public ConditionBuilder<R> where() {
             query.append(SQL_WHERE);
             return this;
         }
@@ -187,16 +223,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder from(String table) {
+        public WhereBuilder<Observable<Row>> from(String table) {
             query.append(SQL_FROM);
             query.append(table);
-            return new WhereClause(query);
+            return new SelectWhereClause(query);
         }
     }
 
     @Override
-    public WhereBuilder deleteFrom(String table) {
-        return new WhereClause(new StringBuilder(SQL_DELETE_FROM).append(table));
+    public WhereBuilder<UpdateQueryExecution> deleteFrom(String table) {
+        return new UpdateWhereClause(new StringBuilder(SQL_DELETE_FROM).append(table));
     }
 
     @Override
@@ -206,6 +242,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
     protected abstract Observable<Row> query(String query);
     protected abstract Observable<Row> query(String query, Object... parameters);
+    protected abstract UpdateQueryExecution update(String query, Object... parameters);
 
     @Override
     public SelectBuilder select(String column) {
@@ -230,5 +267,17 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     @Override
     public UpdateBuilder update(String table) {
         return new UpdateQuery(table);
+    }
+
+    private static class EmptyUpdateQueryExecution implements UpdateQueryExecution {
+        @Override
+        public Observable<Integer> count() {
+            return Observable.empty();
+        }
+
+        @Override
+        public Observable<Long> getIds() {
+            return Observable.empty();
+        }
     }
 }

@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.db;
 
 import com.github.davidmoten.rx.jdbc.Database;
+import com.github.davidmoten.rx.jdbc.QueryUpdate;
 import org.chodavarapu.datamill.db.impl.QueryBuilderImpl;
 import org.chodavarapu.datamill.db.impl.RowImpl;
 import org.flywaydb.core.Flyway;
@@ -72,5 +73,28 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     @Override
     public Observable<Row> query(String sql, Object... parameters) {
         return getDatabase().select(sql).parameters(parameters).get(resultSet -> new RowImpl(resultSet));
+    }
+
+    @Override
+    public UpdateQueryExecution update(String sql, Object... parameters) {
+        return new UpdateQueryExecutionImpl(getDatabase().update(sql).parameters(parameters));
+    }
+
+    private static class UpdateQueryExecutionImpl implements UpdateQueryExecution {
+        private QueryUpdate.Builder updateBuilder;
+
+        public UpdateQueryExecutionImpl(QueryUpdate.Builder updateBuilder) {
+            this.updateBuilder = updateBuilder;
+        }
+
+        @Override
+        public Observable<Integer> count() {
+            return updateBuilder.count();
+        }
+
+        @Override
+        public Observable<Long> getIds() {
+            return updateBuilder.returnGeneratedKeys().getAs(Long.class);
+        }
     }
 }

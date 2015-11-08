@@ -2,7 +2,6 @@ package org.chodavarapu.datamill.db;
 
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.reflection.OutlineBuilder;
-import rx.Observable;
 
 import java.util.function.BiFunction;
 
@@ -20,7 +19,7 @@ public class Repository<T> {
         this.entityClass = entityClass;
     }
 
-    protected <R> Observable<R> executeQuery(BiFunction<DatabaseClient, Outline<T>, Observable<R>> executor) {
+    protected <R> R executeQuery(BiFunction<DatabaseClient, Outline<T>, R> executor) {
         return executor.apply(client, outlineBuilder.build(entityClass));
     }
 }

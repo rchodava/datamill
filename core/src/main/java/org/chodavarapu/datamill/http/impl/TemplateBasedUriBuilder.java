@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class TemplateBasedUriBuilder {
-    private static final Pattern placeholderPattern = Pattern.compile("\\{([a-z]+)}");
+    private static final Pattern placeholderPattern = Pattern.compile("\\{([a-zA-Z0-9]+)}");
 
     public String build(String uri, Map<String, String> uriParameters) {
         StringBuilder composedUri = new StringBuilder();

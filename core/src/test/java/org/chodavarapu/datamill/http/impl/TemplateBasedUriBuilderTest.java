@@ -28,5 +28,8 @@ public class TemplateBasedUriBuilderTest {
         assertEquals("http://localhost:9080/users",
                 builder.build("{scheme}{host}:{port}{path}",
                         ImmutableMap.of("scheme", "http://", "host", "localhost", "port", "9080", "path", "/users")));
+        assertEquals("http://localhost:9080/users",
+                builder.build("{scheme}{hostName}:{port}{path1}",
+                        ImmutableMap.of("scheme", "http://", "hostName", "localhost", "port", "9080", "path1", "/users")));
     }
 }
