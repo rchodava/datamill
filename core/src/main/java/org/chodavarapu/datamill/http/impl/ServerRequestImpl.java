@@ -101,4 +101,9 @@ public class ServerRequestImpl implements ServerRequest {
         }
         return null;
     }
+
+    @Override
+    public Map<String, String> uriParameters() {
+        return uriParameters;
+    }
 }

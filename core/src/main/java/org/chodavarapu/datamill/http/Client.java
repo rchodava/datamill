@@ -1,10 +1,7 @@
 package org.chodavarapu.datamill.http;
 
 import com.google.common.base.Joiner;
-import org.chodavarapu.datamill.http.impl.InputStreamEntity;
-import org.chodavarapu.datamill.http.impl.RequestBuilderImpl;
-import org.chodavarapu.datamill.http.impl.ResponseImpl;
-import org.chodavarapu.datamill.http.impl.ValueEntity;
+import org.chodavarapu.datamill.http.impl.*;
 import org.chodavarapu.datamill.values.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,10 +25,11 @@ import java.util.function.Function;
  */
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
+    private final TemplateBasedUriBuilder uriBuilder = new TemplateBasedUriBuilder();
 
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
-        return request(request.method(), request.headers(), request.uri(), request.entity());
+        return request(request.method(), request.headers(), request.uri(), request.uriParameters(), request.entity());
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Value entity) {
@@ -43,8 +41,23 @@ public class Client {
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Entity entity) {
+        return request(method, headers, uri, null, entity);
+    }
+
+    public Observable<Response> request(
+            Method method,
+            Map<String, String> headers,
+            String uri,
+            Map<String, String> uriParameters,
+            Entity entity) {
+        if (uriParameters != null && uriParameters.size() > 0) {
+            uri = uriBuilder.build(uri, uriParameters);
+        }
+
+        final String composedUri = uri;
+
         return Async.fromCallable(() -> {
-            URLConnection urlConnection = createConnection(uri);
+            URLConnection urlConnection = createConnection(composedUri);
             HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
 
             httpConnection.setRequestMethod(method.toString());
@@ -59,7 +72,7 @@ public class Client {
                 writeEntityOutOverConnection(entity, httpConnection);
             }
 
-            logger.debug("Making HTTP request {} {}", method.name(), uri);
+            logger.debug("Making HTTP request {} {}", method.name(), composedUri);
             if (headers != null && logger.isDebugEnabled()) {
                 logger.debug("  HTTP request headers:");
                 for (Map.Entry<String, String> header : headers.entrySet()) {

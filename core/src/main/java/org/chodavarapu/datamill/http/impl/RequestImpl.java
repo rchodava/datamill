@@ -18,10 +18,12 @@ public class RequestImpl implements Request {
     private final String method;
     private final Map<String, String> headers;
     private final String uri;
+    private final Map<String, String> uriParameters;
 
-    public RequestImpl(String method, Map<String, String> headers, String uri, Entity entity) {
+    public RequestImpl(String method, Map<String, String> headers, String uri, Map<String, String> uriParameters, Entity entity) {
         this.method = method;
         this.uri = uri;
+        this.uriParameters = uriParameters;
         this.headers = headers;
         this.entity = entity;
     }
@@ -59,6 +61,16 @@ public class RequestImpl implements Request {
 
     @Override
     public Value uriParameter(String parameter) {
-        return null;
+        String value = uriParameters.get(parameter);
+        if (value == null) {
+            return null;
+        }
+
+        return new StringValue(value);
+    }
+
+    @Override
+    public Map<String, String> uriParameters() {
+        return uriParameters;
     }
 }

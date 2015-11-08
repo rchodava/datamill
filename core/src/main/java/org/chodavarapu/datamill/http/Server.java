@@ -4,6 +4,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
 import org.chodavarapu.datamill.http.builder.RouteBuilder;
 import org.chodavarapu.datamill.http.impl.ServerRequestImpl;
@@ -34,7 +35,18 @@ public class Server extends AbstractVerticle {
                 responseObservable.doOnNext(routeResponse -> {
                     if (routeResponse != null) {
                         r.response().setStatusCode(routeResponse.status().getCode());
-                        r.response().end(routeResponse.entity() == null ? "" : routeResponse.entity().toString());
+
+                        if (routeResponse.entity() == null) {
+                            r.response().end();
+                        } else {
+                            r.response().setChunked(true);
+                            routeResponse.entity().asChunks()
+                                    .doOnNext(bytes -> r.response().write(Buffer.buffer(bytes)))
+                                    .doOnError(throwable -> r.response().end())
+                                    .doOnCompleted(() -> r.response().end())
+                                    .subscribe();
+                        }
+
                         return;
                     }
                 }).subscribe();

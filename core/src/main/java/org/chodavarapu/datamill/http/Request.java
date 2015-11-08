@@ -22,4 +22,6 @@ public interface Request {
     String uri();
 
     Value uriParameter(String parameter);
+
+    Map<String, String> uriParameters();
 }

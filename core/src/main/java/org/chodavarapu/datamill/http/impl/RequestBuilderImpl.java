@@ -14,10 +14,11 @@ public class RequestBuilderImpl implements RequestBuilder {
     private String method;
     private final Map<String, String> headers = new HashMap<>();
     private String uri;
+    private final Map<String, String> uriParameters = new HashMap<>();
 
     @Override
     public Request build() {
-        return new RequestImpl(method, headers, uri, entity);
+        return new RequestImpl(method, headers, uri, uriParameters, entity);
     }
 
     @Override
@@ -63,6 +64,7 @@ public class RequestBuilderImpl implements RequestBuilder {
 
     @Override
     public <T> RequestBuilder uriParameter(String name, T value) {
+        this.uriParameters.put(name, value.toString());
         return this;
     }
 }
