@@ -52,6 +52,19 @@ public class ClientTest {
     }
 
     @Test
+    public void deleteRequests() throws Exception {
+        verifyConnectionSetup(createClientAndRequest(c -> c.delete("http://sample.com")), Method.DELETE, "http://sample.com", null);
+        verifyConnectionSetup(createClientAndRequest(c -> c.delete("http://sample.com",
+                ImmutableMap.of("Authorization", "Bearer token"))),
+                Method.DELETE, "http://sample.com", ImmutableMap.of("Authorization", "Bearer token"));
+        verifyConnectionSetup(createClientAndRequest(c -> c.delete(
+                rb -> rb.uri("http://sample.com")
+                        .header("Authorization", "Bearer token")
+                        .build())),
+                Method.DELETE, "http://sample.com", ImmutableMap.of("Authorization", "Bearer token"));
+    }
+
+    @Test
     public void getRequests() throws Exception {
         verifyConnectionSetup(createClientAndRequest(c -> c.get("http://sample.com")), Method.GET, "http://sample.com", null);
         verifyConnectionSetup(createClientAndRequest(c -> c.get("http://sample.com",

@@ -130,6 +130,19 @@ public class Client {
                 .subscribe();
     }
 
+    public Observable<Response> delete(String uri) {
+        return delete(uri, null);
+    }
+
+    public Observable<Response> delete(String uri, Map<String, String> headers) {
+        return request(Method.DELETE, headers, uri, (Entity) null);
+    }
+
+
+    public Observable<Response> delete(Function<RequestBuilder, Request> builder) {
+        return request(requestBuilder -> builder.apply(requestBuilder.method(Method.DELETE)));
+    }
+
     public Observable<Response> get(String uri) {
         return get(uri, null);
     }
