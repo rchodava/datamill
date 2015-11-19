@@ -8,8 +8,47 @@ whose function and effect are hidden within complex framework code and documenta
 specify how data flows through your application, and how to modify that data as it does. And you do so using the simple
 style that RxJava allows.
 
-To begin, we will take a look at some of the basic building blocks in the framework, starting with the utilities for
-reflection.
+To give a sense of how this looks, we will start with an example that uses a lot of elements within the framework to build
+a simple service that returns a JSON response after querying a relational database:
+
+```java
+public class Main {
+    public void main(String[] args) throws Exception {
+        DatabaseClient dbClient = new DatabaseClient("jdbc:mysql://localhost:3306/exampledb", "user", "pass");
+        dbClient.migrate();
+
+        OutlineBuilder outlineBuilder = new OutlineBuilder();
+        Outline<User> outline = outlineBuilder.defaultSnakeCased().build(User.class);
+
+        Server server = new Server(rb ->
+            rb.ifMethodAndUriMatch(Method.GET, "/users/{id}", request ->
+                dbClient.select(outline.propertyNames()).from(outline.pluralName()).where()
+                    .eq(outline.name(outline.members().getId()), request.uriParameter("id").asLong())
+                .map(row -> 
+                    new JsonObject()
+                        .put(
+                            outline.name(outline.members().getId()),
+                            row.column(outline.name(outline.members().getId())))
+                        .put(
+                            outline.name(outline.members().getEmail()),
+                            row.column(outline.name(outline.members().getEmail())))
+                        .put(
+                            outline.name(outline.members().getLocation()),
+                            row.column(outline.name(outline.members().getLocation())))
+                        .put(
+                            outline.name(outline.members().getName()),
+                            row.column(outline.name(outline.members().getName()))));                        
+                .flatMap(json -> request.respond().ok(json))
+                .switchIfEmpty(request.respond().notFound())
+            .orElse(r -> r.respond().notFound()));
+
+        server.listen(8080);
+    }
+```
+
+The example serves to illustrate the style of code you will write - in order to analyze it, we will first discuss the 
+various concepts being used. To begin, we will take a look at some of the basic building blocks in the framework, 
+starting with the utilities for reflection.
 
 ## Reflection
 
@@ -52,7 +91,7 @@ Calling the `getFirstName` getter on this proxy instance does not return anythin
 getter call, a record is kept of the getter call. When the `name` method is subsequently called on the outline, we take
 a look at the record of the call we made to the outline proxy's getter method. The `name` method returns the name of the
 property whose getter or setter was last invoked. This is the reason why 
-`userOutline.name(userOutline.members().getFirstName())` returns `first_name`.
+`userOutline.name(userOutline.members().getFirstName())` returns "first_name".
 
 Note that this mechanism is thread-safe so that an outline can be safely re-used in multiple threads and still return 
 the correct name. Note also that this mechanism means that we are not resorting to using strings.
@@ -89,3 +128,50 @@ public class Main {
     }
 }
 ```
+
+## Values
+
+Another set of utilities in datamill is a fluent API for dealing with values of various types. A primary feature offered
+by this API is the ability to easily cast between the types. Consider for example HTTP request parameters:
+
+```java
+public class Main {
+    public void main(String[] args) throws Exception {
+        server = new Server(rb ->
+            rb.ifMethodAndUriMatch(Method.GET, "/users/{id}", request ->
+                request.uriParameter("id").asLong() == 0 ? 
+                    request.respond().ok() : 
+                    request.respond().notFound()));
+    }
+}
+```
+
+Here, the request parameter "id", retrieved using `request.uriParameter("id")` returns a `Value`. This URI parameter, as
+with all URI parameters, is originally a string value. But notice that it is easily converted into a long value using
+the `asLong()` method. There is a method to quickly cast to all the primitive types. Another example of where values 
+are returned is when you access database row data:
+
+```java
+public class Main {
+    public void main(String[] args) throws Exception {
+        DatabaseClient dbClient = new DatabaseClient("jdbc:mysql://localhost:3306/exampledb", "user", "pass");
+        dbClient.migrate();
+
+        OutlineBuilder outlineBuilder = new OutlineBuilder();
+        Outline<User> outline = outlineBuilder.defaultSnakeCased().build(User.class);
+
+        Server server = new Server(rb ->
+            rb.ifMethodAndUriMatch(Method.GET, "/users/{id}/active", request ->
+                dbClient.select(outline.propertyNames()).from(outline.pluralName()).where()
+                    .eq(outline.name(outline.members().getId()), request.uriParameter("id").asLong())
+                .map(row -> row.column(outline.name(outline.members().isActive())).asBoolean())
+                .flatMap(active -> active ? 
+                    r.respond.ok("Active") :
+                    r.respond.ok("Not Active"))));
+    }
+}
+```
+
+Note that when we retrieve the value of the "active" column using `row.column(outline.name(outline.members().isActive()))`,
+we get back a value, which we cast to a boolean with a call to `asBoolean()`. In any location where the ability to perform
+this easy casting is appropriate, `Value`s are used within the framework.
