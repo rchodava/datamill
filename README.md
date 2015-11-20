@@ -132,7 +132,7 @@ public class Main {
 ## Values
 
 Another set of utilities in datamill is a fluent API for dealing with values of various types. A primary feature offered
-by this API is the ability to easily cast between the types. Consider for example HTTP request parameters:
+by this API is the ability to easily cast between different types. Consider for example HTTP request URI parameters:
 
 ```java
 public class Main {
@@ -146,10 +146,10 @@ public class Main {
 }
 ```
 
-Here, the request parameter "id", retrieved using `request.uriParameter("id")` returns a `Value`. This URI parameter, as
-with all URI parameters, is originally a string value. But notice that it is easily converted into a long value using
-the `asLong()` method. There is a method to quickly cast to all the primitive types. Another example of where values 
-are returned is when you access database row data:
+Here, the request URI parameter "id", retrieved using `request.uriParameter("id")` returns a `Value`, the main interface
+for the values API. This URI parameter, as with all URI parameters, is originally a string value. But notice that it is
+easily converted into a long value using the `asLong()` method. There is a method to quickly cast to all the primitive
+types. Another example of where values are returned is when you access database row data:
 
 ```java
 public class Main {
@@ -173,5 +173,49 @@ public class Main {
 ```
 
 Note that when we retrieve the value of the "active" column using `row.column(outline.name(outline.members().isActive()))`,
-we get back a value, which we cast to a boolean with a call to `asBoolean()`. In any location where the ability to perform
-this easy casting is appropriate, `Value`s are used within the framework.
+we get back a value, which we cast to a boolean with a call to `asBoolean()`. In this case, the database type may have
+originally been a boolean, or it may have been an integer type - by using `asBoolean()`, we can perform the cast safely
+and easily. In any location where the ability to perform this easy casting is appropriate, `Value`s are used within the
+framework.
+
+## JSON
+
+A particular type of `Value` in datamill is a JSON object, created using the `JsonObject` class. This class offers a
+fluent API to allow you to quickly create a JSON object in Java:
+
+```java
+public class Main {
+    public void main(String[] args) throws Exception {
+        JsonObject json = new JsonObject()
+            .put("name", "Ravi Chodavarapu")
+            .put("email", "rchodava@gmail.com")
+            .put("male", true);
+            
+        System.out.println(json.asString());
+    }
+```
+
+You can also build JSON objects easily in various parts of the framework where it may be useful. For example, when
+working with a HTTP request entity, you can retrieve it as a JSON object:
+
+```java
+public class Main {
+    public void main(String[] args) throws Exception {
+        OutlineBuilder outlineBuilder = new OutlineBuilder();
+        Outline<User> outline = outlineBuilder.defaultSnakeCased().build(User.class);
+
+        Server server = new Server(rb ->
+            rb.ifMethodAndUriMatch(Method.POST, "/users", request ->
+                request.entity().asJson()
+                .map(json -> json.get(outline.name(outline.members().getEmail()).asString())                 
+                .flatMap(email -> 
+                    "rchodava@gmail.com".equals(email) ? 
+                        request.respond().ok() :
+                        request.respond().notAuthorized());
+                
+        server.listen(8080);
+    }
+```
+
+Note also that getting JSON object properties using the `get(...)` method returns a `Value` which can be easily cast to
+various types - in this case, we cast it to a string using `asString()`.
