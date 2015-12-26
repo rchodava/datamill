@@ -1,9 +1,12 @@
 package org.chodavarapu.datamill.http.impl;
 
+import org.chodavarapu.datamill.http.Method;
+import org.chodavarapu.datamill.http.Route;
 import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.http.Response;
+import org.chodavarapu.datamill.http.annotations.*;
 import org.chodavarapu.datamill.reflection.Bean;
-import org.chodavarapu.datamill.reflection.Method;
+import org.chodavarapu.datamill.reflection.Outline;
 import rx.Observable;
 
 import java.util.ArrayList;
@@ -14,40 +17,102 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class BeanMethodMatcher implements Matcher {
-    private final Bean<?> bean;
+    private static String combinePaths(String path1, String path2) {
+        String combined;
+
+        if (path2 == null) {
+            path2 = "";
+        }
+
+        if (path1.endsWith("/")) {
+            if (path2.startsWith("/")) {
+                combined = path1 + path2.substring(1);
+            } else {
+                combined = path1 + path2;
+            }
+        } else {
+            if (path2.startsWith("/")) {
+                combined = path1 + path2;
+            } else {
+                combined = path1 + "/" + path2;
+            }
+        }
+
+        return combined;
+    }
+
+    private final Outline<?> beanOutline;
     private final List<RouteMatcher> matchers = new ArrayList<>();
+    private final BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route;
 
-    public BeanMethodMatcher(Bean<?> bean, BiFunction<ServerRequest, Method, Observable<Response>> route) {
-//        setRoute(request -> routeToBeanMethod(request));
-        this.bean = bean;
+    public BeanMethodMatcher(
+            Bean<?> bean,
+            BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
+        this.beanOutline = bean.outline();
+        this.route = route;
+
+        createBeanMethodMatchers();
     }
 
-    private Observable<Response> routeToBeanMethod(ServerRequest request) {
-        return Observable.just(null);
-    }
+    private void createBeanMethodMatchers() {
+        String path = null;
 
-    private void createBeanMethodMatchers(Bean<?> bean) {
-//        bean.methods().stream().forEach(method -> {
-//            if (method.hasAnnotation(DELETE.class)) {
-//
-//            } else if (method.hasAnnotation(GET.class)) {
-//
-//            } else if (method.hasAnnotation(HEAD.class)) {
-//
-//            } else if (method.hasAnnotation(OPTIONS.class)) {
-//
-//            } else if (method.hasAnnotation(PATCH.class)) {
-//
-//            } else if (method.hasAnnotation(POST.class)) {
-//
-//            } else if (method.hasAnnotation(PUT.class)) {
-//
-//            }
-//        });
+        Path pathAnnotation = beanOutline.getAnnotation(Path.class);
+        if (pathAnnotation != null) {
+            path = pathAnnotation.value();
+        }
+
+        if (path == null) {
+            path = "";
+        }
+
+        final String beanPath = path;
+
+        beanOutline.methods().stream().forEach(method -> {
+            String methodPath = beanPath;
+
+            Path methodPathAnnotation = method.getAnnotation(Path.class);
+            if (methodPathAnnotation != null) {
+                methodPath = combinePaths(beanPath, methodPathAnnotation.value());
+            }
+
+            Route handler = request -> route.apply(request, method);
+
+            if (method.hasAnnotation(DELETE.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.DELETE, methodPath, handler));
+            }
+
+            if (method.hasAnnotation(GET.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.GET, methodPath, handler));
+            }
+
+            if (method.hasAnnotation(HEAD.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.HEAD, methodPath, handler));
+            }
+
+            if (method.hasAnnotation(PATCH.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.PATCH, methodPath, handler));
+            }
+
+            if (method.hasAnnotation(POST.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.POST, methodPath, handler));
+            }
+
+            if (method.hasAnnotation(PUT.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.PUT, methodPath, handler));
+            }
+        });
     }
 
     @Override
     public Observable<Response> applyIfMatches(ServerRequest request) {
-        return null;
+        for (Matcher matcher : matchers) {
+            Observable<Response> responseObservable = matcher.applyIfMatches(request);
+            if (responseObservable != null) {
+                return responseObservable;
+            }
+        }
+
+        return Observable.empty();
     }
 }

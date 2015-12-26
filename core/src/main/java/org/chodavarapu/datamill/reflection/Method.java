@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.reflection;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -16,7 +17,19 @@ public class Method {
         return method.getName();
     }
 
+    public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+        return method.getAnnotation(annotationClass);
+    }
+
     public boolean hasAnnotation(Class<? extends Annotation> annotationClass) {
         return method.getAnnotation(annotationClass) != null;
+    }
+
+    public <T, R> R invoke(T instance, Object... arguments) {
+        try {
+            return (R) method.invoke(instance, arguments);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new ReflectionException(e);
+        }
     }
 }

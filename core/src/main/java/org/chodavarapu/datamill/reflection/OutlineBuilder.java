@@ -31,4 +31,8 @@ public class OutlineBuilder {
         Class<? extends T> outlineClass = proxyFactory.createClass();
         return new OutlineImpl<>(objenesis.newInstance(outlineClass), camelCased);
     }
+
+    public <T> Bean<T> wrap(T instance) {
+        return build((Class<T>) instance.getClass()).wrap(instance);
+    }
 }

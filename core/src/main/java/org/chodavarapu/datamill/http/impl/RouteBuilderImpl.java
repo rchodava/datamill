@@ -7,6 +7,7 @@ import org.chodavarapu.datamill.http.builder.*;
 import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.reflection.Bean;
 import rx.Observable;
+import rx.functions.Func1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,28 +20,54 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     private final List<Matcher> matchers = new ArrayList<>();
 
     @Override
+    public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean) {
+        return ifMatchesBeanMethod(bean);
+    }
+
+    @Override
+    public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean, Func1<Response, Response> postProcessor) {
+        return ifMatchesBeanMethod(bean, postProcessor);
+    }
+
+    @Override
+    public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean, BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
+        return ifMatchesBeanMethod(bean, route);
+    }
+
+    @Override
     public ElseBuilder elseIfMethodAndUriMatch(Method method, String pattern, Route route) {
-        matchers.add(new MethodAndUriMatcher(method, pattern, route));
-        return this;
+        return ifMethodAndUriMatch(method, pattern, route);
     }
 
     @Override
     public ElseBuilder elseIfMethodMatches(Method method, Route route) {
-        matchers.add(new MethodAndUriMatcher(method, null, route));
-        return this;
+        return ifMethodMatches(method, route);
     }
 
     @Override
     public ElseBuilder elseIfUriMatches(String pattern, Route route) {
-        matchers.add(new MethodAndUriMatcher(null, pattern, route));
-        return this;
+        return ifUriMatches(pattern, route);
+    }
+
+    @Override
+    public ElseBuilder ifMatchesBeanMethod(Bean<?> bean) {
+        return ifMatchesBeanMethod(bean, r -> r);
     }
 
     @Override
     public ElseBuilder ifMatchesBeanMethod(
-            Bean bean,
+            Bean<?> bean,
             BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
-        return null;
+        matchers.add(new BeanMethodMatcher(bean, route));
+        return this;
+    }
+
+    @Override
+    public ElseBuilder ifMatchesBeanMethod(Bean<?> bean, Func1<Response, Response> postProcessor) {
+        return ifMatchesBeanMethod(bean,
+                (request, method) ->
+                        bean.<Observable<Response>, ServerRequest>invoke(method, request)
+                        .map(r -> postProcessor.call(r)));
     }
 
     @Override

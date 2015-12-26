@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.reflection;
 
+import java.lang.annotation.Annotation;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -11,6 +12,8 @@ public interface Outline<T> {
     String camelCasedName(Consumer<T> memberInvoker);
     String camelCasedName();
     String camelCasedPluralName();
+    <A extends Annotation> A getAnnotation(Class<A> annotationClass);
+    boolean hasAnnotation(Class<? extends Annotation> annotationClass);
     T members();
     Collection<Method> methods();
     <M> String name(M member);

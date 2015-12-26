@@ -15,6 +15,7 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +74,11 @@ public class OutlineImpl<T> implements Outline<T> {
         return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, lastInvokedMemberName());
     }
 
+    @Override
+    public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+        return getOutlinedClass().getAnnotation(annotationClass);
+    }
+
     private Class<?> getOutlinedClass() {
         return members().getClass().getSuperclass();
     }
@@ -83,6 +89,11 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         return properties;
+    }
+
+    @Override
+    public boolean hasAnnotation(Class<? extends Annotation> annotationClass) {
+        return getOutlinedClass().getAnnotation(annotationClass) != null;
     }
 
     private void introspectProperties() {
@@ -227,6 +238,26 @@ public class OutlineImpl<T> implements Outline<T> {
         @Override
         public <P> P get(P property) {
             return (P) OutlineImpl.this.property(property).get(instance);
+        }
+
+        @Override
+        public <R, A1> R invoke(org.chodavarapu.datamill.reflection.Method method, A1 argument) {
+            return method.invoke(instance, argument);
+        }
+
+        @Override
+        public <R, A1, A2> R invoke(org.chodavarapu.datamill.reflection.Method method, A1 argument1, A2 argument2) {
+            return method.invoke(instance, argument1, argument2);
+        }
+
+        @Override
+        public <R> R invoke(org.chodavarapu.datamill.reflection.Method method, Object... arguments) {
+            return method.invoke(instance, arguments);
+        }
+
+        @Override
+        public Outline<T> outline() {
+            return (Outline<T>) OutlineImpl.this;
         }
 
         @Override
