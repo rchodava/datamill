@@ -37,6 +37,7 @@ public class ResponseImpl implements Response {
         return entity;
     }
 
+    @Override
     public Map<String, String> headers() {
         return headers;
     }

@@ -42,6 +42,19 @@ public class JsonWebToken {
         this.claims = claims;
     }
 
+    public JsonWebToken addClaim(String claimName, String value) {
+        claims.setClaim(claimName, value);
+        return this;
+    }
+
+    public String getClaim(String claimName) {
+        try {
+            return claims.getStringClaimValue(claimName);
+        } catch (MalformedClaimException e) {
+            throw new SecurityException(e);
+        }
+    }
+
     public JsonObject asJson() {
         return new JsonObject(claims.getClaimsMap());
     }

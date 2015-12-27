@@ -11,6 +11,7 @@ import org.chodavarapu.datamill.http.impl.ServerRequestImpl;
 import org.chodavarapu.datamill.http.impl.RouteBuilderImpl;
 import rx.Observable;
 
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -35,6 +36,12 @@ public class Server extends AbstractVerticle {
                 responseObservable.doOnNext(routeResponse -> {
                     if (routeResponse != null) {
                         r.response().setStatusCode(routeResponse.status().getCode());
+
+                        if (routeResponse.headers() != null) {
+                            for (Map.Entry<String, String> header : routeResponse.headers().entrySet()) {
+                                r.response().headers().add(header.getKey(), header.getValue());
+                            }
+                        }
 
                         if (routeResponse.entity() == null) {
                             r.response().end();

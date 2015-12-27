@@ -90,6 +90,10 @@ public class BeanMethodMatcher implements Matcher {
                 matchers.add(new MethodAndUriMatcher(Method.HEAD, methodPath, handler));
             }
 
+            if (method.hasAnnotation(OPTIONS.class)) {
+                matchers.add(new MethodAndUriMatcher(Method.OPTIONS, methodPath, handler));
+            }
+
             if (method.hasAnnotation(PATCH.class)) {
                 matchers.add(new MethodAndUriMatcher(Method.PATCH, methodPath, handler));
             }
@@ -113,6 +117,6 @@ public class BeanMethodMatcher implements Matcher {
             }
         }
 
-        return Observable.empty();
+        return null;
     }
 }

@@ -23,26 +23,26 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Observable<Response> noContent() {
-        return Observable.just(new ResponseImpl(Status.NO_CONTENT));
+        return Observable.just(new ResponseImpl(Status.NO_CONTENT, headers));
     }
 
     @Override
     public Observable<Response> notFound() {
-        return Observable.just(new ResponseImpl(Status.NOT_FOUND));
+        return Observable.just(new ResponseImpl(Status.NOT_FOUND, headers));
     }
 
     @Override
     public Observable<Response> ok() {
-        return Observable.just(new ResponseImpl(Status.OK));
+        return Observable.just(new ResponseImpl(Status.OK, headers));
     }
 
     @Override
     public Observable<Response> ok(String content) {
-        return Observable.just(new ResponseImpl(Status.OK, null, new ValueEntity(new StringValue(content))));
+        return Observable.just(new ResponseImpl(Status.OK, headers, new ValueEntity(new StringValue(content))));
     }
 
     @Override
     public Observable<Response> unauthorized() {
-        return Observable.just(new ResponseImpl(Status.UNAUTHORIZED));
+        return Observable.just(new ResponseImpl(Status.UNAUTHORIZED, headers));
     }
 }
