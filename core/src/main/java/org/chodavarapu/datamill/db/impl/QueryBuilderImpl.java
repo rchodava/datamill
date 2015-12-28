@@ -6,6 +6,9 @@ import rx.Observable;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -18,7 +21,9 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_EQ = " = ";
     private static final String SQL_FROM = " FROM ";
     private static final String SQL_INSERT_INTO = "INSERT INTO ";
+    private static final String SQL_LEFT_JOIN = " LEFT JOIN ";
     private static final String SQL_NULL = "NULL";
+    private static final String SQL_ON = " ON ";
     private static final String SQL_PARAMETER_PLACEHOLDER = "?";
     private static final String SQL_SELECT = "SELECT ";
     private static final String SQL_SET = " SET ";
@@ -154,6 +159,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             addEqualityClause(column, value);
             return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
+
+        @Override
+        public <T> UpdateQueryExecution eq(String table, String column, T value) {
+            return eq(qualifiedName(table, column), value);
+        }
     }
 
     private class SelectWhereClause extends WhereClause<Observable<Row>> {
@@ -179,9 +189,14 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             addEqualityClause(column, value);
             return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
+
+        @Override
+        public <T> Observable<Row> eq(String table, String column, T value) {
+            return eq(qualifiedName(table, column), value);
+        }
     }
 
-    private abstract class WhereClause<R> implements WhereBuilder<R>, ConditionBuilder<R> {
+    private abstract class WhereClause<R> implements WhereBuilder<R>, ConditionBuilder<R>, JoinBuilder<R> {
         protected final StringBuilder query;
         protected final List<Object> parameters;
 
@@ -205,6 +220,24 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         @Override
         public ConditionBuilder<R> where() {
             query.append(SQL_WHERE);
+            return this;
+        }
+
+        @Override
+        public JoinBuilder<R> leftJoin(String table) {
+            query.append(SQL_LEFT_JOIN);
+            query.append(table);
+
+            return this;
+        }
+
+        @Override
+        public WhereBuilder<R> onEq(String column1, String column2) {
+            query.append(SQL_ON);
+            query.append(column1);
+            query.append(SQL_EQ);
+            query.append(column2);
+
             return this;
         }
     }
@@ -257,6 +290,31 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     @Override
     public SelectBuilder select(Iterable<String> columns) {
         return new SelectQuery(columns);
+    }
+
+    private static final String qualifiedName(String table, String column) {
+        return table + "." + column;
+    }
+
+    @Override
+    public SelectBuilder selectQualified(String table, String column) {
+        return select(qualifiedName(table, column));
+    }
+
+    @Override
+    public SelectBuilder selectQualified(String table, String... columns) {
+        return select(
+                Stream.of(columns)
+                        .map(column -> qualifiedName(table, column))
+                        .collect(Collectors.toList()));
+    }
+
+    @Override
+    public SelectBuilder selectQualified(String table, Iterable<String> columns) {
+        return select(
+                StreamSupport.stream(columns.spliterator(), false)
+                        .map(column -> qualifiedName(table, column))
+                        .collect(Collectors.toList()));
     }
 
     @Override

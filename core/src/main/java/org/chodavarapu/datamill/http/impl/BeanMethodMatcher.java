@@ -9,8 +9,7 @@ import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.reflection.Outline;
 import rx.Observable;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiFunction;
 
 /**
@@ -115,6 +114,23 @@ public class BeanMethodMatcher implements Matcher {
             if (responseObservable != null) {
                 return responseObservable;
             }
+        }
+
+        return null;
+    }
+
+    @Override
+    public Set<Method> queryOptions(ServerRequest request) {
+        EnumSet<Method> methods = EnumSet.noneOf(Method.class);
+        for (Matcher matcher : matchers) {
+            Set<Method> matchedMethods = matcher.queryOptions(request);
+            if (matchedMethods != null) {
+                methods.addAll(matchedMethods);
+            }
+        }
+
+        if (methods.size() > 0) {
+            return methods;
         }
 
         return null;

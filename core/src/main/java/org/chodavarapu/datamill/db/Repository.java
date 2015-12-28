@@ -19,7 +19,11 @@ public class Repository<T> {
         this.entityClass = entityClass;
     }
 
+    protected <E> Outline<E> buildOutline(Class<E> entityClass) {
+        return outlineBuilder.build(entityClass);
+    }
+
     protected <R> R executeQuery(BiFunction<DatabaseClient, Outline<T>, R> executor) {
-        return executor.apply(client, outlineBuilder.build(entityClass));
+        return executor.apply(client, buildOutline(entityClass));
     }
 }

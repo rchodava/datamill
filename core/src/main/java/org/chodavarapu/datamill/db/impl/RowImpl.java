@@ -29,6 +29,11 @@ public class RowImpl implements Row {
     }
 
     @Override
+    public Value column(String table, String name) {
+        return new LabeledColumnValue(table + name);
+    }
+
+    @Override
     public int size() {
         try {
             return resultSet.getMetaData().getColumnCount();

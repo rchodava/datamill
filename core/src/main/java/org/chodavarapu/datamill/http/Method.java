@@ -1,8 +1,18 @@
 package org.chodavarapu.datamill.http;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public enum Method {
-    OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, CONNECT, PATCH
+    OPTIONS, GET, HEAD, POST, PUT, DELETE, TRACE, CONNECT, PATCH;
+
+    private static final Set<Method> methods =
+            EnumSet.allOf(Method.class);
+
+    public static Set<Method> allMethods() {
+        return methods;
+    }
 }

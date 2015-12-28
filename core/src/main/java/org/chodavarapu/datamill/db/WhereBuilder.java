@@ -5,4 +5,5 @@ package org.chodavarapu.datamill.db;
 public interface WhereBuilder<R> {
     R all();
     ConditionBuilder<R> where();
+    JoinBuilder<R> leftJoin(String table);
 }

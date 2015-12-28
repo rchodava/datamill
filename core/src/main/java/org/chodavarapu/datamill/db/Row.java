@@ -9,4 +9,5 @@ public interface Row {
     int size();
     Value column(int index);
     Value column(String name);
+    Value column(String table, String name);
 }

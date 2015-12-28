@@ -6,7 +6,7 @@ import org.chodavarapu.datamill.http.Route;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -53,5 +53,14 @@ public class MethodAndUriMatcher extends RouteMatcher {
 
     private boolean matchesMethod(ServerRequest request) {
         return method != null ? request.method() == method : true;
+    }
+
+    @Override
+    public Set<Method> queryOptions(ServerRequest request) {
+        if (matchesUri(request) && request.method() == Method.OPTIONS) {
+            return method == null ? Method.allMethods() : EnumSet.of(method);
+        }
+
+        return null;
     }
 }

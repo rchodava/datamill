@@ -10,5 +10,8 @@ public interface QueryBuilder {
     SelectBuilder select(String column);
     SelectBuilder select(String... columns);
     SelectBuilder select(Iterable<String> columns);
+    SelectBuilder selectQualified(String table, String column);
+    SelectBuilder selectQualified(String table, String... columns);
+    SelectBuilder selectQualified(String table, Iterable<String> columns);
     UpdateBuilder update(String table);
 }
