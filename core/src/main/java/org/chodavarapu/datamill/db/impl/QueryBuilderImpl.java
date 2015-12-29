@@ -322,7 +322,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
     @Override
     public SelectBuilder select(Member member) {
-        return select(member.name());
+        return selectQualified(member.outline().pluralName(), member.name());
     }
 
     @Override

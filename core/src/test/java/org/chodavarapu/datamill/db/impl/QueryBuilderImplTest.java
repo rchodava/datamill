@@ -72,13 +72,14 @@ public class QueryBuilderImplTest {
 
     @Test
     public void selectQueries() {
+        Outline<QueryTestBean> outline = new OutlineBuilder().build(QueryTestBean.class);
         TestQueryBuilderImpl queryBuilder = new TestQueryBuilderImpl();
 
         queryBuilder.selectAll().from("table_name").all();
         assertEquals("SELECT * FROM table_name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from(new OutlineBuilder().build(QueryTestBean.class)).all();
+        queryBuilder.selectAll().from(outline).all();
         assertEquals("SELECT * FROM query_test_beans", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
@@ -87,7 +88,7 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq(new OutlineBuilder().build(QueryTestBean.class).member(m -> m.getId()), 2);
+        queryBuilder.selectAll().from("table_name").where().eq(outline.member(m -> m.getId()), 2);
         assertEquals("SELECT * FROM table_name WHERE query_test_beans.id = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
@@ -105,6 +106,14 @@ public class QueryBuilderImplTest {
         queryBuilder.selectAll().from("table_name").where().eq("string_column", "value");
         assertEquals("SELECT * FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.selectAllIn(outline).from("table_name").all();
+        assertEquals("SELECT query_test_beans.name, query_test_beans.id FROM table_name", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select(outline.member(m -> m.getName())).from("table_name").all();
+        assertEquals("SELECT query_test_beans.name FROM table_name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.select("column_name").from("table_name").all();
@@ -147,7 +156,7 @@ public class QueryBuilderImplTest {
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
-                .leftJoin(new OutlineBuilder().build(QueryTestBean.class)).onEq("second_column", "third_column").all();
+                .leftJoin(outline).onEq("second_column", "third_column").all();
         assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN query_test_beans ON second_column = third_column", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
@@ -158,11 +167,10 @@ public class QueryBuilderImplTest {
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
-                .leftJoin("second_table").onEq("second_table", "second_column", new OutlineBuilder().build(QueryTestBean.class).member(m -> m.getName())).all();
+                .leftJoin("second_table").onEq("second_table", "second_column", outline.member(m -> m.getName())).all();
         assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON second_table.second_column = query_test_beans.name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        Outline<QueryTestBean> outline = new OutlineBuilder().build(QueryTestBean.class);
         queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
                 .leftJoin("second_table").onEq(outline.member(m -> m.getId()), outline.member(m -> m.getName())).all();
         assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON query_test_beans.id = query_test_beans.name", queryBuilder.getLastQuery());
