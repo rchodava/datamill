@@ -2,6 +2,8 @@ package org.chodavarapu.datamill.db.impl;
 
 import com.google.common.base.Joiner;
 import org.chodavarapu.datamill.db.*;
+import org.chodavarapu.datamill.reflection.Member;
+import org.chodavarapu.datamill.reflection.Outline;
 import rx.Observable;
 
 import java.util.*;
@@ -159,11 +161,6 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             addEqualityClause(column, value);
             return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
-
-        @Override
-        public <T> UpdateQueryExecution eq(String table, String column, T value) {
-            return eq(qualifiedName(table, column), value);
-        }
     }
 
     private class SelectWhereClause extends WhereClause<Observable<Row>> {
@@ -189,11 +186,6 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             addEqualityClause(column, value);
             return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
-
-        @Override
-        public <T> Observable<Row> eq(String table, String column, T value) {
-            return eq(qualifiedName(table, column), value);
-        }
     }
 
     private abstract class WhereClause<R> implements WhereBuilder<R>, ConditionBuilder<R>, JoinBuilder<R> {
@@ -218,6 +210,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
+        public <T> R eq(Member member, T value) {
+            return eq(member.outline().pluralName(), member.name(), value);
+        }
+
+        @Override
+        public <T> R eq(String table, String column, T value) {
+            return eq(qualifiedName(table, column), value);
+        }
+
+        @Override
         public ConditionBuilder<R> where() {
             query.append(SQL_WHERE);
             return this;
@@ -232,6 +234,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
+        public JoinBuilder<R> leftJoin(Outline<?> outline) {
+            return leftJoin(outline.pluralName());
+        }
+
+        @Override
         public WhereBuilder<R> onEq(String column1, String column2) {
             query.append(SQL_ON);
             query.append(column1);
@@ -239,6 +246,22 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             query.append(column2);
 
             return this;
+        }
+
+        @Override
+        public WhereBuilder<R> onEq(String table1, String column1, String table2, String column2) {
+            return onEq(qualifiedName(table1, column1), qualifiedName(table2, column2));
+        }
+
+        @Override
+        public WhereBuilder<R> onEq(Member member1, Member member2) {
+            return onEq(member1.outline().pluralName(), member1.name(),
+                    member2.outline().pluralName(), member2.name());
+        }
+
+        @Override
+        public WhereBuilder<R> onEq(String table1, String column1, Member member2) {
+            return onEq(table1, column1, member2.outline().pluralName(), member2.name());
         }
     }
 
@@ -261,6 +284,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             query.append(table);
             return new SelectWhereClause(query);
         }
+
+        @Override
+        public WhereBuilder<Observable<Row>> from(Outline<?> outline) {
+            return from(outline.pluralName());
+        }
     }
 
     @Override
@@ -269,8 +297,18 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     }
 
     @Override
+    public WhereBuilder<UpdateQueryExecution> deleteFrom(Outline<?> outline) {
+        return deleteFrom(outline.pluralName());
+    }
+
+    @Override
     public InsertBuilder insertInto(String table) {
         return new InsertQuery(table);
+    }
+
+    @Override
+    public InsertBuilder insertInto(Outline<?> outline) {
+        return insertInto(outline.pluralName());
     }
 
     protected abstract Observable<Row> query(String query);
@@ -280,6 +318,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     @Override
     public SelectBuilder select(String column) {
         return select(Arrays.asList(column));
+    }
+
+    @Override
+    public SelectBuilder select(Member member) {
+        return select(member.name());
     }
 
     @Override
@@ -323,8 +366,18 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     }
 
     @Override
+    public SelectBuilder selectAllIn(Outline<?> outline) {
+        return selectQualified(outline.pluralName(), outline.propertyNames());
+    }
+
+    @Override
     public UpdateBuilder update(String table) {
         return new UpdateQuery(table);
+    }
+
+    @Override
+    public UpdateBuilder update(Outline<?> outline) {
+        return update(outline.pluralName());
     }
 
     private static class EmptyUpdateQueryExecution implements UpdateQueryExecution {

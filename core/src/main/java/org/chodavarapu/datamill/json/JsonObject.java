@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.json;
 
+import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 
@@ -73,6 +74,10 @@ public class JsonObject implements ReflectableValue {
         return new JsonProperty(property);
     }
 
+    public Value get(Member member) {
+        return get(member.name());
+    }
+
     @Override
     public boolean isBoolean() {
         return false;
@@ -131,6 +136,10 @@ public class JsonObject implements ReflectableValue {
     public <T> JsonObject put(String key, T value) {
         object.put(key, value);
         return this;
+    }
+
+    public <T> JsonObject put(Member member, T value) {
+        return put(member.name(), value);
     }
 
     @Override

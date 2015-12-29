@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.db;
 
+import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.values.Value;
 
 /**
@@ -10,4 +11,5 @@ public interface Row {
     Value column(int index);
     Value column(String name);
     Value column(String table, String name);
+    Value column(Member member);
 }

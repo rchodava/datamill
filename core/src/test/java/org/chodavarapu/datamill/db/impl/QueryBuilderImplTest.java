@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import org.chodavarapu.datamill.db.Row;
 import org.chodavarapu.datamill.db.UpdateBuilder;
 import org.chodavarapu.datamill.db.UpdateQueryExecution;
+import org.chodavarapu.datamill.reflection.Outline;
+import org.chodavarapu.datamill.reflection.OutlineBuilder;
 import org.junit.Test;
 import rx.Observable;
 
@@ -17,6 +19,16 @@ import static org.junit.Assert.*;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class QueryBuilderImplTest {
+    private static class QueryTestBean {
+        public String getName() {
+            return "";
+        }
+
+        public String getId() {
+            return "";
+        }
+    }
+
     private static class TestQueryBuilderImpl extends QueryBuilderImpl {
         private String lastQuery;
         private Object[] lastParameters;
@@ -66,8 +78,17 @@ public class QueryBuilderImplTest {
         assertEquals("SELECT * FROM table_name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
+        queryBuilder.selectAll().from(new OutlineBuilder().build(QueryTestBean.class)).all();
+        assertEquals("SELECT * FROM query_test_beans", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
         queryBuilder.selectAll().from("table_name").where().eq("int_column", 2);
         assertEquals("SELECT * FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.selectAll().from("table_name").where().eq(new OutlineBuilder().build(QueryTestBean.class).member(m -> m.getId()), 2);
+        assertEquals("SELECT * FROM table_name WHERE query_test_beans.id = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
@@ -126,9 +147,25 @@ public class QueryBuilderImplTest {
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
+                .leftJoin(new OutlineBuilder().build(QueryTestBean.class)).onEq("second_column", "third_column").all();
+        assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN query_test_beans ON second_column = third_column", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
                 .leftJoin("second_table").onEq("second_column", "third_column").where().eq("column_name", 2);
         assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON second_column = third_column WHERE column_name = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
+                .leftJoin("second_table").onEq("second_table", "second_column", new OutlineBuilder().build(QueryTestBean.class).member(m -> m.getName())).all();
+        assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON second_table.second_column = query_test_beans.name", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        Outline<QueryTestBean> outline = new OutlineBuilder().build(QueryTestBean.class);
+        queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
+                .leftJoin("second_table").onEq(outline.member(m -> m.getId()), outline.member(m -> m.getName())).all();
+        assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON query_test_beans.id = query_test_beans.name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
     }
 

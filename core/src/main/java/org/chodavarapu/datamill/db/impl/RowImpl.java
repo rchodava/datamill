@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.db.impl;
 
+import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.values.Value;
 import org.chodavarapu.datamill.db.DatabaseException;
 import org.chodavarapu.datamill.db.Row;
@@ -31,6 +32,11 @@ public class RowImpl implements Row {
     @Override
     public Value column(String table, String name) {
         return new LabeledColumnValue(table + name);
+    }
+
+    @Override
+    public Value column(Member member) {
+        return column(member.outline().pluralName(), member.name());
     }
 
     @Override

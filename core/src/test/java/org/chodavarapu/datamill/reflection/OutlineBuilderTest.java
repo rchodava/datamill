@@ -36,9 +36,9 @@ public class OutlineBuilderTest {
         OutlineBuilder outlineBuilder = new OutlineBuilder();
         Outline<TestBeanClass> outline = outlineBuilder.defaultSnakeCased().build(TestBeanClass.class);
 
-        assertEquals("read_only_property", outline.name(outline.members().getReadOnlyProperty()));
-        assertEquals("boolean_property", outline.name(outline.members().isBooleanProperty()));
-        assertEquals("read_write_property", outline.name(members -> members.setReadWriteProperty("")));
+        assertEquals("read_only_property", outline.member(m -> m.getReadOnlyProperty()).name());
+        assertEquals("boolean_property", outline.member(m -> m.isBooleanProperty()).name());
+        assertEquals("read_write_property", outline.member(m -> m.setReadWriteProperty("")).name());
 
         assertEquals("test_bean_class", outline.name());
         assertEquals("test_bean_classes", outline.pluralName());
@@ -51,9 +51,9 @@ public class OutlineBuilderTest {
         OutlineBuilder outlineBuilder = new OutlineBuilder();
         Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
 
-        assertEquals("readOnlyProperty", outline.name(outline.members().getReadOnlyProperty()));
-        assertEquals("booleanProperty", outline.name(outline.members().isBooleanProperty()));
-        assertEquals("readWriteProperty", outline.name(members -> members.setReadWriteProperty("")));
+        assertEquals("readOnlyProperty", outline.member(m -> m.getReadOnlyProperty()).name());
+        assertEquals("booleanProperty", outline.member(m -> m.isBooleanProperty()).name());
+        assertEquals("readWriteProperty", outline.member(m -> m.setReadWriteProperty("")).name());
 
         assertEquals("TestBeanClass", outline.name());
         assertEquals("TestBeanClasses", outline.pluralName());

@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.db.impl;
 
 import org.chodavarapu.datamill.db.RowBuilder;
+import org.chodavarapu.datamill.reflection.Member;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -20,5 +21,10 @@ public class RowBuilderImpl implements RowBuilder {
     public <T> RowBuilder put(String name, T value) {
         values.put(name, value);
         return this;
+    }
+
+    @Override
+    public <T> RowBuilder put(Member member, T value) {
+        return put(member.name(), value);
     }
 }

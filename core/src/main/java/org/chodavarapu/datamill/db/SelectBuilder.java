@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.db;
 
+import org.chodavarapu.datamill.reflection.Outline;
 import rx.Observable;
 
 /**
@@ -7,4 +8,5 @@ import rx.Observable;
  */
 public interface SelectBuilder {
     WhereBuilder<Observable<Row>> from(String table);
+    WhereBuilder<Observable<Row>> from(Outline<?> outline);
 }

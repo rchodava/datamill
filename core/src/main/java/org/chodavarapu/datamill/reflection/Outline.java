@@ -8,24 +8,21 @@ import java.util.function.Consumer;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface Outline<T> {
-    <M> String camelCasedName(M member);
-    String camelCasedName(Consumer<T> memberInvoker);
-    String camelCasedName();
-    String camelCasedPluralName();
     <A extends Annotation> A getAnnotation(Class<A> annotationClass);
     boolean hasAnnotation(Class<? extends Annotation> annotationClass);
-    T members();
-    Collection<Method> methods();
-    <M> String name(M member);
-    String name(Consumer<T> memberInvoker);
+
+    String camelCasedName();
+    String camelCasedPluralName();
     String name();
     String pluralName();
-    Collection<Property> properties();
-    <P> Property property(P property);
-    Collection<String> propertyNames();
-    <M> String snakeCasedName(M member);
-    String snakeCasedName(Consumer<T> memberInvoker);
     String snakeCasedName();
     String snakeCasedPluralName();
+
+    Member member(Consumer<T> memberInvoker);
+    Collection<Method> methods();
+    Collection<Property> properties();
+    Property property(Consumer<T> memberInvoker);
+    Collection<String> propertyNames();
+
     Bean<T> wrap(T instance);
 }

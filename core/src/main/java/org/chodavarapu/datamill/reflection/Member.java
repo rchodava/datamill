@@ -7,4 +7,6 @@ public interface Member {
     String name();
     String camelCasedName();
     String snakeCasedName();
+
+    Outline<?> outline();
 }

@@ -5,10 +5,7 @@ import com.google.common.base.Defaults;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.Proxy;
 import org.atteo.evo.inflector.English;
-import org.chodavarapu.datamill.reflection.Bean;
-import org.chodavarapu.datamill.reflection.Outline;
-import org.chodavarapu.datamill.reflection.Property;
-import org.chodavarapu.datamill.reflection.ReflectionException;
+import org.chodavarapu.datamill.reflection.*;
 import org.chodavarapu.datamill.values.Value;
 
 import java.beans.BeanInfo;
@@ -16,11 +13,15 @@ import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 
 /**
@@ -64,23 +65,12 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     @Override
-    public String camelCasedName(Consumer<T> memberInvoker) {
-        memberInvoker.accept(members());
-        return camelCasedName((Boolean) null);
-    }
-
-    @Override
-    public <P> String camelCasedName(P member) {
-        return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, lastInvokedMemberName());
-    }
-
-    @Override
     public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
         return getOutlinedClass().getAnnotation(annotationClass);
     }
 
     private Class<?> getOutlinedClass() {
-        return members().getClass().getSuperclass();
+        return members.getClass().getSuperclass();
     }
 
     private Map<String, Property> getProperties() {
@@ -106,7 +96,7 @@ public class OutlineImpl<T> implements Outline<T> {
                     properties.put(camelCased ?
                                     descriptor.getName() :
                                     CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, descriptor.getName()),
-                            new Property(descriptor, camelCased));
+                            new PropertyImpl<>(descriptor));
                 }
             }
         } catch (IntrospectionException e) {
@@ -154,8 +144,9 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     @Override
-    public T members() {
-        return members;
+    public Member member(Consumer<T> memberInvoker) {
+        memberInvoker.accept(members);
+        return new MemberImpl(lastInvokedMemberName());
     }
 
     @Override
@@ -164,23 +155,13 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     @Override
-    public String name(Consumer<T> memberInvoker) {
-        return camelCased ? camelCasedName(memberInvoker) : snakeCasedName(memberInvoker);
-    }
-
-    @Override
-    public <P> String name(P member) {
-        return camelCased ? camelCasedName(member) : snakeCasedName(member);
-    }
-
-    @Override
     public String pluralName() {
         return English.plural(name());
     }
 
     @Override
-    public <P> Property property(P property) {
-        return getProperties().get(name(property));
+    public Property property(Consumer<T> memberInvoker) {
+        return getProperties().get(member(memberInvoker).name());
     }
 
     @Override
@@ -199,17 +180,6 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     @Override
-    public String snakeCasedName(Consumer<T> memberInvoker) {
-        memberInvoker.accept(members());
-        return snakeCasedName((Boolean) null);
-    }
-
-    @Override
-    public <P> String snakeCasedName(P member) {
-        return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, lastInvokedMemberName());
-    }
-
-    @Override
     public String snakeCasedPluralName() {
         return English.plural(snakeCasedName());
     }
@@ -225,10 +195,10 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public Bean<T> wrap(T instance) {
-        return new BeanImpl<>(instance);
+        return new BeanImpl(instance);
     }
 
-    private class BeanImpl<T> implements Bean<T> {
+    private class BeanImpl implements Bean<T> {
         private final T instance;
 
         public BeanImpl(T instance) {
@@ -236,8 +206,8 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
-        public <P> P get(P property) {
-            return (P) OutlineImpl.this.property(property).get(instance);
+        public <P> P get(Consumer<T> propertyInvoker) {
+            return (P) OutlineImpl.this.property(propertyInvoker).get(instance);
         }
 
         @Override
@@ -261,9 +231,9 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
-        public <P> Bean<T> set(P property, Value value) {
-            Property descriptor = OutlineImpl.this.property(property);
-            Class<?> type = descriptor.getType();
+        public Bean<T> set(Consumer<T> propertyInvoker, Value value) {
+            Property descriptor = OutlineImpl.this.property(propertyInvoker);
+            Class<?> type = descriptor.type();
             if (type == boolean.class || type == Boolean.class) {
                 descriptor.set(instance, value.asBoolean());
             } else if (type == byte.class || type == Byte.class) {
@@ -287,14 +257,135 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
-        public <P> Bean<T> set(P property, P value) {
-            OutlineImpl.this.property(property).set(instance, value);
+        public <P> Bean<T> set(Consumer<T> propertyInvoker, P value) {
+            OutlineImpl.this.property(propertyInvoker).set(instance, value);
             return this;
         }
 
         @Override
         public T unwrap() {
             return instance;
+        }
+    }
+
+    private class PropertyImpl<T> extends MemberImpl implements Property<T> {
+        private final PropertyDescriptor descriptor;
+
+        public PropertyImpl(PropertyDescriptor descriptor) {
+            super(descriptor.getName());
+
+            this.descriptor = descriptor;
+        }
+
+        public boolean isReadOnly() {
+            return descriptor.getWriteMethod() == null;
+        }
+
+        public boolean isSimple() {
+            Class<?> propertyType = descriptor.getPropertyType();
+            return propertyType.isPrimitive() || propertyType.isEnum() || propertyType == String.class;
+        }
+
+        @Override
+        public Class<?> type() {
+            return descriptor.getPropertyType();
+        }
+
+        private <T> T performSecureGet(Callable<T> runnable) {
+            if (System.getSecurityManager() != null) {
+                return AccessController.doPrivileged((PrivilegedAction<T>) () -> {
+                    try {
+                        return runnable.call();
+                    } catch (Exception e) {
+                        throw new ReflectionException(e);
+                    }
+                });
+            } else {
+                try {
+                    return runnable.call();
+                } catch (Exception e) {
+                    throw new ReflectionException(e);
+                }
+            }
+        }
+
+        private void performSecure(Runnable runnable) {
+            if (System.getSecurityManager() != null) {
+                AccessController.doPrivileged((PrivilegedAction<?>) () -> {
+                    runnable.run();
+                    return null;
+                });
+            } else {
+                runnable.run();
+            }
+        }
+
+        public <P> P get(T instance) {
+            java.lang.reflect.Method readMethod = descriptor.getReadMethod();
+            if (readMethod != null) {
+                if (!readMethod.isAccessible()) {
+                    performSecure(() -> readMethod.setAccessible(true));
+                }
+
+                return performSecureGet(() -> {
+                    try {
+                        return (P) readMethod.invoke(instance);
+                    } catch (InvocationTargetException e) {
+                        throw new ReflectionException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new ReflectionException(e);
+                    }
+                });
+            } else {
+                throw new ReflectionException("Property does not have a getter!");
+            }
+        }
+
+        public <P> void set(T instance, P value) {
+            java.lang.reflect.Method writeMethod = descriptor.getWriteMethod();
+            if (writeMethod != null) {
+                if (!writeMethod.isAccessible()) {
+                    performSecure(() -> writeMethod.setAccessible(true));
+                }
+
+                performSecure(() -> {
+                    try {
+                        writeMethod.invoke(instance, value);
+                    } catch (InvocationTargetException e) {
+                        throw new ReflectionException(e);
+                    } catch (IllegalAccessException e) {
+                        throw new ReflectionException(e);
+                    }
+                });
+            }
+        }
+    }
+
+    private class MemberImpl implements Member {
+        private String memberName;
+
+        public MemberImpl(String memberName) {
+            this.memberName = memberName;
+        }
+
+        @Override
+        public String camelCasedName() {
+            return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, memberName);
+        }
+
+        @Override
+        public String snakeCasedName() {
+            return CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, memberName);
+        }
+
+        @Override
+        public String name() {
+            return camelCased ? camelCasedName() : snakeCasedName();
+        }
+
+        @Override
+        public Outline<?> outline() {
+            return OutlineImpl.this;
         }
     }
 
