@@ -11,7 +11,7 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonObject implements ReflectableValue {
-    private final io.vertx.core.json.JsonObject object;
+    final io.vertx.core.json.JsonObject object;
 
     public JsonObject() {
         object = new io.vertx.core.json.JsonObject();

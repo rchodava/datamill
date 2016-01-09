@@ -331,6 +331,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     }
 
     @Override
+    public SelectBuilder select(Member... members) {
+        ArrayList<String> columns = new ArrayList<>();
+        for (Member member : members) {
+            columns.add(qualifiedName(member.outline().pluralName(), member.name()));
+        }
+
+        return select(columns);
+    }
+
+    @Override
     public SelectBuilder select(Iterable<String> columns) {
         return new SelectQuery(columns);
     }

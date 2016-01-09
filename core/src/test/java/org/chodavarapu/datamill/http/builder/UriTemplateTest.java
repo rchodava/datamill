@@ -24,16 +24,14 @@ public class UriTemplateTest {
 
         assertThat(new UriTemplate("/{id}/property/").match("/12/property"),
                 equalTo(ImmutableMap.of("id", "12")));
-        assertThat(new UriTemplate("/{id}/property/").match("/12/property/second"),
-                equalTo(ImmutableMap.of("id", "12")));
+        assertNull(new UriTemplate("/{id}/property/").match("/12/property/second"));
 
         assertNull(new UriTemplate("/{id}/property/").match("/12/prop"));
         assertNull(new UriTemplate("/{id}/property/").match("34/12/property"));
 
         assertThat(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/"),
                 equalTo(ImmutableMap.of("userId", "user_12", "postId", "Post ID 456")));
-        assertThat(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/furtherUri/content"),
-                equalTo(ImmutableMap.of("userId", "user_12", "postId", "Post ID 456")));
+        assertNull(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/furtherUri/content"));
 
         assertThat(new UriTemplate("{id:\\w+}/users/{userId:\\w+}/").match("/testIdContent/users/testUserIdContent"),
                 equalTo(ImmutableMap.of("id", "testIdContent", "userId", "testUserIdContent")));

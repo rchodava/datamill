@@ -98,6 +98,10 @@ public class UriTemplate {
             position = regionEnd;
         }
 
+        if (position != uri.length()) {
+            return null;
+        }
+
         if (matches == null) {
             return Collections.emptyMap();
         }
