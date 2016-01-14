@@ -38,7 +38,9 @@ public class MethodAndUriMatcher extends RouteMatcher {
         if (uriTemplate != null) {
             Map<String, String> uriParameters = uriTemplate.match(request.uri());
             if (uriParameters != null) {
-                ((ServerRequestImpl) request).setUriParameters(uriParameters);
+                if (!uriParameters.isEmpty()) {
+                    ((ServerRequestImpl) request).setUriParameters(uriParameters);
+                }
 
                 logger.debug("Request matched {} {}", method, uriTemplate);
                 return true;

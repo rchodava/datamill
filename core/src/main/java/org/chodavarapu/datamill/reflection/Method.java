@@ -27,6 +27,7 @@ public class Method {
 
     public <T, R> R invoke(T instance, Object... arguments) {
         try {
+            method.setAccessible(true);
             return (R) method.invoke(instance, arguments);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new ReflectionException(e);

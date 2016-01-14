@@ -61,10 +61,6 @@ public class BeanMethodMatcher implements Matcher {
             path = pathAnnotation.value();
         }
 
-        if (path == null) {
-            path = "";
-        }
-
         final String beanPath = path;
 
         beanOutline.methods().stream().forEach(method -> {
@@ -72,7 +68,7 @@ public class BeanMethodMatcher implements Matcher {
 
             Path methodPathAnnotation = method.getAnnotation(Path.class);
             if (methodPathAnnotation != null) {
-                methodPath = combinePaths(beanPath, methodPathAnnotation.value());
+                methodPath = combinePaths(beanPath == null ? "" : beanPath, methodPathAnnotation.value());
             }
 
             Route handler = request -> route.apply(request, method);
