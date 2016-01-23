@@ -5,6 +5,8 @@ import com.github.davidmoten.rx.jdbc.QueryUpdate;
 import org.chodavarapu.datamill.db.impl.QueryBuilderImpl;
 import org.chodavarapu.datamill.db.impl.RowImpl;
 import org.flywaydb.core.Flyway;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import javax.sql.DataSource;
@@ -77,10 +79,12 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
 
     @Override
     public UpdateQueryExecution update(String sql, Object... parameters) {
-        return new UpdateQueryExecutionImpl(getDatabase().update(sql).parameters(parameters));
+        return new UpdateQueryExecutionImpl(getDatabase().update(sql).parameters(Observable.from(parameters)));
     }
 
     private static class UpdateQueryExecutionImpl implements UpdateQueryExecution {
+        private static final Logger logger = LoggerFactory.getLogger(UpdateQueryExecutionImpl.class);
+
         private QueryUpdate.Builder updateBuilder;
 
         public UpdateQueryExecutionImpl(QueryUpdate.Builder updateBuilder) {
@@ -89,12 +93,14 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
 
         @Override
         public Observable<Integer> count() {
-            return updateBuilder.count();
+            return updateBuilder.count()
+                    .doOnError(t -> logger.error("Error executing update statement!", t));
         }
 
         @Override
         public Observable<Long> getIds() {
-            return updateBuilder.returnGeneratedKeys().getAs(Long.class);
+            return updateBuilder.returnGeneratedKeys().getAs(Long.class)
+                    .doOnError(t -> logger.error("Error executing update statement!", t));
         }
     }
 }
