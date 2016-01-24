@@ -2,7 +2,6 @@ package org.chodavarapu.datamill.db.impl;
 
 import com.google.common.collect.ImmutableMap;
 import org.chodavarapu.datamill.db.Row;
-import org.chodavarapu.datamill.db.UpdateBuilder;
 import org.chodavarapu.datamill.db.UpdateQueryExecution;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.reflection.OutlineBuilder;
@@ -26,6 +25,24 @@ public class QueryBuilderImplTest {
 
         public String getId() {
             return "";
+        }
+    }
+
+    private static class InsertQueryBean {
+        private String id;
+        private String name;
+
+        public InsertQueryBean(String id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        public String getId() {
+            return id;
+        }
+
+        public String getName() {
+            return name;
         }
     }
 
@@ -223,6 +240,13 @@ public class QueryBuilderImplTest {
         queryBuilder.insertInto("table_name").row(r -> r.put("string_column", "value").build());
         assertEquals("INSERT INTO table_name (string_column) VALUES (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
+        assertTrue(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.insertInto("table_name").values(
+                Arrays.asList(new InsertQueryBean("id1", "name1"), new InsertQueryBean("id2", "name2")),
+                (r, b) -> r.put("id", b.getId()).put("name", b.getName()).build());
+        assertEquals("INSERT INTO table_name (id, name) VALUES (?, ?), (?, ?)", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { "id1", "name1", "id2", "name2" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.insertInto("table_name").values(ImmutableMap.of("int_column", 2, "boolean_column", true));

@@ -3,6 +3,7 @@ package org.chodavarapu.datamill.json;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -11,7 +12,7 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonArray implements ReflectableValue {
-    private final io.vertx.core.json.JsonArray array;
+    final io.vertx.core.json.JsonArray array;
 
     public JsonArray() {
         array = new io.vertx.core.json.JsonArray();
@@ -27,6 +28,11 @@ public class JsonArray implements ReflectableValue {
             objects.add(value.object);
         }
         array = new io.vertx.core.json.JsonArray(objects);
+    }
+
+    public JsonArray add(JsonObject value) {
+        array.add(value.object);
+        return this;
     }
 
     @Override
@@ -57,6 +63,11 @@ public class JsonArray implements ReflectableValue {
     @Override
     public double asDouble() {
         throw new JsonException("A JSON array cannot be converted to a double!");
+    }
+
+    @Override
+    public LocalDateTime asLocalDateTime() {
+        throw new JsonException("A JSON array cannot be converted to a LocalDateTime!");
     }
 
     @Override

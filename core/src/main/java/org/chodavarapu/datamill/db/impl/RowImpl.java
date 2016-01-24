@@ -7,6 +7,7 @@ import org.chodavarapu.datamill.db.Row;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.function.Function;
 
 /**
@@ -95,6 +96,11 @@ public class RowImpl implements Row {
         }
 
         @Override
+        public LocalDateTime asLocalDateTime() {
+            return safeRetrieve(k -> resultSet.getTimestamp(key).toLocalDateTime());
+        }
+
+        @Override
         public long asLong() {
             return safeRetrieve(k -> resultSet.getLong(key));
         }
@@ -143,6 +149,11 @@ public class RowImpl implements Row {
         @Override
         public double asDouble() {
             return safeRetrieve(k -> resultSet.getDouble(key));
+        }
+
+        @Override
+        public LocalDateTime asLocalDateTime() {
+            return safeRetrieve(k -> resultSet.getTimestamp(key).toLocalDateTime());
         }
 
         @Override

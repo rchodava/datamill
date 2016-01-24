@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.values;
 
+import java.time.LocalDateTime;
 import java.util.UnknownFormatConversionException;
 import java.util.function.Function;
 
@@ -49,6 +50,11 @@ public class StringValue implements ReflectableValue {
     @Override
     public float asFloat() {
         return Float.parseFloat(value);
+    }
+
+    @Override
+    public LocalDateTime asLocalDateTime() {
+        return LocalDateTime.parse(value);
     }
 
     @Override

@@ -4,14 +4,15 @@ import com.google.common.base.Joiner;
 import org.chodavarapu.datamill.db.*;
 import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.reflection.Outline;
+import org.chodavarapu.datamill.values.Times;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import java.sql.*;
-import java.time.*;
 import java.time.temporal.Temporal;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,19 +39,6 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_WHERE = " WHERE ";
     private static final String SQL_UPDATE = "UPDATE ";
 
-    private static long toEpochMillis(Temporal temporal) {
-        if (temporal instanceof LocalDate) {
-            return ((LocalDate) temporal).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        } else if (temporal instanceof LocalDateTime) {
-            return ((LocalDateTime) temporal).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        } else if (temporal instanceof OffsetDateTime) {
-            return ((OffsetDateTime) temporal).toInstant().toEpochMilli();
-        } else if (temporal instanceof ZonedDateTime) {
-            return ((ZonedDateTime) temporal).toInstant().toEpochMilli();
-        }
-
-        throw new IllegalArgumentException("The specified temporal type is not supported!");
-    }
     private class UpdateQuery implements UpdateBuilder {
         private final List<Object> parameters = new ArrayList<>();
         private final StringBuilder query = new StringBuilder();
@@ -109,6 +97,17 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
+        public <T> UpdateQueryExecution values(Collection<T> values, BiFunction<RowBuilder, T, Map<String, ?>> constructor) {
+            ArrayList<Map<String, ?>> rows = new ArrayList<>(values.size());
+            for (T value : values) {
+                Map<String, ?> row = constructor.apply(new RowBuilderImpl(), value);
+                rows.add(row);
+            }
+
+            return values(rows.toArray(new Map[rows.size()]));
+        }
+
+        @Override
         public UpdateQueryExecution values(Map<String, ?>... rows) {
             if (rows.length < 1) {
                 return EMPTY_UPDATE_EXECUTION;
@@ -142,7 +141,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
                     } else {
                         values.append(SQL_PARAMETER_PLACEHOLDER);
                         if (value instanceof Temporal) {
-                            value = new Timestamp(toEpochMillis((Temporal) value));
+                            value = new Timestamp(Times.toEpochMillis((Temporal) value));
                         }
 
                         parameters.add(value);

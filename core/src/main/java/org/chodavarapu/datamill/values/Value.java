@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.values;
 
+import java.time.LocalDateTime;
 import java.util.function.Function;
 
 /**
@@ -12,6 +13,7 @@ public interface Value {
     double asDouble();
     float asFloat();
     int asInteger();
+    LocalDateTime asLocalDateTime();
     long asLong();
     short asShort();
     String asString();

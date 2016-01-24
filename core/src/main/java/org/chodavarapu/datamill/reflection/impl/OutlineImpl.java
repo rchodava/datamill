@@ -17,6 +17,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -250,6 +251,8 @@ public class OutlineImpl<T> implements Outline<T> {
                 descriptor.set(instance, value.asFloat());
             } else if (type == double.class || type == Double.class) {
                 descriptor.set(instance, value.asDouble());
+            } else if (type == LocalDateTime.class) {
+                descriptor.set(instance, value.asLocalDateTime());
             } else {
                 descriptor.set(instance, value.asString());
             }

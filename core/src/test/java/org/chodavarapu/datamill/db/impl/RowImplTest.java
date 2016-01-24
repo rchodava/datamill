@@ -2,9 +2,13 @@ package org.chodavarapu.datamill.db.impl;
 
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.reflection.OutlineBuilder;
+import org.chodavarapu.datamill.values.Times;
 import org.junit.Test;
 
 import java.sql.ResultSet;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -36,6 +40,10 @@ public class RowImplTest {
 
         when(resultSet.getDouble("test_beans.property_name")).thenReturn(1.23);
         assertEquals(1.23, row.column(outline.member(m -> m.getPropertyName())).asDouble(), 0.001);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(resultSet.getTimestamp("test_beans.property_name")).thenReturn(new Timestamp(Times.toEpochMillis(now)));
+        assertEquals(now, row.column(outline.member(m -> m.getPropertyName())).asLocalDateTime());
 
         when(resultSet.getLong("test_beans.property_name")).thenReturn(156l);
         assertEquals(156l, row.column(outline.member(m -> m.getPropertyName())).asLong());
@@ -71,6 +79,10 @@ public class RowImplTest {
         when(resultSet.getDouble(15)).thenReturn(1.23);
         assertEquals(1.23, row.column(15).asDouble(), 0.001);
 
+        LocalDateTime now = LocalDateTime.now();
+        when(resultSet.getTimestamp(15)).thenReturn(new Timestamp(Times.toEpochMillis(now)));
+        assertEquals(now, row.column(15).asLocalDateTime());
+
         when(resultSet.getLong(16)).thenReturn(156l);
         assertEquals(156l, row.column(16).asLong());
 
@@ -105,6 +117,10 @@ public class RowImplTest {
         when(resultSet.getDouble("label15")).thenReturn(1.23);
         assertEquals(1.23, row.column("label15").asDouble(), 0.001);
 
+        LocalDateTime now = LocalDateTime.now();
+        when(resultSet.getTimestamp("label15")).thenReturn(new Timestamp(Times.toEpochMillis(now)));
+        assertEquals(now, row.column("label15").asLocalDateTime());
+
         when(resultSet.getLong("label16")).thenReturn(156l);
         assertEquals(156l, row.column("label16").asLong());
 
@@ -138,6 +154,10 @@ public class RowImplTest {
 
         when(resultSet.getDouble("table.label15")).thenReturn(1.23);
         assertEquals(1.23, row.column("table", "label15").asDouble(), 0.001);
+
+        LocalDateTime now = LocalDateTime.now();
+        when(resultSet.getTimestamp("table.label15")).thenReturn(new Timestamp(Times.toEpochMillis(now)));
+        assertEquals(now, row.column("table", "label15").asLocalDateTime());
 
         when(resultSet.getLong("table.label16")).thenReturn(156l);
         assertEquals(156l, row.column("table", "label16").asLong());

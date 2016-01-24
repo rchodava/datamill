@@ -4,6 +4,7 @@ import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -53,6 +54,11 @@ public class JsonObject implements ReflectableValue {
     @Override
     public double asDouble() {
         throw new JsonException("A JSON object cannot be converted to a double!");
+    }
+
+    @Override
+    public LocalDateTime asLocalDateTime() {
+        throw new JsonException("A JSON object cannot be converted to a LocalDateTime!");
     }
 
     @Override
@@ -138,6 +144,11 @@ public class JsonObject implements ReflectableValue {
         return this;
     }
 
+    public JsonObject put(String key, JsonArray array) {
+        object.put(key, array.array);
+        return this;
+    }
+
     public <T> JsonObject put(Member member, T value) {
         return put(member.name(), value);
     }
@@ -191,6 +202,11 @@ public class JsonObject implements ReflectableValue {
         @Override
         public int asInteger() {
             return object.getInteger(name);
+        }
+
+        @Override
+        public LocalDateTime asLocalDateTime() {
+            return LocalDateTime.parse(object.getString(name));
         }
 
         @Override

@@ -2,6 +2,8 @@ package org.chodavarapu.datamill.values;
 
 import org.junit.Test;
 
+import java.time.LocalDateTime;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
@@ -76,5 +78,13 @@ public class StringValueTest {
         StringValue value = new StringValue("test");
         assertTrue(value.isString());
         assertEquals("test", value.asString());
+    }
+
+    @Test
+    public void timeConversions() {
+        LocalDateTime now = LocalDateTime.now();
+        String time = now.toString();
+        StringValue value = new StringValue(time);
+        assertEquals(now, value.asLocalDateTime());
     }
 }
