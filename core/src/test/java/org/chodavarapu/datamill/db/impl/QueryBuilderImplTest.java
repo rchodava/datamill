@@ -100,27 +100,27 @@ public class QueryBuilderImplTest {
         assertEquals("SELECT * FROM query_test_beans", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq("int_column", 2);
+        queryBuilder.selectAll().from("table_name").where().eq("int_column", 2).execute();
         assertEquals("SELECT * FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq(outline.member(m -> m.getId()), 2);
+        queryBuilder.selectAll().from("table_name").where().eq(outline.member(m -> m.getId()), 2).execute();
         assertEquals("SELECT * FROM table_name WHERE query_test_beans.id = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq("table_name", "int_column", 2);
+        queryBuilder.selectAll().from("table_name").where().eq("table_name", "int_column", 2).execute();
         assertEquals("SELECT * FROM table_name WHERE table_name.int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq("boolean_column", true);
+        queryBuilder.selectAll().from("table_name").where().eq("boolean_column", true).execute();
         assertEquals("SELECT * FROM table_name WHERE boolean_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { true }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.selectAll().from("table_name").where().eq("string_column", "value");
+        queryBuilder.selectAll().from("table_name").where().eq("string_column", "value").execute();
         assertEquals("SELECT * FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
@@ -157,12 +157,12 @@ public class QueryBuilderImplTest {
         assertEquals("SELECT table_name.column_name, table_name.second_column FROM table_name", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("int_column", 2);
+        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("int_column", 2).execute();
         assertEquals("SELECT column_name, second_column FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("table_name", "int_column", 2);
+        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("table_name", "int_column", 2).execute();
         assertEquals("SELECT column_name, second_column FROM table_name WHERE table_name.int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
@@ -178,7 +178,7 @@ public class QueryBuilderImplTest {
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.select(Arrays.asList("column_name", "second_column")).from("table_name")
-                .leftJoin("second_table").onEq("second_column", "third_column").where().eq("column_name", 2);
+                .leftJoin("second_table").onEq("second_column", "third_column").where().eq("column_name", 2).execute();
         assertEquals("SELECT column_name, second_column FROM table_name LEFT JOIN second_table ON second_column = third_column WHERE column_name = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
@@ -202,17 +202,17 @@ public class QueryBuilderImplTest {
         assertEquals("DELETE FROM table_name", queryBuilder.getLastQuery());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.deleteFrom("table_name").where().eq("int_column", 2);
+        queryBuilder.deleteFrom("table_name").where().eq("int_column", 2).execute();
         assertEquals("DELETE FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.deleteFrom("table_name").where().eq("boolean_column", true);
+        queryBuilder.deleteFrom("table_name").where().eq("boolean_column", true).execute();
         assertEquals("DELETE FROM table_name WHERE boolean_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.deleteFrom("table_name").where().eq("string_column", "value");
+        queryBuilder.deleteFrom("table_name").where().eq("string_column", "value").execute();
         assertEquals("DELETE FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
@@ -307,17 +307,17 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("int_column", 2);
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("int_column", 2).execute();
         assertEquals("UPDATE table_name SET int_column = ? WHERE int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1, 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("boolean_column", true);
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("boolean_column", true).execute();
         assertEquals("UPDATE table_name SET int_column = ? WHERE boolean_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1, true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("string_column", "value");
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().eq("string_column", "value").execute();
         assertEquals("UPDATE table_name SET int_column = ? WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1, "value" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
