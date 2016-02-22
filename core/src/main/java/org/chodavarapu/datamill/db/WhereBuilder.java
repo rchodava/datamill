@@ -7,7 +7,9 @@ import org.chodavarapu.datamill.reflection.Outline;
  */
 public interface WhereBuilder<R> {
     R all();
+    R execute();
     ConditionBuilder<R> where();
+    ConditionBuilder<R> and();
     JoinBuilder<R> leftJoin(String table);
     JoinBuilder<R> leftJoin(Outline<?> outline);
 }

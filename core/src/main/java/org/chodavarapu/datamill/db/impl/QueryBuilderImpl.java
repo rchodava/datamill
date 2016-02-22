@@ -1,7 +1,16 @@
 package org.chodavarapu.datamill.db.impl;
 
 import com.google.common.base.Joiner;
-import org.chodavarapu.datamill.db.*;
+import org.chodavarapu.datamill.db.ConditionBuilder;
+import org.chodavarapu.datamill.db.InsertBuilder;
+import org.chodavarapu.datamill.db.JoinBuilder;
+import org.chodavarapu.datamill.db.QueryBuilder;
+import org.chodavarapu.datamill.db.Row;
+import org.chodavarapu.datamill.db.RowBuilder;
+import org.chodavarapu.datamill.db.SelectBuilder;
+import org.chodavarapu.datamill.db.UpdateBuilder;
+import org.chodavarapu.datamill.db.UpdateQueryExecution;
+import org.chodavarapu.datamill.db.WhereBuilder;
 import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.values.Times;
@@ -9,9 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
-import java.sql.*;
+import java.sql.Timestamp;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -38,6 +53,8 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_SET = " SET ";
     private static final String SQL_WHERE = " WHERE ";
     private static final String SQL_UPDATE = "UPDATE ";
+    private static final String SQL_IS = " IS ";
+    private static final String SQL_AND = " AND ";
 
     private class UpdateQuery implements UpdateBuilder {
         private final List<Object> parameters = new ArrayList<>();
@@ -179,8 +196,19 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public <T> UpdateQueryExecution eq(String column, T value) {
+        public <T> WhereBuilder<UpdateQueryExecution> eq(String column, T value) {
             addEqualityClause(column, value);
+            return this;
+        }
+
+        @Override
+        public <T> WhereBuilder<UpdateQueryExecution> is(String column, T value) {
+            addIsClause(column, value);
+            return  this;
+        }
+
+        @Override
+        public UpdateQueryExecution execute() {
             return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
     }
@@ -204,8 +232,19 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public <T> Observable<Row> eq(String column, T value) {
+        public <T> WhereBuilder<Observable<Row>> eq(String column, T value) {
             addEqualityClause(column, value);
+            return this;
+        }
+
+        @Override
+        public <T> WhereBuilder<Observable<Row>> is(String column, T value) {
+            addIsClause(column, value);
+            return  this;
+        }
+
+        @Override
+        public Observable<Row> execute() {
             return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
     }
@@ -231,14 +270,38 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             parameters.add(value);
         }
 
+        protected <T> void addIsClause(String column, T value) {
+            query.append(column);
+            query.append(SQL_IS);
+            query.append(SQL_PARAMETER_PLACEHOLDER);
+
+            parameters.add(value);
+        }
+
         @Override
-        public <T> R eq(Member member, T value) {
+        public ConditionBuilder<R> and() {
+            query.append(SQL_AND);
+            return this;
+        }
+
+        @Override
+        public <T> WhereBuilder<R> eq(Member member, T value) {
             return eq(member.outline().pluralName(), member.name(), value);
         }
 
         @Override
-        public <T> R eq(String table, String column, T value) {
+        public <T> WhereBuilder<R> eq(String table, String column, T value) {
             return eq(qualifiedName(table, column), value);
+        }
+
+        @Override
+        public <T> WhereBuilder<R> is(String table, String column, T value) {
+            return is(qualifiedName(table, column), value);
+        }
+
+        @Override
+        public <T> WhereBuilder<R> is(Member member, T value) {
+            return is(member.outline().pluralName(), member.name(), value);
         }
 
         @Override
