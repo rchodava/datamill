@@ -24,7 +24,7 @@ public class Repository<T> {
     }
 
     protected <E> Outline<E> buildOutline(Class<E> entityClass) {
-        return outlineBuilder.build(entityClass);
+        return outlineBuilder.defaultSnakeCased().build(entityClass);
     }
 
     protected <R> R executeQuery(BiFunction<DatabaseClient, Outline<T>, R> executor) {
