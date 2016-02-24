@@ -29,6 +29,11 @@ public class StringValue implements ReflectableValue {
     }
 
     @Override
+    public byte[] asByteArray() {
+        return asString().getBytes();
+    }
+
+    @Override
     public boolean asBoolean() {
         return !isFalsy();
     }

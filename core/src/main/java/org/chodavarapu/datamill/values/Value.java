@@ -9,6 +9,7 @@ import java.util.function.Function;
 public interface Value {
     boolean asBoolean();
     byte asByte();
+    byte[] asByteArray();
     char asCharacter();
     double asDouble();
     float asFloat();

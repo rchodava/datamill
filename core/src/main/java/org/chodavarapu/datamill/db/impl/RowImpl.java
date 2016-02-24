@@ -86,6 +86,11 @@ public class RowImpl implements Row {
         }
 
         @Override
+        public byte[] asByteArray() {
+            return safeRetrieve(k -> resultSet.getBytes(key));
+        }
+
+        @Override
         public char asCharacter() {
             return safeRetrieve(k -> (char) resultSet.getInt(key));
         }
@@ -139,6 +144,11 @@ public class RowImpl implements Row {
         @Override
         public byte asByte() {
             return safeRetrieve(k -> resultSet.getByte(key));
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            return safeRetrieve(k -> resultSet.getBytes(key));
         }
 
         @Override

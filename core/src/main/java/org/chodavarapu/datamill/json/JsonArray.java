@@ -46,6 +46,11 @@ public class JsonArray implements ReflectableValue {
     }
 
     @Override
+    public byte[] asByteArray() {
+        return asString().getBytes();
+    }
+
+    @Override
     public char asCharacter() {
         throw new JsonException("A JSON array cannot be converted to a character!");
     }

@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,9 @@ public class RowImplTest {
 
         when(resultSet.getByte("test_beans.property_name")).thenReturn((byte) 26);
         assertEquals(26, row.column(outline.member(m -> m.getPropertyName())).asByte());
+
+        when(resultSet.getBytes("test_beans.property_name")).thenReturn("test".getBytes());
+        assertArrayEquals("test".getBytes(), row.column(outline.member(m -> m.getPropertyName())).asByteArray());
 
         when(resultSet.getInt("test_beans.property_name")).thenReturn((int) 'a');
         assertEquals('a', row.column(outline.member(m -> m.getPropertyName())).asCharacter());
@@ -73,6 +77,9 @@ public class RowImplTest {
         when(resultSet.getByte(13)).thenReturn((byte) 26);
         assertEquals(26, row.column(13).asByte());
 
+        when(resultSet.getBytes(21)).thenReturn("test".getBytes());
+        assertArrayEquals("test".getBytes(), row.column(21).asByteArray());
+
         when(resultSet.getInt(14)).thenReturn((int) 'a');
         assertEquals('a', row.column(14).asCharacter());
 
@@ -111,6 +118,9 @@ public class RowImplTest {
         when(resultSet.getByte("label13")).thenReturn((byte) 26);
         assertEquals(26, row.column("label13").asByte());
 
+        when(resultSet.getBytes("label21")).thenReturn("test".getBytes());
+        assertArrayEquals("test".getBytes(), row.column("label21").asByteArray());
+
         when(resultSet.getInt("label14")).thenReturn((int) 'a');
         assertEquals('a', row.column("label14").asCharacter());
 
@@ -148,6 +158,9 @@ public class RowImplTest {
 
         when(resultSet.getByte("table.label13")).thenReturn((byte) 26);
         assertEquals(26, row.column("table", "label13").asByte());
+
+        when(resultSet.getBytes("table.label21")).thenReturn("test".getBytes());
+        assertArrayEquals("test".getBytes(), row.column("table", "label21").asByteArray());
 
         when(resultSet.getInt("table.label14")).thenReturn((int) 'a');
         assertEquals('a', row.column("table", "label14").asCharacter());
