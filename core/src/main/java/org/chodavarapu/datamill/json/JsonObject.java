@@ -37,6 +37,11 @@ public class JsonObject implements ReflectableValue {
     }
 
     @Override
+    public byte[] asByteArray() {
+        return asString().getBytes();
+    }
+
+    @Override
     public char asCharacter() {
         throw new JsonException("A JSON object cannot be converted to a character!");
     }
@@ -173,6 +178,11 @@ public class JsonObject implements ReflectableValue {
         @Override
         public byte asByte() {
             return (byte) (int) object.getInteger(name);
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            return object.getBinary(name);
         }
 
         @Override

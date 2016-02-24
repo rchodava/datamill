@@ -4,9 +4,7 @@ import org.junit.Test;
 
 import java.time.LocalDateTime;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -40,6 +38,13 @@ public class StringValueTest {
         assertTrue(value.isBoolean());
         value = new StringValue("1");
         assertTrue(value.isBoolean());
+    }
+
+    @Test
+    public void binaryConversion() {
+        StringValue value = new StringValue("test");
+        assertTrue(value.isString());
+        assertArrayEquals("test".getBytes(), value.asByteArray());
     }
 
     @Test

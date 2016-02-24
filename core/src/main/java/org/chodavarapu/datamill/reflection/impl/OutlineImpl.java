@@ -253,6 +253,8 @@ public class OutlineImpl<T> implements Outline<T> {
                 descriptor.set(instance, value.asDouble());
             } else if (type == LocalDateTime.class) {
                 descriptor.set(instance, value.asLocalDateTime());
+            } else if (type == byte[].class) {
+                descriptor.set(instance, value.asByteArray());
             } else {
                 descriptor.set(instance, value.asString());
             }
