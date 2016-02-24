@@ -9,7 +9,7 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface InsertBuilder {
-    <T> UpdateQueryExecution values(Collection<T> values, BiFunction<RowBuilder, T, Map<String, ?>> constructor);
-    UpdateQueryExecution values(Map<String, ?>... values);
-    UpdateQueryExecution row(Function<RowBuilder, Map<String, ?>> constructor);
+    <T> InsertSuffixBuilder values(Collection<T> values, BiFunction<RowBuilder, T, Map<String, ?>> constructor);
+    InsertSuffixBuilder values(Map<String, ?>... values);
+    InsertSuffixBuilder row(Function<RowBuilder, Map<String, ?>> constructor);
 }

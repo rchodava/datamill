@@ -18,6 +18,18 @@ import static org.junit.Assert.*;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class QueryBuilderImplTest {
+    private static final UpdateQueryExecution EMPTY_UPDATE_QUERY_EXECUTION = new UpdateQueryExecution() {
+        @Override
+        public Observable<Integer> count() {
+            return null;
+        }
+
+        @Override
+        public Observable<Long> getIds() {
+            return null;
+        }
+    };
+
     private static class QueryTestBean {
         public String getName() {
             return "";
@@ -83,7 +95,7 @@ public class QueryBuilderImplTest {
             lastQuery = query;
             lastParameters = parameters;
             lastWasUpdate = true;
-            return null;
+            return EMPTY_UPDATE_QUERY_EXECUTION;
         }
     }
 
@@ -222,34 +234,34 @@ public class QueryBuilderImplTest {
     public void insertQueries() {
         TestQueryBuilderImpl queryBuilder = new TestQueryBuilderImpl();
 
-        queryBuilder.insertInto("table_name").row(r -> r.put("int_column", 2).put("boolean_column", true).build());
+        queryBuilder.insertInto("table_name").row(r -> r.put("int_column", 2).put("boolean_column", true).build()).count();
         assertEquals("INSERT INTO table_name (int_column, boolean_column) VALUES (?, ?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2, true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.insertInto("table_name").row(r -> r.put("boolean_column", true).put("int_column", 2).build());
+        queryBuilder.insertInto("table_name").row(r -> r.put("boolean_column", true).put("int_column", 2).build()).count();
         assertEquals("INSERT INTO table_name (boolean_column, int_column) VALUES (?, ?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { true, 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.insertInto("table_name").row(r -> r.put("boolean_value", true).put("null_column", null).build());
+        queryBuilder.insertInto("table_name").row(r -> r.put("boolean_value", true).put("null_column", null).build()).count();
         assertEquals("INSERT INTO table_name (boolean_value, null_column) VALUES (?, NULL)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.insertInto("table_name").row(r -> r.put("string_column", "value").build());
+        queryBuilder.insertInto("table_name").row(r -> r.put("string_column", "value").build()).count();
         assertEquals("INSERT INTO table_name (string_column) VALUES (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.insertInto("table_name").values(
                 Arrays.asList(new InsertQueryBean("id1", "name1"), new InsertQueryBean("id2", "name2")),
-                (r, b) -> r.put("id", b.getId()).put("name", b.getName()).build());
+                (r, b) -> r.put("id", b.getId()).put("name", b.getName()).build()).count();
         assertEquals("INSERT INTO table_name (id, name) VALUES (?, ?), (?, ?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "id1", "name1", "id2", "name2" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.insertInto("table_name").values(ImmutableMap.of("int_column", 2, "boolean_column", true));
+        queryBuilder.insertInto("table_name").values(ImmutableMap.of("int_column", 2, "boolean_column", true)).count();
         assertEquals("INSERT INTO table_name (int_column, boolean_column) VALUES (?, ?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2, true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
@@ -257,7 +269,7 @@ public class QueryBuilderImplTest {
         HashMap<String, Object> values = new LinkedHashMap<>();
         values.put("int_column", 2);
         values.put("boolean_column", null);
-        queryBuilder.insertInto("table_name").values(values);
+        queryBuilder.insertInto("table_name").values(values).count();
         assertEquals("INSERT INTO table_name (int_column, boolean_column) VALUES (?, NULL)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
@@ -268,10 +280,25 @@ public class QueryBuilderImplTest {
         HashMap<String, Object> row2 = new LinkedHashMap<>();
         row2.put("int_column", null);
         row2.put("string_column", "value");
-        queryBuilder.insertInto("table_name").values(row1, row2);
+        queryBuilder.insertInto("table_name").values(row1, row2).count();
         assertEquals("INSERT INTO table_name (int_column, boolean_column, string_column) VALUES (?, NULL, NULL), (NULL, NULL, ?)",
                 queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2, "value" }, queryBuilder.getLastParameters());
+        assertTrue(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.insertInto("table_name").row(r -> r.put("boolean_column", true).put("int_column", 2).build())
+                .onDuplicateKeyUpdate(r -> r.put("boolean_column", false).build()).count();
+        assertEquals("INSERT INTO table_name (boolean_column, int_column) VALUES (?, ?) ON DUPLICATE KEY UPDATE boolean_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { true, 2, false }, queryBuilder.getLastParameters());
+        assertTrue(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.insertInto("table_name").values(
+                Arrays.asList(new InsertQueryBean("id1", "name1"), new InsertQueryBean("id2", "name2")),
+                (r, b) -> r.put("id", b.getId()).put("name", b.getName()).build())
+                .onDuplicateKeyUpdate(ImmutableMap.of("name", 12))
+                .count();
+        assertEquals("INSERT INTO table_name (id, name) VALUES (?, ?), (?, ?) ON DUPLICATE KEY UPDATE name = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { "id1", "name1", "id2", "name2", 12 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
     }
 
