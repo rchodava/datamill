@@ -1,16 +1,7 @@
 package org.chodavarapu.datamill.db.impl;
 
 import com.google.common.base.Joiner;
-import org.chodavarapu.datamill.db.ConditionBuilder;
-import org.chodavarapu.datamill.db.InsertBuilder;
-import org.chodavarapu.datamill.db.JoinBuilder;
-import org.chodavarapu.datamill.db.QueryBuilder;
-import org.chodavarapu.datamill.db.Row;
-import org.chodavarapu.datamill.db.RowBuilder;
-import org.chodavarapu.datamill.db.SelectBuilder;
-import org.chodavarapu.datamill.db.UpdateBuilder;
-import org.chodavarapu.datamill.db.UpdateQueryExecution;
-import org.chodavarapu.datamill.db.WhereBuilder;
+import org.chodavarapu.datamill.db.*;
 import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.values.Times;
@@ -38,7 +29,7 @@ import java.util.stream.StreamSupport;
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final Logger logger = LoggerFactory.getLogger(QueryBuilderImpl.class);
-    private static final UpdateQueryExecution EMPTY_UPDATE_EXECUTION = new EmptyUpdateQueryExecution();
+    private static final InsertSuffixBuilder EMPTY_UPDATE_BUILDER = new EmptyUpdateSuffixBuilder();
 
     private static final String SQL_ASSIGNMENT = " = ";
     private static final String SQL_DELETE_FROM = "DELETE FROM ";
@@ -48,6 +39,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_LEFT_JOIN = " LEFT JOIN ";
     private static final String SQL_NULL = "NULL";
     private static final String SQL_ON = " ON ";
+    private static final String SQL_ON_DUPLICATE_KEY_UPDATE = " ON DUPLICATE KEY UPDATE ";
     private static final String SQL_PARAMETER_PLACEHOLDER = "?";
     private static final String SQL_SELECT = "SELECT ";
     private static final String SQL_SET = " SET ";
@@ -55,6 +47,27 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_UPDATE = "UPDATE ";
     private static final String SQL_IS = " IS ";
     private static final String SQL_AND = " AND ";
+
+    private static void appendUpdateAssignments(StringBuilder query, List<Object> parameters, Map<String, ?> values) {
+        List<String> setters = new ArrayList<>(values.size());
+
+        for (Map.Entry<String, ?> column : values.entrySet()) {
+            StringBuilder setter = new StringBuilder(column.getKey());
+            setter.append(SQL_ASSIGNMENT);
+
+            Object value = column.getValue();
+            if (value == null) {
+                setter.append(SQL_NULL);
+            } else {
+                setter.append(SQL_PARAMETER_PLACEHOLDER);
+                parameters.add(value);
+            }
+
+            setters.add(setter.toString());
+        }
+
+        Joiner.on(", ").appendTo(query, setters);
+    }
 
     private class UpdateQuery implements UpdateBuilder {
         private final List<Object> parameters = new ArrayList<>();
@@ -72,24 +85,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
                 return new UpdateWhereClause(query, parameters);
             }
 
-            List<String> setters = new ArrayList<>(values.size());
-
-            for (Map.Entry<String, ?> column : values.entrySet()) {
-                StringBuilder setter = new StringBuilder(column.getKey());
-                setter.append(SQL_ASSIGNMENT);
-
-                Object value = column.getValue();
-                if (value == null) {
-                    setter.append(SQL_NULL);
-                } else {
-                    setter.append(SQL_PARAMETER_PLACEHOLDER);
-                    parameters.add(value);
-                }
-
-                setters.add(setter.toString());
-            }
-
-            Joiner.on(", ").appendTo(query, setters);
+            appendUpdateAssignments(query, parameters, values);
 
             return new UpdateWhereClause(query, parameters);
         }
@@ -109,12 +105,12 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public UpdateQueryExecution row(Function<RowBuilder, Map<String, ?>> constructor) {
+        public InsertSuffixBuilder row(Function<RowBuilder, Map<String, ?>> constructor) {
             return values(constructor.apply(new RowBuilderImpl()));
         }
 
         @Override
-        public <T> UpdateQueryExecution values(Collection<T> values, BiFunction<RowBuilder, T, Map<String, ?>> constructor) {
+        public <T> InsertSuffixBuilder values(Collection<T> values, BiFunction<RowBuilder, T, Map<String, ?>> constructor) {
             ArrayList<Map<String, ?>> rows = new ArrayList<>(values.size());
             for (T value : values) {
                 Map<String, ?> row = constructor.apply(new RowBuilderImpl(), value);
@@ -125,9 +121,9 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public UpdateQueryExecution values(Map<String, ?>... rows) {
+        public InsertSuffixBuilder values(Map<String, ?>... rows) {
             if (rows.length < 1) {
-                return EMPTY_UPDATE_EXECUTION;
+                return EMPTY_UPDATE_BUILDER;
             }
 
             Set<String> columns = new LinkedHashSet<>();
@@ -137,7 +133,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
             int numColumns = columns.size();
             if (numColumns < 1) {
-                return EMPTY_UPDATE_EXECUTION;
+                return EMPTY_UPDATE_BUILDER;
             }
 
             query.append(" (");
@@ -177,7 +173,45 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
             Joiner.on(", ").appendTo(query, valueSets);
 
+            return new InsertQuerySuffixBuilder(query, parameters);
+        }
+    }
+
+    private class InsertQuerySuffixBuilder implements InsertSuffixBuilder {
+        private final StringBuilder query;
+        private final List<Object> parameters;
+
+        public InsertQuerySuffixBuilder(StringBuilder query, List<Object> parameters) {
+            this.query = query;
+            this.parameters = parameters;
+        }
+
+        private UpdateQueryExecution executeQuery() {
             return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
+        }
+
+        @Override
+        public Observable<Integer> count() {
+            return executeQuery().count();
+        }
+
+        @Override
+        public Observable<Long> getIds() {
+            return executeQuery().getIds();
+        }
+
+        @Override
+        public UpdateQueryExecution onDuplicateKeyUpdate(Function<RowBuilder, Map<String, ?>> rowConstructor) {
+            return onDuplicateKeyUpdate(rowConstructor.apply(new RowBuilderImpl()));
+        }
+
+        @Override
+        public UpdateQueryExecution onDuplicateKeyUpdate(Map<String, ?> values) {
+            if (values.size() > 0) {
+                query.append(SQL_ON_DUPLICATE_KEY_UPDATE);
+                appendUpdateAssignments(query, parameters, values);
+            }
+            return this;
         }
     }
 
@@ -475,7 +509,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         return update(outline.pluralName());
     }
 
-    private static class EmptyUpdateQueryExecution implements UpdateQueryExecution {
+    private static class EmptyUpdateSuffixBuilder implements InsertSuffixBuilder {
         @Override
         public Observable<Integer> count() {
             return Observable.empty();
@@ -484,6 +518,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         @Override
         public Observable<Long> getIds() {
             return Observable.empty();
+        }
+
+        @Override
+        public UpdateQueryExecution onDuplicateKeyUpdate(Function<RowBuilder, Map<String, ?>> rowConstructor) {
+            return this;
+        }
+
+        @Override
+        public UpdateQueryExecution onDuplicateKeyUpdate(Map<String, ?> values) {
+            return this;
         }
     }
 }
