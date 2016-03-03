@@ -62,6 +62,11 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
+    public Observable<Response> ok(byte[] content) {
+        return Observable.just(new ResponseImpl(Status.OK, headers, new BytesEntity(content)));
+    }
+
+    @Override
     public Observable<Response> unauthorized() {
         return Observable.just(new ResponseImpl(Status.UNAUTHORIZED, headers));
     }
