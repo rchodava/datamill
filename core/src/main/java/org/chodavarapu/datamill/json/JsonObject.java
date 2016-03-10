@@ -14,6 +14,10 @@ import java.util.function.Function;
 public class JsonObject implements ReflectableValue {
     final io.vertx.core.json.JsonObject object;
 
+    private JsonObject(io.vertx.core.json.JsonObject object) {
+        this.object = object;
+    }
+
     public JsonObject() {
         object = new io.vertx.core.json.JsonObject();
     }
@@ -81,11 +85,11 @@ public class JsonObject implements ReflectableValue {
         return object.encode();
     }
 
-    public Value get(String property) {
+    public JsonProperty get(String property) {
         return new JsonProperty(property);
     }
 
-    public Value get(Member member) {
+    public JsonProperty get(Member member) {
         return get(member.name());
     }
 
@@ -163,10 +167,10 @@ public class JsonObject implements ReflectableValue {
         return asString();
     }
 
-    private class JsonProperty implements Value {
+    public class JsonProperty implements Value {
         private String name;
 
-        public JsonProperty(String name) {
+        private JsonProperty(String name) {
             this.name = name;
         }
 
@@ -212,6 +216,14 @@ public class JsonObject implements ReflectableValue {
         @Override
         public int asInteger() {
             return object.getInteger(name);
+        }
+
+        public JsonArray asJsonArray() {
+            return new JsonArray(object.getJsonArray(name));
+        }
+
+        public JsonObject asJson() {
+            return new JsonObject(object.getJsonObject(name));
         }
 
         @Override
