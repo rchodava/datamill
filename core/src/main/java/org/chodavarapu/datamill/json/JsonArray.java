@@ -22,6 +22,10 @@ public class JsonArray implements ReflectableValue {
         array = new io.vertx.core.json.JsonArray(json);
     }
 
+    JsonArray(io.vertx.core.json.JsonArray array) {
+        this.array = array;
+    }
+
     public JsonArray(List<JsonObject> values) {
         ArrayList<io.vertx.core.json.JsonObject> objects = new ArrayList<>();
         for (JsonObject value : values) {

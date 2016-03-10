@@ -46,6 +46,6 @@ public class InputStreamEntity implements Entity {
 
     @Override
     public Observable<String> asString() {
-        return StringObservable.from(new InputStreamReader(inputStream));
+        return asBytes().map(bytes -> new String(bytes));
     }
 }

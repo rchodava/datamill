@@ -10,11 +10,15 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseClient.class);
+
     private final DataSource dataSource;
     private Database database;
     private final String password;
@@ -47,6 +51,28 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         }
 
         return database;
+    }
+
+    public String getVersion() {
+        try (Connection connection = getDatabase().getConnectionProvider().get()) {
+            StringBuilder vendor = new StringBuilder();
+            vendor.append(connection.getMetaData().getDatabaseProductName());
+            vendor.append(' ');
+            vendor.append(connection.getMetaData().getDatabaseProductVersion());
+            return vendor.toString();
+        } catch (SQLException e) {
+            logger.debug("Error retrieving database version information", e);
+            return null;
+        }
+    }
+
+    public String getURL() {
+        try (Connection connection = getDatabase().getConnectionProvider().get()) {
+            return connection.getMetaData().getURL();
+        } catch (SQLException e) {
+            logger.debug("Error retrieving database connection URL", e);
+            return null;
+        }
     }
 
     private Flyway getFlyway() {
