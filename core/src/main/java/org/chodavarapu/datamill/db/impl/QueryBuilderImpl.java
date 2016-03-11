@@ -33,6 +33,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
     private static final String SQL_ASSIGNMENT = " = ";
     private static final String SQL_DELETE_FROM = "DELETE FROM ";
+    private static final String SQL_DELETE = "DELETE ";
     private static final String SQL_EQ = " = ";
     private static final String SQL_FROM = " FROM ";
     private static final String SQL_INSERT_INTO = "INSERT INTO ";
@@ -418,6 +419,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     @Override
     public WhereBuilder<UpdateQueryExecution> deleteFrom(Outline<?> outline) {
         return deleteFrom(outline.pluralName());
+    }
+
+    @Override
+    public WhereBuilder<UpdateQueryExecution> deleteFromNamed(String table) {
+        return new UpdateWhereClause(new StringBuilder(SQL_DELETE).append(table).append(SQL_FROM).append(table));
+    }
+
+    @Override
+    public WhereBuilder<UpdateQueryExecution> deleteFromNamed(Outline<?> outline) {
+        return deleteFromNamed(outline.pluralName());
     }
 
     @Override

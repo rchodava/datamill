@@ -8,6 +8,8 @@ import org.chodavarapu.datamill.reflection.Outline;
 public interface QueryBuilder extends SelectQueryBuilder {
     WhereBuilder<UpdateQueryExecution> deleteFrom(String table);
     WhereBuilder<UpdateQueryExecution> deleteFrom(Outline<?> outline);
+    WhereBuilder<UpdateQueryExecution> deleteFromNamed(String table);
+    WhereBuilder<UpdateQueryExecution> deleteFromNamed(Outline<?> outline);
     InsertBuilder insertInto(String table);
     InsertBuilder insertInto(Outline<?> outline);
     SelectBuilder selectAll();

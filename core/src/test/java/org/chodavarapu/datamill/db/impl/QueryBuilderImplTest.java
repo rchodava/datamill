@@ -216,7 +216,7 @@ public class QueryBuilderImplTest {
 
         queryBuilder.deleteFrom("table_name").where().eq("int_column", 2).execute();
         assertEquals("DELETE FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
-        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertArrayEquals(new Object[]{2}, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.deleteFrom("table_name").where().eq("boolean_column", true).execute();
@@ -226,6 +226,12 @@ public class QueryBuilderImplTest {
 
         queryBuilder.deleteFrom("table_name").where().eq("string_column", "value").execute();
         assertEquals("DELETE FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
+        assertTrue(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.deleteFromNamed("table_name")
+                .where().eq("string_column", "value").execute();
+        assertEquals("DELETE table_name FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
     }
