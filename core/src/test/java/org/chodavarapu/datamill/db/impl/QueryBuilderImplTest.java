@@ -211,21 +211,21 @@ public class QueryBuilderImplTest {
         TestQueryBuilderImpl queryBuilder = new TestQueryBuilderImpl();
 
         queryBuilder.deleteFrom("table_name").all();
-        assertEquals("DELETE  FROM table_name", queryBuilder.getLastQuery());
+        assertEquals("DELETE FROM table_name", queryBuilder.getLastQuery());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.deleteFrom("table_name").where().eq("int_column", 2).execute();
-        assertEquals("DELETE  FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
+        assertEquals("DELETE FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[]{2}, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.deleteFrom("table_name").where().eq("boolean_column", true).execute();
-        assertEquals("DELETE  FROM table_name WHERE boolean_column = ?", queryBuilder.getLastQuery());
+        assertEquals("DELETE FROM table_name WHERE boolean_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { true }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
         queryBuilder.deleteFrom("table_name").where().eq("string_column", "value").execute();
-        assertEquals("DELETE  FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
+        assertEquals("DELETE FROM table_name WHERE string_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 

@@ -32,10 +32,10 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final InsertSuffixBuilder EMPTY_UPDATE_BUILDER = new EmptyUpdateSuffixBuilder();
 
     private static final String SQL_ASSIGNMENT = " = ";
+    private static final String SQL_DELETE_FROM = "DELETE FROM ";
     private static final String SQL_DELETE = "DELETE ";
     private static final String SQL_EQ = " = ";
     private static final String SQL_FROM = " FROM ";
-    private static final String SQL_DELETE_FROM = SQL_DELETE + SQL_FROM;
     private static final String SQL_INSERT_INTO = "INSERT INTO ";
     private static final String SQL_LEFT_JOIN = " LEFT JOIN ";
     private static final String SQL_NULL = "NULL";
