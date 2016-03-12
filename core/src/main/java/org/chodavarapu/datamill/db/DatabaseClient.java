@@ -1,7 +1,6 @@
 package org.chodavarapu.datamill.db;
 
-import com.github.davidmoten.rx.jdbc.Database;
-import com.github.davidmoten.rx.jdbc.QueryUpdate;
+import com.github.davidmoten.rx.jdbc.*;
 import org.chodavarapu.datamill.db.impl.QueryBuilderImpl;
 import org.chodavarapu.datamill.db.impl.RowImpl;
 import org.flywaydb.core.Flyway;
@@ -19,6 +18,7 @@ import java.sql.SQLException;
 public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseClient.class);
 
+    private DelegatingConnectionProvider connectionProvider;
     private final DataSource dataSource;
     private Database database;
     private final String password;
@@ -44,9 +44,11 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     private Database getDatabase() {
         if (database == null) {
             if (dataSource != null) {
-                database = Database.fromDataSource(dataSource);
+                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
+                database = Database.from(connectionProvider);
             } else if (url != null && username != null && password != null) {
-                database = Database.from(url, username, password);
+                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromUrl(url, username, password));
+                database = Database.from(connectionProvider);
             }
         }
 
@@ -108,6 +110,11 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         return new UpdateQueryExecutionImpl(getDatabase().update(sql).parameters(Observable.from(parameters)));
     }
 
+    public DatabaseClient changeCatalog(String catalog) {
+        connectionProvider.setCatalog(catalog);
+        return this;
+    }
+
     private static class UpdateQueryExecutionImpl implements UpdateQueryExecution {
         private static final Logger logger = LoggerFactory.getLogger(UpdateQueryExecutionImpl.class);
 
@@ -127,6 +134,39 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         public Observable<Long> getIds() {
             return updateBuilder.returnGeneratedKeys().getAs(Long.class)
                     .doOnError(t -> logger.error("Error executing update statement!", t));
+        }
+    }
+
+    private static class DelegatingConnectionProvider implements ConnectionProvider {
+        private final ConnectionProvider wrapped;
+        private String catalog;
+
+        public DelegatingConnectionProvider(ConnectionProvider wrapped) {
+            this.wrapped = wrapped;
+        }
+
+        public void setCatalog(String catalog) {
+            this.catalog = catalog;
+        }
+
+        @Override
+        public Connection get() {
+            if (catalog != null) {
+                Connection connection = wrapped.get();
+                try {
+                    connection.setCatalog(catalog);
+                } catch (SQLException e) {
+                    logger.debug("Failed to set catalog to {} on SQL connection", catalog);
+                }
+                return connection;
+            } else {
+                return wrapped.get();
+            }
+        }
+
+        @Override
+        public void close() {
+            wrapped.close();
         }
     }
 }

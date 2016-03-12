@@ -5,6 +5,7 @@ import org.chodavarapu.datamill.values.Value;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
@@ -32,6 +33,10 @@ public class JsonArray implements ReflectableValue {
             objects.add(value.object);
         }
         array = new io.vertx.core.json.JsonArray(objects);
+    }
+
+    public JsonArray(String[] values) {
+        array = new io.vertx.core.json.JsonArray(Arrays.asList(values));
     }
 
     public JsonArray add(JsonObject value) {
