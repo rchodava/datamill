@@ -33,6 +33,10 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         this.password = null;
     }
 
+    public DatabaseClient(String url) {
+        this(url, null, null);
+    }
+
     public DatabaseClient(String url, String username, String password) {
         this.dataSource = null;
 
@@ -46,7 +50,7 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
             if (dataSource != null) {
                 connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
                 database = Database.from(connectionProvider);
-            } else if (url != null && username != null && password != null) {
+            } else if (url != null) {
                 connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromUrl(url, username, password));
                 database = Database.from(connectionProvider);
             }
