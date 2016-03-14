@@ -31,7 +31,12 @@ public class MethodAndUriMatcher extends RouteMatcher {
 
     @Override
     public boolean matches(ServerRequest request) {
-        return matchesMethod(request) && matchesUri(request);
+        boolean matches = matchesMethod(request) && matchesUri(request);
+        if (matches) {
+            logger.debug("Request matched {} {}", method, uriTemplate == null ? "*" : uriTemplate);
+        }
+
+        return matches;
     }
 
     private boolean matchesUri(ServerRequest request) {
@@ -42,13 +47,11 @@ public class MethodAndUriMatcher extends RouteMatcher {
                     ((ServerRequestImpl) request).setUriParameters(uriParameters);
                 }
 
-                logger.debug("Request matched {} {}", method, uriTemplate);
                 return true;
             } else {
                 return false;
             }
         } else {
-            logger.debug("Request matched {} *", method);
             return true;
         }
     }
