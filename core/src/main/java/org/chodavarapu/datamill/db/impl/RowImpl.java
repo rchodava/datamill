@@ -7,6 +7,7 @@ import org.chodavarapu.datamill.db.Row;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.function.Function;
 
@@ -163,7 +164,14 @@ public class RowImpl implements Row {
 
         @Override
         public LocalDateTime asLocalDateTime() {
-            return safeRetrieve(k -> resultSet.getTimestamp(key).toLocalDateTime());
+            return safeRetrieve(k -> {
+                Timestamp timestap = resultSet.getTimestamp(key);
+                if (timestap != null) {
+                    return timestap.toLocalDateTime();
+                }
+
+                return null;
+            });
         }
 
         @Override

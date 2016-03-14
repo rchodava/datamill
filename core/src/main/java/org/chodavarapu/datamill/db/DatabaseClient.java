@@ -50,8 +50,8 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
             if (dataSource != null) {
                 connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
                 database = Database.from(connectionProvider);
-            } else if (url != null) {
-                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromUrl(url, username, password));
+            } else if (url != null && username != null && password != null) {
+                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderPooled(url, username, password, 0, 10));
                 database = Database.from(connectionProvider);
             }
         }
