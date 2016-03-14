@@ -174,6 +174,26 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
+        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("int_column", 2).and().eq("boolean_column", true).execute();
+        assertEquals("SELECT column_name, second_column FROM table_name WHERE int_column = ? AND boolean_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2, true }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("int_column", 2).and().eq("boolean_column", null).execute();
+        assertEquals("SELECT column_name, second_column FROM table_name WHERE int_column = ? AND boolean_column = NULL", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select("column_name", "second_column").from("table_name").where().eq("int_column", null).execute();
+        assertEquals("SELECT column_name, second_column FROM table_name WHERE int_column = NULL", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.select("column_name", "second_column").from("table_name").where().is("int_column", null).execute();
+        assertEquals("SELECT column_name, second_column FROM table_name WHERE int_column IS NULL", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
         queryBuilder.select("column_name", "second_column").from("table_name").where().eq("table_name", "int_column", 2).execute();
         assertEquals("SELECT column_name, second_column FROM table_name WHERE table_name.int_column = ?", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());

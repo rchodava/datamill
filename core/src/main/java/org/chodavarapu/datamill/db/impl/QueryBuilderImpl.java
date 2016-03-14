@@ -300,17 +300,25 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         protected <T> void addEqualityClause(String column, T value) {
             query.append(column);
             query.append(SQL_EQ);
-            query.append(SQL_PARAMETER_PLACEHOLDER);
 
-            parameters.add(value);
+            if (value != null) {
+                query.append(SQL_PARAMETER_PLACEHOLDER);
+                parameters.add(value);
+            } else {
+                query.append(SQL_NULL);
+            }
         }
 
         protected <T> void addIsClause(String column, T value) {
             query.append(column);
             query.append(SQL_IS);
-            query.append(SQL_PARAMETER_PLACEHOLDER);
 
-            parameters.add(value);
+            if (value != null) {
+                query.append(SQL_PARAMETER_PLACEHOLDER);
+                parameters.add(value);
+            } else {
+                query.append(SQL_NULL);
+            }
         }
 
         @Override
