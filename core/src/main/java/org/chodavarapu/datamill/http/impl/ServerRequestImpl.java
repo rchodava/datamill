@@ -7,10 +7,7 @@ import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.values.StringValue;
 import org.chodavarapu.datamill.values.Value;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -75,6 +72,11 @@ public class ServerRequestImpl implements ServerRequest {
         }
 
         return null;
+    }
+
+    @Override
+    public Map<String, Object> options() {
+        return Collections.emptyMap();
     }
 
     @Override

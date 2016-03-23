@@ -29,7 +29,7 @@ public class Client {
 
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
-        return request(request.method(), request.headers(), request.uri(), request.uriParameters(), request.entity());
+        return request(request.method(), request.headers(), request.uri(), request.uriParameters(), request.options(), request.entity());
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Value entity) {
@@ -41,7 +41,7 @@ public class Client {
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Entity entity) {
-        return request(method, headers, uri, null, entity);
+        return request(method, headers, uri, null, null, entity);
     }
 
     public Observable<Response> request(
@@ -49,6 +49,7 @@ public class Client {
             Map<String, String> headers,
             String uri,
             Map<String, String> uriParameters,
+            Map<String, ?> options,
             Entity entity) {
         if (uriParameters != null && uriParameters.size() > 0) {
             uri = uriBuilder.build(uri, uriParameters);
@@ -61,6 +62,13 @@ public class Client {
             HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
 
             httpConnection.setRequestMethod(method.toString());
+
+            if (options != null && options.size() > 0) {
+                Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
+                if (connectTimeout instanceof Integer) {
+                    httpConnection.setConnectTimeout((int) connectTimeout);
+                }
+            }
 
             if (headers != null) {
                 for (Map.Entry<String, String> header : headers.entrySet()) {

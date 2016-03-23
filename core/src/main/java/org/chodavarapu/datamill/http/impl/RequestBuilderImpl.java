@@ -11,14 +11,21 @@ import java.util.Map;
  */
 public class RequestBuilderImpl implements RequestBuilder {
     private Entity entity;
-    private String method;
     private final Map<String, String> headers = new HashMap<>();
+    private String method;
+    private final Map<String, Object> options = new HashMap<>();
     private String uri;
     private final Map<String, String> uriParameters = new HashMap<>();
 
     @Override
     public Request build() {
-        return new RequestImpl(method, headers, uri, uriParameters, entity);
+        return new RequestImpl(method, headers, uri, uriParameters, options, entity);
+    }
+
+    @Override
+    public RequestBuilder connectTimeout(int milliseconds) {
+        options.put(Request.OPTION_CONNECT_TIMEOUT, milliseconds);
+        return this;
     }
 
     @Override

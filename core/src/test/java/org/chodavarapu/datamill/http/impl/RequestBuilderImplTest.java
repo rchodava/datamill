@@ -18,6 +18,7 @@ public class RequestBuilderImplTest {
     @Test
     public void requestBuilding() {
         Request request = new RequestBuilderImpl()
+                .connectTimeout(500)
                 .header(RequestHeader.ACCEPT, "application/json")
                 .header("Content-Type", "application/json")
                 .method(Method.GET)
@@ -28,6 +29,7 @@ public class RequestBuilderImplTest {
         assertEquals("application/json", request.header(RequestHeader.CONTENT_TYPE).get().asString());
         assertEquals(Method.GET, request.method());
         assertEquals("http://sample.com", request.uri());
+        assertEquals(500, request.options().get(Request.OPTION_CONNECT_TIMEOUT));
     }
 
     @Test
