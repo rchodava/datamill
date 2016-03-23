@@ -7,6 +7,7 @@ import org.chodavarapu.datamill.values.Value;
  */
 public interface RequestBuilder {
     Request build();
+    RequestBuilder connectTimeout(int milliseconds);
     RequestBuilder entity(Value entity);
     RequestBuilder entity(Entity entity);
     RequestBuilder header(String name, String value);

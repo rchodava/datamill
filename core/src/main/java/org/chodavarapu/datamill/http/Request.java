@@ -9,6 +9,8 @@ import java.util.Optional;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface Request {
+    String OPTION_CONNECT_TIMEOUT = "connectTimeout";
+
     Entity entity();
 
     Map<String, String> headers();
@@ -18,6 +20,8 @@ public interface Request {
     Optional<Value> header(RequestHeader header);
 
     Method method();
+
+    Map<String, Object> options();
 
     String uri();
 
