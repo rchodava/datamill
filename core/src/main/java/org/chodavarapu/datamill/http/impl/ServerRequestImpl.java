@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.chodavarapu.datamill.http.*;
+import org.chodavarapu.datamill.values.Value;
 
 import java.nio.charset.Charset;
 import java.util.*;
@@ -14,13 +15,13 @@ import java.util.*;
 public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequest {
     private Multimap<String, String> queryParameters;
     private QueryStringDecoder queryStringDecoder;
+    private Multimap<String, String> trailingHeaders;
 
     public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Entity entity) {
         super(method, headers, uri, entity);
 
         this.queryStringDecoder = new QueryStringDecoder(uri, charset);
     }
-
 
     private Multimap<String, String> extractQueryParameters() {
         Multimap<String, String> queryParameters;
@@ -48,6 +49,16 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
     }
 
     @Override
+    public Value firstTrailingHeader(String header) {
+        return firstValue(trailingHeaders, header);
+    }
+
+    @Override
+    public Value firstTrailingHeader(RequestHeader header) {
+        return firstTrailingHeader(header.getName());
+    }
+
+    @Override
     public Multimap<String, String> queryParameters() {
         if (queryParameters == null && queryStringDecoder != null) {
             queryParameters = extractQueryParameters();
@@ -64,5 +75,14 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
     @Override
     public ResponseBuilder respond() {
         return new ResponseBuilderImpl();
+    }
+
+    public void setTrailingHeaders(Multimap<String, String> trailingHeaders) {
+        this.trailingHeaders = trailingHeaders;
+    }
+
+    @Override
+    public Multimap<String, String> trailingHeaders() {
+        return trailingHeaders;
     }
 }

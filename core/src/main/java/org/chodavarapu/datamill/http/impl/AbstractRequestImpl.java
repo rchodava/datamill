@@ -15,7 +15,7 @@ import java.util.Map;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public abstract class AbstractRequestImpl implements Request {
-    private static Value firstValue(Multimap<String, String> entries, String name) {
+    protected static Value firstValue(Multimap<String, String> entries, String name) {
         if (entries != null) {
             Collection<String> values = entries.get(name);
             if (values.size() > 0) {

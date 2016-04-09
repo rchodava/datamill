@@ -7,9 +7,15 @@ import io.netty.handler.codec.http.HttpContentCompressor;
 import io.netty.handler.codec.http.HttpContentDecompressor;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.ssl.SslContext;
+import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
+import org.chodavarapu.datamill.http.ServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Observable;
+
+import java.util.concurrent.ExecutorService;
+import java.util.function.BiFunction;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -17,12 +23,18 @@ import org.slf4j.LoggerFactory;
 public class ClientToServerChannelInitializer extends ChannelInitializer<SocketChannel> {
     private static final Logger logger = LoggerFactory.getLogger(ClientToServerChannelInitializer.class);
 
-    private final SslContext sslContext;
+    private final BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor;
     private final Route route;
+    private final SslContext sslContext;
+    private final ExecutorService threadPool;
 
-    public ClientToServerChannelInitializer(SslContext sslContext, Route route) {
+    public ClientToServerChannelInitializer(SslContext sslContext, ExecutorService threadPool,
+                                            Route route, BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor) {
         this.sslContext = sslContext;
+        this.threadPool = threadPool;
+
         this.route = route;
+        this.errorResponseConstructor = errorResponseConstructor;
     }
 
     @Override
@@ -38,6 +50,6 @@ public class ClientToServerChannelInitializer extends ChannelInitializer<SocketC
         pipeline.addLast(new HttpServerCodec(4096, 8192, 65536));
         pipeline.addLast(new HttpContentDecompressor());
         pipeline.addLast(new HttpContentCompressor());
-        pipeline.addLast(new ClientToServerChannelHandler(route));
+        pipeline.addLast(new ClientToServerChannelHandler(threadPool, route, errorResponseConstructor));
     }
 }

@@ -1,28 +1,46 @@
 package org.chodavarapu.datamill.http.impl;
 
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.*;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
+import org.chodavarapu.datamill.http.Entity;
+import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
+import org.chodavarapu.datamill.http.ServerRequest;
+import rx.Observable;
 import rx.subjects.PublishSubject;
 
-import java.nio.charset.Charset;
-import java.util.*;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.function.BiFunction;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
+    private final BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor;
     private final Route route;
+    private final ExecutorService threadPool;
+
     private PublishSubject<byte[]> entityStream;
+    private ServerRequestImpl serverRequest;
 
-    private final StringBuilder buf = new StringBuilder();
-
-    public ClientToServerChannelHandler(Route route) {
+    public ClientToServerChannelHandler(
+            ExecutorService threadPool,
+            Route route,
+            BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor) {
+        this.threadPool = threadPool;
         this.route = route;
+        this.errorResponseConstructor = errorResponseConstructor;
+    }
+
+    private void sendGeneralServerError(ChannelHandlerContext context) {
+        context.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR));
     }
 
     @Override
@@ -40,15 +58,9 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
             }
 
             entityStream = PublishSubject.create();
+            serverRequest = ServerRequestBuilder.buildServerRequest(request, entityStream);
 
-            Charset messageCharset = HttpUtil.getCharset(request);
-
-            new ServerRequestImpl(
-                    request.method().name(),
-                    extractHeaders(request),
-                    request.uri(),
-                    messageCharset,
-                    new RequestEntity(entityStream, messageCharset));
+            processRequest(context, request);
 
             if (request.decoderResult().isFailure()) {
                 entityStream.onError(request.decoderResult().cause());
@@ -68,104 +80,137 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
             }
 
             if (message instanceof LastHttpContent) {
-                entityStream.onCompleted();
-
                 LastHttpContent trailer = (LastHttpContent) message;
                 if (!trailer.trailingHeaders().isEmpty()) {
-                    buf.append("\r\n");
-                    for (CharSequence name: trailer.trailingHeaders().names()) {
-                        for (CharSequence value: trailer.trailingHeaders().getAll(name)) {
-                            buf.append("TRAILING HEADER: ");
-                            buf.append(name).append(" = ").append(value).append("\r\n");
-                        }
-                    }
-                    buf.append("\r\n");
+                    serverRequest.setTrailingHeaders(ServerRequestBuilder.buildHeadersMap(trailer.trailingHeaders()));
                 }
 
-                if (!writeResponse(trailer, context)) {
-                    // If keep-alive is off, close the connection once the content is fully written.
-                    // TODO: DO not flush after every read, instead wait till channel read complete and flush after writes
-                    // TODO: Use void channel prommise
-                    // TODO: Use channel is writeable
-                    context.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-                }
+                entityStream.onCompleted();
             }
         }
     }
 
-    private Multimap<String, String> extractHeaders(HttpRequest request) {
-        Multimap<String, String> headers;
+    private void processRequest(ChannelHandlerContext context, HttpRequest originalRequest) {
+        threadPool.execute(() -> {
+            try {
+                Observable<Response> responseObservable = route.apply(serverRequest);
+                if (responseObservable != null) {
+                    threadPool.execute(() -> {
+                        Response response = responseObservable.onErrorResumeNext(throwable -> {
+                            Observable<Response> errorResponse = errorResponseConstructor.apply(serverRequest, throwable);
+                            if (errorResponse != null) {
+                                return errorResponse.onErrorResumeNext(Observable.just(null));
+                            }
 
-        HttpHeaders requestHeaders = request.headers();
-        if (!requestHeaders.isEmpty()) {
-            ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
+                            return Observable.just(null);
+                        }).toBlocking().lastOrDefault(null);
 
-            for (Map.Entry<String, String> header : requestHeaders) {
-                String key = header.getKey();
-                String value = header.getValue();
-
-                if (key != null && value != null) {
-                    builder.put(key, value);
+                        sendResponse(context, originalRequest, response);
+                    });
+                } else {
+                    sendGeneralServerError(context);
                 }
+            } catch (Exception e) {
+                sendGeneralServerError(context);
             }
-
-            headers = builder.build();
-        } else {
-            headers = null;
-        }
-
-        return headers;
+        });
     }
 
-
-    //    private void writeIfPossible(Channel channel) {
-//        while(needsToWrite && channel.isWritable()) {
-//            channel.writeAndFlush(createMessage());
-//        }
-//    }
-//
-    private boolean writeResponse(HttpObject currentObj, ChannelHandlerContext ctx) {
-        boolean keepAlive = HttpUtil.isKeepAlive(request);
-        // Build the response object.
-        FullHttpResponse response = new DefaultFullHttpResponse(
-                HTTP_1_1, currentObj.decoderResult().isSuccess()? OK : BAD_REQUEST,
-                Unpooled.copiedBuffer(buf.toString(), CharsetUtil.UTF_8));
-
-        response.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/plain; charset=UTF-8");
-
+    private void fillResponse(HttpRequest originalRequest, HttpResponse response,
+                              Multimap<String, String> headers, int contentLength) {
+        boolean keepAlive = HttpUtil.isKeepAlive(originalRequest);
         if (keepAlive) {
-            // Add 'Content-Length' header only for a keep-alive connection.
-            response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, response.content().readableBytes());
-            // Add keep alive header as per:
-            // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+            // http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
             response.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
         }
 
-        // Encode the cookie.
-        String cookieString = request.headers().get(HttpHeaderNames.COOKIE);
-        if (cookieString != null) {
-            Set<Cookie> cookies = ServerCookieDecoder.STRICT.decode(cookieString);
-            if (!cookies.isEmpty()) {
-                // Reset the cookies if necessary.
-                for (Cookie cookie: cookies) {
-                    response.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode(cookie));
-                }
-            }
-        } else {
-            // Browser sent no cookie.  Add some.
-            response.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode("key1", "value1"));
-            response.headers().add(HttpHeaderNames.SET_COOKIE, ServerCookieEncoder.STRICT.encode("key2", "value2"));
+        if (contentLength > -1) {
+            response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, contentLength);
         }
 
-        // Write the response.
-        ctx.write(response);
+        if (headers != null && headers.size() > 0) {
+            for (Map.Entry<String, String> header : headers.entries()) {
+                response.headers().add(header.getKey(), header.getValue());
+            }
+        }
 
-        return keepAlive;
+    }
+
+    private void sendResponseStart(ChannelHandlerContext context, HttpRequest originalRequest,
+                                   int status, Multimap<String, String> headers, int contentLength) {
+        HttpResponse response = new DefaultHttpResponse(
+                originalRequest.protocolVersion(),
+                HttpResponseStatus.valueOf(status));
+
+        fillResponse(originalRequest, response, headers, contentLength);
+
+        context.write(response);
+    }
+
+    private void sendContent(ChannelHandlerContext context, byte[] responseBytes) {
+        HttpContent content = new DefaultHttpContent(responseBytes == null ?
+                Unpooled.EMPTY_BUFFER :
+                Unpooled.wrappedBuffer(responseBytes));
+
+        context.write(content);
+    }
+
+    private void sendResponseEnd(ChannelHandlerContext context, HttpRequest originalRequest) {
+        writeAndFlush(context, originalRequest, LastHttpContent.EMPTY_LAST_CONTENT);
+    }
+
+    private void sendFullResponse(ChannelHandlerContext context, HttpRequest originalRequest,
+                                  int status, Multimap<String, String> headers) {
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                originalRequest.protocolVersion(),
+                HttpResponseStatus.valueOf(status),
+                Unpooled.EMPTY_BUFFER);
+
+        fillResponse(originalRequest, response, headers, 0);
+
+        writeAndFlush(context, originalRequest, response);
+    }
+
+    private void sendResponse(ChannelHandlerContext context, HttpRequest originalRequest, Response serverResponse) {
+        Entity responseEntity = serverResponse.entity();
+        if (responseEntity != null) {
+            threadPool.execute(() -> {
+                boolean[] first = {true};
+                responseEntity.asChunks()
+                        .doOnNext(bytes -> {
+                            if (first[0]) {
+                                sendResponseStart(context, originalRequest,
+                                        serverResponse.status().getCode(),
+                                        serverResponse.headers(),
+                                        bytes == null ? -1 : bytes.length);
+                                sendContent(context, bytes);
+
+                                first[0] = false;
+                            } else {
+                                sendContent(context, bytes);
+                            }
+                        })
+                        .finallyDo(() -> {
+                            sendResponseEnd(context, originalRequest);
+                        })
+                        .toBlocking().lastOrDefault(null);
+            });
+        } else {
+            sendFullResponse(context, originalRequest, serverResponse.status().getCode(), serverResponse.headers());
+        }
     }
 
     private static void sendContinueResponse(ChannelHandlerContext context) {
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.CONTINUE);
         context.write(response);
+    }
+
+    private void writeAndFlush(ChannelHandlerContext context, HttpRequest originalRequest, HttpObject response) {
+        ChannelFuture writeFuture = context.writeAndFlush(response);
+        boolean keepAlive = HttpUtil.isKeepAlive(originalRequest);
+        if (!keepAlive) {
+            writeFuture.addListener(ChannelFutureListener.CLOSE);
+        }
     }
 
     @Override
