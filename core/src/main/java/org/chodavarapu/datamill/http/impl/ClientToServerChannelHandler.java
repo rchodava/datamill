@@ -13,7 +13,7 @@ import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import org.chodavarapu.datamill.http.ServerRequest;
 import rx.Observable;
-import rx.subjects.PublishSubject;
+import rx.subjects.ReplaySubject;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -27,7 +27,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     private final Route route;
     private final ExecutorService threadPool;
 
-    private PublishSubject<byte[]> entityStream;
+    private ReplaySubject<byte[]> entityStream;
     private ServerRequestImpl serverRequest;
 
     public ClientToServerChannelHandler(
@@ -49,11 +49,6 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelActive(ChannelHandlerContext context) throws Exception {
-        context.read();
-    }
-
-    @Override
     public void channelRead(ChannelHandlerContext context, Object message) {
         if (message instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) message;
@@ -62,7 +57,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 sendContinueResponse(context);
             }
 
-            entityStream = PublishSubject.create();
+            entityStream = ReplaySubject.create();
             serverRequest = ServerRequestBuilder.buildServerRequest(request, entityStream);
 
             processRequest(context, request);
@@ -77,7 +72,9 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
 
             ByteBuf content = httpContent.content();
             if (content.isReadable()) {
-                entityStream.onNext(content.array());
+                byte[] chunk = new byte[content.readableBytes()];
+                content.readBytes(chunk);
+                entityStream.onNext(chunk);
 
                 if (httpContent.decoderResult().isFailure()) {
                     entityStream.onError(httpContent.decoderResult().cause());
@@ -93,8 +90,6 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 entityStream.onCompleted();
             }
         }
-
-        context.read();
     }
 
     private void processRequest(ChannelHandlerContext context, HttpRequest originalRequest) {

@@ -73,7 +73,6 @@ public class Server {
                 .handler(new LoggingHandler())
                 .childHandler(new ClientToServerChannelInitializer(null, threadPool, route, errorResponseConstructor))
                 .childOption(ChannelOption.TCP_NODELAY, true)
-                .childOption(ChannelOption.AUTO_READ, false)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         try {
