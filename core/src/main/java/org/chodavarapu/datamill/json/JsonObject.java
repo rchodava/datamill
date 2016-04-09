@@ -4,6 +4,7 @@ import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
@@ -205,7 +206,7 @@ public class JsonObject implements ReflectableValue {
         public char asCharacter() {
             try {
                 return (char) (int) object.getInt(name);
-            } catch (ClassCastException e) {
+            } catch (JSONException e) {
                 String value = object.getString(name);
                 if (value.length() == 1) {
                     return value.charAt(0);
