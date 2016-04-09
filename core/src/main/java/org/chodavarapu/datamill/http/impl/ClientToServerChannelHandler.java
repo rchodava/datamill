@@ -49,6 +49,11 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext context) throws Exception {
+        context.read();
+    }
+
+    @Override
     public void channelRead(ChannelHandlerContext context, Object message) {
         if (message instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) message;
@@ -88,6 +93,8 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 entityStream.onCompleted();
             }
         }
+
+        context.read();
     }
 
     private void processRequest(ChannelHandlerContext context, HttpRequest originalRequest) {
