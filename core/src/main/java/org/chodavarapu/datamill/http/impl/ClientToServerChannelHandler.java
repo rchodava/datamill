@@ -12,6 +12,8 @@ import org.chodavarapu.datamill.http.Entity;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Route;
 import org.chodavarapu.datamill.http.ServerRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.subjects.ReplaySubject;
 
@@ -23,6 +25,8 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
+    private static final Logger logger = LoggerFactory.getLogger(ClientToServerChannelHandler.class);
+
     private final BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor;
     private final Route route;
     private final ExecutorService threadPool;
@@ -101,6 +105,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                         Response response = responseObservable.onErrorResumeNext(throwable -> {
                             Observable<Response> errorResponse = errorResponseConstructor.apply(serverRequest, throwable);
                             if (errorResponse != null) {
+                                logger.debug("Error occurred handling request, invoking application error handler");
                                 return errorResponse.onErrorResumeNext(Observable.just(null));
                             }
 
@@ -110,9 +115,11 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                         sendResponse(context, originalRequest, response);
                     });
                 } else {
+                    logger.debug("Error occurred handling request, sending a generic server error (500)");
                     sendGeneralServerError(context);
                 }
             } catch (Exception e) {
+                logger.debug("Error occurred handling request, sending a generic server error (500)", e);
                 sendGeneralServerError(context);
             }
         });

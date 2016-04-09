@@ -189,12 +189,16 @@ public class JsonObject implements ReflectableValue {
         @Override
         public byte[] asByteArray() {
             JSONArray array = object.getJSONArray(name);
-            byte[] bytes = new byte[array.length()];
-            for (int i = 0; i < bytes.length; i++) {
-                bytes[i] = (byte) array.getInt(i);
+            if (array != null) {
+                byte[] bytes = new byte[array.length()];
+                for (int i = 0; i < bytes.length; i++) {
+                    bytes[i] = (byte) array.getInt(i);
+                }
+
+                return bytes;
             }
 
-            return bytes;
+            return null;
         }
 
         @Override
@@ -227,16 +231,31 @@ public class JsonObject implements ReflectableValue {
         }
 
         public JsonArray asJsonArray() {
-            return new JsonArray(object.getJSONArray(name));
+            JSONArray array = object.optJSONArray(name);
+            if (array != null) {
+                return new JsonArray(array);
+            }
+
+            return null;
         }
 
         public JsonObject asJson() {
-            return new JsonObject(object.getJSONObject(name));
+            JSONObject json = object.optJSONObject(name);
+            if (json != null) {
+                return new JsonObject(json);
+            }
+
+            return null;
         }
 
         @Override
         public LocalDateTime asLocalDateTime() {
-            return LocalDateTime.parse(object.getString(name));
+            String value = object.optString(name);
+            if (value != null) {
+                return LocalDateTime.parse(value);
+            }
+
+            return null;
         }
 
         @Override
@@ -251,7 +270,7 @@ public class JsonObject implements ReflectableValue {
 
         @Override
         public String asString() {
-            return object.getString(name);
+            return object.optString(name);
         }
 
         @Override
