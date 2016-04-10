@@ -1,6 +1,8 @@
 package org.chodavarapu.datamill.http;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import org.chodavarapu.datamill.http.impl.*;
 import org.chodavarapu.datamill.values.Value;
 import org.slf4j.Logger;
@@ -12,10 +14,13 @@ import rx.util.async.Async;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -29,7 +34,8 @@ public class Client {
 
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
-        return request(request.method(), request.headers(), request.uri(), request.uriParameters(), request.options(), request.entity());
+        return request(request.method(), request.headers(), request.uri(), request.uriParameters(),
+                request.queryParameters(), request.options(), request.entity());
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Value entity) {
@@ -41,19 +47,22 @@ public class Client {
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Entity entity) {
-        return request(method, headers, uri, null, null, entity);
+        return request(method, headers != null ? Multimaps.forMap(headers) : null, uri, null, null, null, entity);
     }
 
     public Observable<Response> request(
             Method method,
-            Map<String, String> headers,
+            Multimap<String, String> headers,
             String uri,
             Map<String, String> uriParameters,
+            Multimap<String, String> queryParameters,
             Map<String, ?> options,
             Entity entity) {
         if (uriParameters != null && uriParameters.size() > 0) {
             uri = uriBuilder.build(uri, uriParameters);
         }
+
+        uri = appendQueryParameters(uri, queryParameters);
 
         final String composedUri = uri;
 
@@ -71,7 +80,7 @@ public class Client {
             }
 
             if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entrySet()) {
+                for (Map.Entry<String, String> header : headers.entries()) {
                     httpConnection.addRequestProperty(header.getKey(), header.getValue());
                 }
             }
@@ -83,7 +92,7 @@ public class Client {
             logger.debug("Making HTTP request {} {}", method.name(), composedUri);
             if (headers != null && logger.isDebugEnabled()) {
                 logger.debug("  HTTP request headers:");
-                for (Map.Entry<String, String> header : headers.entrySet()) {
+                for (Map.Entry<String, String> header : headers.entries()) {
                     logger.debug("    {}: {}", header.getKey(), header.getValue());
                 }
             }
@@ -103,6 +112,33 @@ public class Client {
 
             return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(inputStream));
         }, Schedulers.io());
+    }
+
+    private String appendQueryParameters(String uri, Multimap<String, String> queryParameters) {
+        if (queryParameters != null && queryParameters.size() > 0) {
+            try {
+                StringBuilder queryBuilder = new StringBuilder("?");
+                Iterator<Map.Entry<String, String>> iterator = queryParameters.entries().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<String, String> parameter = iterator.next();
+
+                    queryBuilder.append(URLEncoder.encode(parameter.getKey(), "UTF-8"));
+                    queryBuilder.append('=');
+
+                    if (parameter.getValue() != null) {
+                        queryBuilder.append(URLEncoder.encode(parameter.getValue()));
+                    }
+
+                    if (iterator.hasNext()) {
+                        queryBuilder.append('&');
+                    }
+                }
+
+                uri = uri + queryBuilder.toString();
+            } catch (UnsupportedEncodingException e) {
+            }
+        }
+        return uri;
     }
 
     private void writeEntityOutOverConnection(Entity entity, HttpURLConnection httpConnection) throws IOException {

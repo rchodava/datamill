@@ -1,19 +1,18 @@
 package org.chodavarapu.datamill.http.impl;
 
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import org.chodavarapu.datamill.values.StringValue;
 import rx.Observable;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
-    private final Map<String, String> headers = new HashMap<>();
+    private final Multimap<String, String> headers = LinkedListMultimap.create();
 
     @Override
     public Observable<Response> badRequest() {

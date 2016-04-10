@@ -1,12 +1,12 @@
 package org.chodavarapu.datamill.http;
 
-import java.util.Map;
+import com.google.common.collect.Multimap;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface Response {
     Entity entity();
-    Map<String, String> headers();
+    Multimap<String, String> headers();
     Status status();
 }

@@ -1,9 +1,9 @@
 package org.chodavarapu.datamill.http;
 
+import com.google.common.collect.Multimap;
 import org.chodavarapu.datamill.values.Value;
 
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -13,15 +13,21 @@ public interface Request {
 
     Entity entity();
 
-    Map<String, String> headers();
+    Multimap<String, String> headers();
 
-    Optional<Value> header(String header);
+    Value firstHeader(String header);
 
-    Optional<Value> header(RequestHeader header);
+    Value firstHeader(RequestHeader header);
+
+    Value firstQueryParameter(String name);
 
     Method method();
 
     Map<String, Object> options();
+
+    Multimap<String, String> queryParameters();
+
+    String rawMethod();
 
     String uri();
 

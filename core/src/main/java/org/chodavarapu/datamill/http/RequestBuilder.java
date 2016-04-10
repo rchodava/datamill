@@ -14,6 +14,7 @@ public interface RequestBuilder {
     RequestBuilder header(RequestHeader header, String value);
     RequestBuilder method(Method method);
     RequestBuilder method(String method);
+    RequestBuilder queryParameter(String name, String value);
     RequestBuilder uri(String uri);
     <T> RequestBuilder uriParameter(String name, T value);
 }

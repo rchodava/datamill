@@ -25,8 +25,8 @@ public class RequestBuilderImplTest {
                 .uri("http://sample.com")
                 .build();
 
-        assertEquals("application/json", request.header("Accept").get().asString());
-        assertEquals("application/json", request.header(RequestHeader.CONTENT_TYPE).get().asString());
+        assertEquals("application/json", request.firstHeader("Accept").asString());
+        assertEquals("application/json", request.firstHeader(RequestHeader.CONTENT_TYPE).asString());
         assertEquals(Method.GET, request.method());
         assertEquals("http://sample.com", request.uri());
         assertEquals(500, request.options().get(Request.OPTION_CONNECT_TIMEOUT));

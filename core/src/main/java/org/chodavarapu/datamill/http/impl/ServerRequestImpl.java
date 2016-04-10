@@ -1,77 +1,70 @@
 package org.chodavarapu.datamill.http.impl;
 
-import com.google.common.base.Joiner;
-import io.vertx.core.MultiMap;
-import io.vertx.core.http.HttpServerRequest;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
+import io.netty.handler.codec.http.QueryStringDecoder;
 import org.chodavarapu.datamill.http.*;
-import org.chodavarapu.datamill.values.StringValue;
 import org.chodavarapu.datamill.values.Value;
 
+import java.nio.charset.Charset;
 import java.util.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class ServerRequestImpl implements ServerRequest {
-    private Entity entity;
+public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequest {
+    private Multimap<String, String> queryParameters;
+    private QueryStringDecoder queryStringDecoder;
+    private Multimap<String, String> trailingHeaders;
 
-    private final HttpServerRequest request;
+    public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Entity entity) {
+        super(method, headers, uri, entity);
 
-    private Map<String, String> uriParameters;
-
-    public ServerRequestImpl(HttpServerRequest request) {
-        this.request = request;
-        this.entity = new RequestEntity(request);
+        this.queryStringDecoder = new QueryStringDecoder(uri, charset);
     }
 
-    @Override
-    public Entity entity() {
-        return entity;
-    }
+    private Multimap<String, String> extractQueryParameters() {
+        Multimap<String, String> queryParameters;
 
-    @Override
-    public Map<String, String> headers() {
-        Map<String, String> headers = new HashMap<>();
+        Map<String, List<String>> params = queryStringDecoder.parameters();
+        if (!params.isEmpty()) {
+            ImmutableMultimap.Builder<String, String> builder = ImmutableMultimap.builder();
 
-        MultiMap requestHeaders = request.headers();
-        for (String header : requestHeaders.names()) {
-            List<String> values = requestHeaders.getAll(header);
-            if (values.size() > 1) {
-                headers.put(header, Joiner.on(',').join(values));
-            } else if (values.size() > 0) {
-                headers.put(header, values.get(0));
+            for (Map.Entry<String, List<String>> p: params.entrySet()) {
+                String key = p.getKey();
+
+                List<String> values = p.getValue();
+                for (String value : values) {
+                    builder.put(key, value);
+                }
             }
+
+            queryParameters = builder.build();
+        } else {
+            queryParameters = null;
+            queryStringDecoder = null;
         }
 
-        return headers;
+        return queryParameters;
     }
 
     @Override
-    public Optional<Value> header(String header) {
-        String value = request.getHeader(header);
-        return Optional.ofNullable(value != null ? new StringValue(value) : null);
+    public Value firstTrailingHeader(String header) {
+        return firstValue(trailingHeaders, header);
     }
 
     @Override
-    public Optional<Value> header(RequestHeader header) {
-        return header(header.getName());
+    public Value firstTrailingHeader(RequestHeader header) {
+        return firstTrailingHeader(header.getName());
     }
 
     @Override
-    public Method method() {
-        switch (request.method()) {
-            case OPTIONS: return Method.OPTIONS;
-            case GET: return Method.GET;
-            case HEAD: return Method.HEAD;
-            case POST: return Method.POST;
-            case PUT: return Method.PUT;
-            case DELETE: return Method.DELETE;
-            case TRACE: return Method.TRACE;
-            case CONNECT: return Method.CONNECT;
-            case PATCH: return Method.PATCH;
+    public Multimap<String, String> queryParameters() {
+        if (queryParameters == null && queryStringDecoder != null) {
+            queryParameters = extractQueryParameters();
         }
 
-        return null;
+        return queryParameters;
     }
 
     @Override
@@ -84,28 +77,12 @@ public class ServerRequestImpl implements ServerRequest {
         return new ResponseBuilderImpl();
     }
 
-    @Override
-    public String uri() {
-        return request.uri();
-    }
-
-    void setUriParameters(Map<String, String> uriParameters) {
-        this.uriParameters = uriParameters;
+    public void setTrailingHeaders(Multimap<String, String> trailingHeaders) {
+        this.trailingHeaders = trailingHeaders;
     }
 
     @Override
-    public Value uriParameter(String parameter) {
-        if (uriParameters != null) {
-            String value = uriParameters.get(parameter);
-            if (value != null) {
-                return new StringValue(value);
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Map<String, String> uriParameters() {
-        return uriParameters;
+    public Multimap<String, String> trailingHeaders() {
+        return trailingHeaders;
     }
 }

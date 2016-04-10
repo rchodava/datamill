@@ -1,5 +1,7 @@
 package org.chodavarapu.datamill.http.impl;
 
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
 import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.values.Value;
 
@@ -11,15 +13,16 @@ import java.util.Map;
  */
 public class RequestBuilderImpl implements RequestBuilder {
     private Entity entity;
-    private final Map<String, String> headers = new HashMap<>();
+    private final Multimap<String, String> headers = LinkedListMultimap.create();
     private String method;
     private final Map<String, Object> options = new HashMap<>();
+    private final Multimap<String, String> queryParameters = LinkedListMultimap.create();
     private String uri;
     private final Map<String, String> uriParameters = new HashMap<>();
 
     @Override
     public Request build() {
-        return new RequestImpl(method, headers, uri, uriParameters, options, entity);
+        return new RequestImpl(method, headers, uri, queryParameters, uriParameters, options, entity);
     }
 
     @Override
@@ -60,6 +63,12 @@ public class RequestBuilderImpl implements RequestBuilder {
     @Override
     public RequestBuilder method(String method) {
         this.method = method;
+        return this;
+    }
+
+    @Override
+    public RequestBuilder queryParameter(String name, String value) {
+        queryParameters.put(name, value);
         return this;
     }
 

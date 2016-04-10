@@ -2,6 +2,8 @@ package org.chodavarapu.datamill.json;
 
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -13,34 +15,35 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonArray implements ReflectableValue {
-    final io.vertx.core.json.JsonArray array;
+    final JSONArray array;
 
     public JsonArray() {
-        array = new io.vertx.core.json.JsonArray();
+        array = new JSONArray();
     }
 
     public JsonArray(String json) {
-        array = new io.vertx.core.json.JsonArray(json);
+        array = new JSONArray(json);
     }
 
-    JsonArray(io.vertx.core.json.JsonArray array) {
+    JsonArray(JSONArray array) {
         this.array = array;
     }
 
     public JsonArray(List<JsonObject> values) {
-        ArrayList<io.vertx.core.json.JsonObject> objects = new ArrayList<>();
+        ArrayList<JSONObject> objects = new ArrayList<>();
         for (JsonObject value : values) {
             objects.add(value.object);
         }
-        array = new io.vertx.core.json.JsonArray(objects);
+
+        array = new JSONArray(objects);
     }
 
     public JsonArray(String[] values) {
-        array = new io.vertx.core.json.JsonArray(Arrays.asList(values));
+        array = new JSONArray(Arrays.asList(values));
     }
 
     public JsonArray add(JsonObject value) {
-        array.add(value.object);
+        array.put(value.object);
         return this;
     }
 
@@ -96,7 +99,7 @@ public class JsonArray implements ReflectableValue {
 
     @Override
     public String asString() {
-        return array.encode();
+        return array.toString();
     }
 
     @Override
