@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import rx.Observable;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,7 +83,7 @@ public class ClientToServerChannelHandlerTest {
         DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "localhost");
         request.content().writeBytes("Test Content".getBytes());
 
-        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok());
+        when(route.apply(any())).thenReturn(Observable.just(new ResponseBuilderImpl().ok()));
 
         handler.channelRead(context, request);
 
@@ -96,7 +97,7 @@ public class ClientToServerChannelHandlerTest {
 
     @Test
     public void readEntitySentWithMultipleChunks() throws Exception {
-        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok());
+        when(route.apply(any())).thenReturn(Observable.just(new ResponseBuilderImpl().ok()));
 
         ExecutorService service = Executors.newSingleThreadExecutor();
 
@@ -129,7 +130,7 @@ public class ClientToServerChannelHandlerTest {
 
         DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "localhost");
 
-        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok());
+        when(route.apply(any())).thenReturn(Observable.just(new ResponseBuilderImpl().ok()));
 
         handler.channelRead(context, request);
 
@@ -147,7 +148,7 @@ public class ClientToServerChannelHandlerTest {
 
         DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "localhost");
 
-        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok("Test Content"));
+        when(route.apply(any())).thenReturn(Observable.just(new ResponseBuilderImpl().ok("Test Content")));
 
         handler.channelRead(context, request);
 

@@ -22,37 +22,37 @@ public class BeanMethodMatcherTest {
     private static class TestBean {
         @DELETE
         public Observable<Response> delete() {
-            return new ResponseBuilderImpl().ok("DELETE");
+            return Observable.just(new ResponseBuilderImpl().ok("DELETE"));
         }
 
         @GET
         public Observable<Response> get() {
-            return new ResponseBuilderImpl().ok("GET");
+            return Observable.just(new ResponseBuilderImpl().ok("GET"));
         }
 
         @HEAD
         public Observable<Response> head() {
-            return new ResponseBuilderImpl().ok("HEAD");
+            return Observable.just(new ResponseBuilderImpl().ok("HEAD"));
         }
 
         @OPTIONS
         public Observable<Response> options() {
-            return new ResponseBuilderImpl().ok("OPTIONS");
+            return Observable.just(new ResponseBuilderImpl().ok("OPTIONS"));
         }
 
         @PATCH
         public Observable<Response> patch() {
-            return new ResponseBuilderImpl().ok("PATCH");
+            return Observable.just(new ResponseBuilderImpl().ok("PATCH"));
         }
 
         @POST
         public Observable<Response> post() {
-            return new ResponseBuilderImpl().ok("POST");
+            return Observable.just(new ResponseBuilderImpl().ok("POST"));
         }
 
         @PUT
         public Observable<Response> put() {
-            return new ResponseBuilderImpl().ok("PUT");
+            return Observable.just(new ResponseBuilderImpl().ok("PUT"));
         }
     }
 
@@ -61,37 +61,37 @@ public class BeanMethodMatcherTest {
         @Path("delete")
         @DELETE
         public Observable<Response> delete() {
-            return new ResponseBuilderImpl().ok("DELETE");
+            return Observable.just(new ResponseBuilderImpl().ok("DELETE"));
         }
 
         @Path("get/")
         @GET
         public Observable<Response> get() {
-            return new ResponseBuilderImpl().ok("GET");
+            return Observable.just(new ResponseBuilderImpl().ok("GET"));
         }
 
         @Path("/head/")
         @HEAD
         public Observable<Response> head() {
-            return new ResponseBuilderImpl().ok("HEAD");
+            return Observable.just(new ResponseBuilderImpl().ok("HEAD"));
         }
 
         @Path("/options")
         @OPTIONS
         public Observable<Response> options() {
-            return new ResponseBuilderImpl().ok("OPTIONS");
+            return Observable.just(new ResponseBuilderImpl().ok("OPTIONS"));
         }
 
         @Path("")
         @PATCH
         public Observable<Response> patch() {
-            return new ResponseBuilderImpl().ok("PATCH");
+            return Observable.just(new ResponseBuilderImpl().ok("PATCH"));
         }
 
         @Path("/")
         @POST
         public Observable<Response> post() {
-            return new ResponseBuilderImpl().ok("POST");
+            return Observable.just(new ResponseBuilderImpl().ok("POST"));
         }
     }
 
@@ -99,7 +99,7 @@ public class BeanMethodMatcherTest {
         @POST
         @Path("/post")
         public Observable<Response> post() {
-            return new ResponseBuilderImpl().ok("POST");
+            return Observable.just(new ResponseBuilderImpl().ok("POST"));
         }
     }
 
@@ -107,12 +107,12 @@ public class BeanMethodMatcherTest {
     private static class TestBeanWithOnlyBeanPath {
         @POST
         public Observable<Response> post() {
-            return new ResponseBuilderImpl().ok("POST");
+            return Observable.just(new ResponseBuilderImpl().ok("POST"));
         }
 
         @GET
         public Observable<Response> get() {
-            return new ResponseBuilderImpl().ok("GET");
+            return Observable.just(new ResponseBuilderImpl().ok("GET"));
         }
     }
 

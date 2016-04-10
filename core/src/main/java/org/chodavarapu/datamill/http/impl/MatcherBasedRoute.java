@@ -33,11 +33,11 @@ public class MatcherBasedRoute implements Route {
             }
 
             if (availableMethods.size() > 0) {
-                return request.respond()
-                        .header("Allow", Joiner.on(',').join(availableMethods))
+                return request.respond(b ->
+                        b.header("Allow", Joiner.on(',').join(availableMethods))
                         .header("Access-Control-Allow-Headers", "Authorization")
                         .header("Access-Control-Allow-Origin", "*")
-                        .ok();
+                        .ok());
             }
         }
 

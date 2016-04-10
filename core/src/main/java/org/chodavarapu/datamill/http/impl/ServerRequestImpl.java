@@ -5,9 +5,12 @@ import com.google.common.collect.Multimap;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.values.Value;
+import rx.*;
+import rx.Observable;
 
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -73,8 +76,8 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
     }
 
     @Override
-    public ResponseBuilder respond() {
-        return new ResponseBuilderImpl();
+    public rx.Observable<Response> respond(Function<ResponseBuilder, Response> responseBuilder) {
+        return Observable.just(responseBuilder.apply(new ResponseBuilderImpl()));
     }
 
     public void setTrailingHeaders(Multimap<String, String> trailingHeaders) {

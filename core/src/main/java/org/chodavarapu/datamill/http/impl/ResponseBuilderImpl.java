@@ -6,7 +6,6 @@ import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import org.chodavarapu.datamill.values.StringValue;
-import rx.Observable;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -15,13 +14,13 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     private final Multimap<String, String> headers = LinkedListMultimap.create();
 
     @Override
-    public Observable<Response> badRequest() {
-        return Observable.just(new ResponseImpl(Status.BAD_REQUEST, headers));
+    public Response badRequest() {
+        return new ResponseImpl(Status.BAD_REQUEST, headers);
     }
 
     @Override
-    public Observable<Response> badRequest(String content) {
-        return Observable.just(new ResponseImpl(Status.BAD_REQUEST, headers, new ValueEntity(new StringValue(content))));
+    public Response badRequest(String content) {
+        return new ResponseImpl(Status.BAD_REQUEST, headers, new ValueEntity(new StringValue(content)));
     }
 
     @Override
@@ -31,47 +30,47 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
-    public Observable<Response> internalServerError() {
-        return Observable.just(new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers));
+    public Response internalServerError() {
+        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers);
     }
 
     @Override
-    public Observable<Response> internalServerError(String content) {
-        return Observable.just(new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, new ValueEntity(new StringValue(content))));
+    public Response internalServerError(String content) {
+        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, new ValueEntity(new StringValue(content)));
     }
 
     @Override
-    public Observable<Response> noContent() {
-        return Observable.just(new ResponseImpl(Status.NO_CONTENT, headers));
+    public Response noContent() {
+        return new ResponseImpl(Status.NO_CONTENT, headers);
     }
 
     @Override
-    public Observable<Response> notFound() {
-        return Observable.just(new ResponseImpl(Status.NOT_FOUND, headers));
+    public Response notFound() {
+        return new ResponseImpl(Status.NOT_FOUND, headers);
     }
 
     @Override
-    public Observable<Response> ok() {
-        return Observable.just(new ResponseImpl(Status.OK, headers));
+    public Response ok() {
+        return new ResponseImpl(Status.OK, headers);
     }
 
     @Override
-    public Observable<Response> ok(String content) {
-        return Observable.just(new ResponseImpl(Status.OK, headers, new ValueEntity(new StringValue(content))));
+    public Response ok(String content) {
+        return new ResponseImpl(Status.OK, headers, new ValueEntity(new StringValue(content)));
     }
 
     @Override
-    public Observable<Response> ok(byte[] content) {
-        return Observable.just(new ResponseImpl(Status.OK, headers, new BytesEntity(content)));
+    public Response ok(byte[] content) {
+        return new ResponseImpl(Status.OK, headers, new BytesEntity(content));
     }
 
     @Override
-    public Observable<Response> unauthorized() {
-        return Observable.just(new ResponseImpl(Status.UNAUTHORIZED, headers));
+    public Response unauthorized() {
+        return new ResponseImpl(Status.UNAUTHORIZED, headers);
     }
 
     @Override
-    public Observable<Response> unauthorized(String content) {
-        return Observable.just(new ResponseImpl(Status.UNAUTHORIZED, headers, new ValueEntity(new StringValue(content))));
+    public Response unauthorized(String content) {
+        return new ResponseImpl(Status.UNAUTHORIZED, headers, new ValueEntity(new StringValue(content)));
     }
 }
