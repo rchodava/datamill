@@ -1,21 +1,19 @@
 package org.chodavarapu.datamill.http;
 
-import rx.Observable;
-
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface ResponseBuilder {
-    Observable<Response> badRequest();
-    Observable<Response> badRequest(String content);
+    Response badRequest();
+    Response badRequest(String content);
     <T> ResponseBuilder header(String name, T value);
-    Observable<Response> internalServerError();
-    Observable<Response> internalServerError(String content);
-    Observable<Response> noContent();
-    Observable<Response> notFound();
-    Observable<Response> ok();
-    Observable<Response> ok(String content);
-    Observable<Response> ok(byte[] content);
-    Observable<Response> unauthorized();
-    Observable<Response> unauthorized(String content);
+    Response internalServerError();
+    Response internalServerError(String content);
+    Response noContent();
+    Response notFound();
+    Response ok();
+    Response ok(String content);
+    Response ok(byte[] content);
+    Response unauthorized();
+    Response unauthorized(String content);
 }
