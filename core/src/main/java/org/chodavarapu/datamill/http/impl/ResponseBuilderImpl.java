@@ -2,20 +2,38 @@ package org.chodavarapu.datamill.http.impl;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
+import org.chodavarapu.datamill.http.Entity;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import org.chodavarapu.datamill.values.StringValue;
+import rx.Observer;
+import rx.subjects.PublishSubject;
+
+import java.nio.charset.Charset;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
+    private final ExecutorService streamingEntityThreadPool;
     private final Multimap<String, String> headers = LinkedListMultimap.create();
+    private Entity entity;
+
+    public ResponseBuilderImpl(ExecutorService threadPool) {
+        this.streamingEntityThreadPool = threadPool;
+    }
+
+    // Test hook
+    ResponseBuilderImpl() {
+        this.streamingEntityThreadPool = null;
+    }
 
     @Override
     public Response badRequest() {
-        return new ResponseImpl(Status.BAD_REQUEST, headers);
+        return new ResponseImpl(Status.BAD_REQUEST, headers, entity);
     }
 
     @Override
@@ -31,7 +49,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Response internalServerError() {
-        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers);
+        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, entity);
     }
 
     @Override
@@ -46,12 +64,12 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Response notFound() {
-        return new ResponseImpl(Status.NOT_FOUND, headers);
+        return new ResponseImpl(Status.NOT_FOUND, headers, entity);
     }
 
     @Override
     public Response ok() {
-        return new ResponseImpl(Status.OK, headers);
+        return new ResponseImpl(Status.OK, headers, entity);
     }
 
     @Override
@@ -65,8 +83,18 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
+    public ResponseBuilder streamingEntity(Consumer<Observer<byte[]>> entityStreamer) {
+        PublishSubject<byte[]> entitySubject = PublishSubject.create();
+
+        streamingEntityThreadPool.execute(() -> entityStreamer.accept(entitySubject));
+
+        this.entity = new StreamedChunksEntity(entitySubject, Charset.defaultCharset());
+        return this;
+    }
+
+    @Override
     public Response unauthorized() {
-        return new ResponseImpl(Status.UNAUTHORIZED, headers);
+        return new ResponseImpl(Status.UNAUTHORIZED, headers, entity);
     }
 
     @Override

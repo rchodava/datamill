@@ -9,19 +9,21 @@ import rx.Observable;
 
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestBuilder {
-    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<byte[]> entityStream) {
+    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<byte[]> entityStream, ExecutorService threadPool) {
         Charset messageCharset = HttpUtil.getCharset(request);
         return new ServerRequestImpl(
                 request.method().name(),
                 buildHeadersMap(request.headers()),
                 request.uri(),
                 messageCharset,
-                new RequestEntity(entityStream, messageCharset));
+                new StreamedChunksEntity(entityStream, messageCharset),
+                threadPool);
     }
 
     public static Multimap<String, String> buildHeadersMap(HttpHeaders headers) {

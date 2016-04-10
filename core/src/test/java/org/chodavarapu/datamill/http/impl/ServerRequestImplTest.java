@@ -16,7 +16,7 @@ public class ServerRequestImplTest {
     public void basicRequestProperties() {
         ServerRequestImpl request = new ServerRequestImpl(
                 "GET", ImmutableMultimap.of("header1", "valueh1v1", "header1", "valueh1v2", "header2", "valueh2v1"),
-                "http://localhost:8080?param1=value1&param2=value2&param2=value3", Charset.defaultCharset(), null);
+                "http://localhost:8080?param1=value1&param2=value2&param2=value3", Charset.defaultCharset(), null, null);
         assertEquals(Method.GET, request.method());
         assertEquals("GET", request.rawMethod());
         assertEquals("valueh1v1", request.firstHeader("header1").asString());

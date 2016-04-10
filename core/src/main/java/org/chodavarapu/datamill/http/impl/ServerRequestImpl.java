@@ -5,25 +5,29 @@ import com.google.common.collect.Multimap;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.values.Value;
-import rx.*;
 import rx.Observable;
 
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequest {
+    private final ExecutorService entityStreamingThreadPool;
+
     private Multimap<String, String> queryParameters;
     private QueryStringDecoder queryStringDecoder;
     private Multimap<String, String> trailingHeaders;
 
-    public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Entity entity) {
+    public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Entity entity,
+                             ExecutorService threadPool) {
         super(method, headers, uri, entity);
 
         this.queryStringDecoder = new QueryStringDecoder(uri, charset);
+        this.entityStreamingThreadPool = threadPool;
     }
 
     private Multimap<String, String> extractQueryParameters() {
@@ -77,7 +81,7 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
 
     @Override
     public rx.Observable<Response> respond(Function<ResponseBuilder, Response> responseBuilder) {
-        return Observable.just(responseBuilder.apply(new ResponseBuilderImpl()));
+        return Observable.just(responseBuilder.apply(new ResponseBuilderImpl(entityStreamingThreadPool)));
     }
 
     public void setTrailingHeaders(Multimap<String, String> trailingHeaders) {
