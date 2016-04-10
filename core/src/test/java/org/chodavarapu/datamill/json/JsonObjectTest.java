@@ -6,9 +6,7 @@ import org.junit.Test;
 
 import java.util.function.Consumer;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -36,6 +34,7 @@ public class JsonObjectTest {
         testThrowsConversionException(j -> j.asDouble());
         testThrowsConversionException(j -> j.asFloat());
         testThrowsConversionException(j -> j.asInteger());
+        testThrowsConversionException(j -> j.asLocalDateTime());
         testThrowsConversionException(j -> j.asLong());
         testThrowsConversionException(j -> j.asShort());
 
@@ -46,6 +45,7 @@ public class JsonObjectTest {
         assertFalse(testObject.isFloat());
         assertFalse(testObject.isInteger());
         assertFalse(testObject.isLong());
+        assertFalse(testObject.isNumeric());
         assertFalse(testObject.isShort());
         assertFalse(testObject.isString());
     }
@@ -64,7 +64,7 @@ public class JsonObjectTest {
 
     @Test
     public void propertyConversions() {
-        JsonObject json = new JsonObject("{\"character\": \"v\", \"numeric\": 2, \"boolean\": true, \"string\": \"value\"}");
+        JsonObject json = new JsonObject("{\"character\": \"v\", \"numeric\": 2, \"boolean\": true, \"string\": \"value\", \"bytes\": [1, 2]}");
         assertEquals(true, json.get("boolean").asBoolean());
         assertEquals(2, json.get("numeric").asByte());
         assertEquals('v', json.get("character").asCharacter());
@@ -75,6 +75,8 @@ public class JsonObjectTest {
         assertEquals(2l, json.get("numeric").asLong());
         assertEquals(2, json.get("numeric").asShort());
         assertEquals("value", json.get("string").asString());
+        assertArrayEquals("value".getBytes(), json.get("string").asByteArray());
+        assertArrayEquals(new byte[] {(byte) 1, (byte) 2}, json.get("bytes").asByteArray());
 
         testThrowsConversionException(json, j -> j.get("string").asCharacter());
     }

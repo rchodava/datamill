@@ -189,14 +189,21 @@ public class JsonObject implements ReflectableValue {
 
         @Override
         public byte[] asByteArray() {
-            JSONArray array = object.getJSONArray(name);
-            if (array != null) {
-                byte[] bytes = new byte[array.length()];
-                for (int i = 0; i < bytes.length; i++) {
-                    bytes[i] = (byte) array.getInt(i);
-                }
+            try {
+                JSONArray array = object.getJSONArray(name);
+                if (array != null) {
+                    byte[] bytes = new byte[array.length()];
+                    for (int i = 0; i < bytes.length; i++) {
+                        bytes[i] = (byte) array.getInt(i);
+                    }
 
-                return bytes;
+                    return bytes;
+                }
+            } catch (JSONException e) {
+                String value = asString();
+                if (value != null) {
+                    return value.getBytes();
+                }
             }
 
             return null;

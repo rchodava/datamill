@@ -11,14 +11,14 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import rx.Observable;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -29,6 +29,9 @@ import static org.mockito.Mockito.when;
 public class ClientToServerChannelHandlerTest {
     @Mock
     private ChannelHandlerContext context;
+
+    @Captor
+    private ArgumentCaptor<LastHttpContent> lastContentCaptor;
 
     @Mock
     private Route route;
@@ -41,6 +44,18 @@ public class ClientToServerChannelHandlerTest {
 
     @Captor
     private ArgumentCaptor<FullHttpResponse> responseCaptor;
+
+    @Captor
+    private ArgumentCaptor<HttpObject> responseFragmentsCaptor;
+
+    private void waitForExecutorToFinishAllTasks(ExecutorService executor) throws Exception {
+        for (int i = 0; i < 5; i++) {
+            // We submit an empty task and wait for it so that other tasks submitted ahead of this get executed first
+            // and we wait for their completion. But each of those may have submitted others which we need to wait for
+            // as well which is why this is done in a loop.
+            executor.submit(() -> {}).get();
+        }
+    }
 
     @Test
     public void sendContinueResponseIfRequested() {
@@ -71,8 +86,7 @@ public class ClientToServerChannelHandlerTest {
 
         handler.channelRead(context, request);
 
-        service.shutdown();
-        service.awaitTermination(1, TimeUnit.SECONDS);
+        waitForExecutorToFinishAllTasks(service);
 
         verify(route).apply(requestCaptor.capture());
 
@@ -100,12 +114,51 @@ public class ClientToServerChannelHandlerTest {
         DefaultLastHttpContent last = new DefaultLastHttpContent();
         handler.channelRead(context, last);
 
-        service.shutdown();
-        service.awaitTermination(1, TimeUnit.SECONDS);
+        waitForExecutorToFinishAllTasks(service);
 
         verify(route).apply(requestCaptor.capture());
 
         ServerRequest appliedRequest = requestCaptor.getValue();
         assertEquals("Test Content Additional Content", appliedRequest.entity().asString().toBlocking().last());
+    }
+
+    @Test
+    public void singleChunkResponseSent() throws Exception {
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        ClientToServerChannelHandler handler = new ClientToServerChannelHandler(service, route, null);
+
+        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "localhost");
+
+        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok());
+
+        handler.channelRead(context, request);
+
+        waitForExecutorToFinishAllTasks(service);
+
+        verify(context).writeAndFlush(responseCaptor.capture());
+
+        assertEquals(HttpResponseStatus.OK, responseCaptor.getValue().status());
+    }
+
+    @Test
+    public void multipeResponseChunksSent() throws Exception {
+        ExecutorService service = Executors.newSingleThreadExecutor();
+        ClientToServerChannelHandler handler = new ClientToServerChannelHandler(service, route, null);
+
+        DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, HttpMethod.GET, "localhost");
+
+        when(route.apply(any())).thenReturn(new ResponseBuilderImpl().ok("Test Content"));
+
+        handler.channelRead(context, request);
+
+        waitForExecutorToFinishAllTasks(service);
+
+        verify(context, times(2)).write(responseFragmentsCaptor.capture());
+        verify(context).writeAndFlush(lastContentCaptor.capture());
+
+        assertEquals(HttpResponseStatus.OK, ((HttpResponse) responseFragmentsCaptor.getAllValues().get(0)).status());
+        byte[] bytes = new byte[((HttpContent) responseFragmentsCaptor.getAllValues().get(1)).content().readableBytes()];
+        ((HttpContent) responseFragmentsCaptor.getAllValues().get(1)).content().readBytes(bytes);
+        assertArrayEquals("Test Content".getBytes(), bytes);
     }
 }

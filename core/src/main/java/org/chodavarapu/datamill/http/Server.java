@@ -77,7 +77,7 @@ public class Server {
 
         try {
             logger.debug("Starting HTTP server on {}:{}", host, port);
-            Channel serverChannel = bootstrap.bind(host, port).sync().channel();
+            serverChannel = bootstrap.bind(host, port).sync().channel();
             logger.debug("HTTP server listening on port {}:{}", host, port);
         } catch (InterruptedException e) {
             logger.debug("Error occurred while HTTP server was listening on {}:{}", host, port, e);
