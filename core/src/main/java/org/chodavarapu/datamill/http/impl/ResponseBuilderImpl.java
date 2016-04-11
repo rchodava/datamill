@@ -6,6 +6,7 @@ import org.chodavarapu.datamill.http.Entity;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
+import org.chodavarapu.datamill.json.Json;
 import org.chodavarapu.datamill.values.StringValue;
 import rx.Observer;
 import rx.subjects.ReplaySubject;
@@ -90,6 +91,42 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
         this.entity = new StreamedChunksEntity(entitySubject, Charset.defaultCharset());
         return this;
+    }
+
+    @Override
+    public ResponseBuilder streamingJson(Consumer<Observer<Json>> jsonStreamer) {
+        boolean firstJsonObject[] = new boolean[] { true };
+        return streamingEntity(byteObserver -> {
+            jsonStreamer.accept(new Observer<Json>() {
+                {
+                    byteObserver.onNext("[".getBytes());
+                }
+
+                @Override
+                public void onCompleted() {
+                    byteObserver.onNext("]".getBytes());
+                    byteObserver.onCompleted();
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    byteObserver.onError(e);
+                }
+
+                @Override
+                public void onNext(Json jsonObject) {
+                    if (jsonObject != null) {
+                        if (!firstJsonObject[0]) {
+                            byteObserver.onNext(",".getBytes());
+                        } else {
+                            firstJsonObject[0] = false;
+                        }
+
+                        byteObserver.onNext(jsonObject.toString().getBytes());
+                    }
+                }
+            });
+        });
     }
 
     @Override

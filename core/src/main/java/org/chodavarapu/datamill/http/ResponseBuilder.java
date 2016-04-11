@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.http;
 
+import org.chodavarapu.datamill.json.Json;
 import rx.Observer;
 
 import java.util.function.Consumer;
@@ -19,6 +20,7 @@ public interface ResponseBuilder {
     Response ok(String content);
     Response ok(byte[] content);
     ResponseBuilder streamingEntity(Consumer<Observer<byte[]>> entityStreamer);
+    ResponseBuilder streamingJson(Consumer<Observer<Json>> jsonStreamer);
     Response unauthorized();
     Response unauthorized(String content);
 }
