@@ -2,7 +2,13 @@ package org.chodavarapu.datamill.http.impl;
 
 import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
+import org.chodavarapu.datamill.json.JsonArray;
+import org.chodavarapu.datamill.json.JsonObject;
+import org.json.JSONArray;
 import org.junit.Test;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -27,5 +33,30 @@ public class ResponseBuilderTest {
         assertEquals(Status.UNAUTHORIZED, builder.unauthorized("Content").status());
         assertEquals("Content", builder.unauthorized("Content").entity().asString().toBlocking().last());
         assertEquals(Status.NO_CONTENT, builder.noContent().status());
+    }
+
+    @Test
+    public void streamingEntites() {
+        ExecutorService threadPool = Executors.newSingleThreadExecutor();
+
+        ResponseBuilderImpl builder = new ResponseBuilderImpl(threadPool);
+
+        builder.streamingEntity(observer -> {
+            observer.onNext("Test Content ".getBytes());
+            observer.onNext("More Content".getBytes());
+            observer.onCompleted();
+        });
+        assertEquals("Test Content More Content", builder.ok().entity().asString().toBlocking().lastOrDefault(null));
+
+        builder.streamingJson(observer -> {
+            observer.onNext(new JsonObject().put("test", "value"));
+            observer.onNext(new JsonArray(new String[] { "test1", "test2" }));
+            observer.onCompleted();
+        });
+
+        JSONArray array = new JSONArray(builder.ok().entity().asString().toBlocking().lastOrDefault(null));
+        assertEquals("value", array.getJSONObject(0).get("test"));
+        assertEquals("test1", array.getJSONArray(1).get(0));
+        assertEquals("test2", array.getJSONArray(1).get(1));
     }
 }

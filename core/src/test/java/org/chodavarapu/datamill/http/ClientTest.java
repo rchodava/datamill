@@ -82,6 +82,16 @@ public class ClientTest {
                 Method.GET, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"));
+        verifyConnectionSetup(createClientAndRequest(c -> c.get(
+                rb -> rb.uri("http://sample.com")
+                        .header("Content-Type", "application/json")
+                        .header("Accept", "application/json")
+                        .queryParameter("test", "value")
+                        .queryParameter("test2", "value%$@")
+                        .build())),
+                Method.GET, "http://sample.com?test=value&test2=value%25%24%40", ImmutableMap.of(
+                        "Content-Type", "application/json",
+                        "Accept", "application/json"));
     }
 
     @Test
