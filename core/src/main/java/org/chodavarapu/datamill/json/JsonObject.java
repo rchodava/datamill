@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class JsonObject implements ReflectableValue {
+public class JsonObject implements Json, ReflectableValue {
     final JSONObject object;
 
     private JsonObject(JSONObject object) {

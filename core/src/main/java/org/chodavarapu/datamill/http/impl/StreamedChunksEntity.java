@@ -12,11 +12,11 @@ import java.nio.charset.Charset;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class RequestEntity implements Entity {
+public class StreamedChunksEntity implements Entity {
     private final Observable<byte[]> chunks;
     private final Charset charset;
 
-    public RequestEntity(Observable<byte[]> chunks, Charset charset) {
+    public StreamedChunksEntity(Observable<byte[]> chunks, Charset charset) {
         this.chunks = chunks;
         this.charset = charset;
     }

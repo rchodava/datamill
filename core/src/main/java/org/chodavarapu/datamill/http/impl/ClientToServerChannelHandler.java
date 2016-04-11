@@ -62,7 +62,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
             }
 
             entityStream = ReplaySubject.create();
-            serverRequest = ServerRequestBuilder.buildServerRequest(request, entityStream);
+            serverRequest = ServerRequestBuilder.buildServerRequest(request, entityStream, threadPool);
 
             processRequest(context, request);
 
@@ -161,7 +161,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 Unpooled.EMPTY_BUFFER :
                 Unpooled.wrappedBuffer(responseBytes));
 
-        context.write(content);
+        context.writeAndFlush(content);
     }
 
     private void sendResponseEnd(ChannelHandlerContext context, HttpRequest originalRequest) {

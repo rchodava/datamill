@@ -45,15 +45,27 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         this.password = password;
     }
 
+    private void setupConnectionProvider() {
+        if (dataSource != null) {
+            connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
+            database = Database.from(connectionProvider);
+        } else if (url != null) {
+            connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderPooled(url, username, password, 0, 10));
+            database = Database.from(connectionProvider);
+        }
+    }
+
+    private DelegatingConnectionProvider getConnectionProvider() {
+        if (connectionProvider == null) {
+            setupConnectionProvider();
+        }
+
+        return connectionProvider;
+    }
+
     private Database getDatabase() {
         if (database == null) {
-            if (dataSource != null) {
-                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
-                database = Database.from(connectionProvider);
-            } else if (url != null) {
-                connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderPooled(url, username, password, 0, 10));
-                database = Database.from(connectionProvider);
-            }
+            setupConnectionProvider();
         }
 
         return database;
@@ -115,7 +127,7 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     }
 
     public DatabaseClient changeCatalog(String catalog) {
-        connectionProvider.setCatalog(catalog);
+        getConnectionProvider().setCatalog(catalog);
         return this;
     }
 

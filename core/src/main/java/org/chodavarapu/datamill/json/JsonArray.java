@@ -14,7 +14,7 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class JsonArray implements ReflectableValue {
+public class JsonArray implements Json, ReflectableValue {
     final JSONArray array;
 
     public JsonArray() {

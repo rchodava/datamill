@@ -31,9 +31,6 @@ public class ClientToServerChannelHandlerTest {
     @Mock
     private ChannelHandlerContext context;
 
-    @Captor
-    private ArgumentCaptor<LastHttpContent> lastContentCaptor;
-
     @Mock
     private Route route;
 
@@ -48,6 +45,9 @@ public class ClientToServerChannelHandlerTest {
 
     @Captor
     private ArgumentCaptor<HttpObject> responseFragmentsCaptor;
+
+    @Captor
+    private ArgumentCaptor<HttpObject> responseStartCaptor;
 
     private void waitForExecutorToFinishAllTasks(ExecutorService executor) throws Exception {
         for (int i = 0; i < 5; i++) {
@@ -154,12 +154,12 @@ public class ClientToServerChannelHandlerTest {
 
         waitForExecutorToFinishAllTasks(service);
 
-        verify(context, times(2)).write(responseFragmentsCaptor.capture());
-        verify(context).writeAndFlush(lastContentCaptor.capture());
+        verify(context).write(responseStartCaptor.capture());
+        verify(context, times(2)).writeAndFlush(responseFragmentsCaptor.capture());
 
-        assertEquals(HttpResponseStatus.OK, ((HttpResponse) responseFragmentsCaptor.getAllValues().get(0)).status());
-        byte[] bytes = new byte[((HttpContent) responseFragmentsCaptor.getAllValues().get(1)).content().readableBytes()];
-        ((HttpContent) responseFragmentsCaptor.getAllValues().get(1)).content().readBytes(bytes);
+        assertEquals(HttpResponseStatus.OK, ((HttpResponse) responseStartCaptor.getValue()).status());
+        byte[] bytes = new byte[((HttpContent) responseFragmentsCaptor.getAllValues().get(0)).content().readableBytes()];
+        ((HttpContent) responseFragmentsCaptor.getAllValues().get(0)).content().readBytes(bytes);
         assertArrayEquals("Test Content".getBytes(), bytes);
     }
 }
