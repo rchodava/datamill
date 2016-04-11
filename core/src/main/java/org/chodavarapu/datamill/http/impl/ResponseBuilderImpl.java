@@ -8,7 +8,7 @@ import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import org.chodavarapu.datamill.values.StringValue;
 import rx.Observer;
-import rx.subjects.PublishSubject;
+import rx.subjects.ReplaySubject;
 
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
@@ -84,7 +84,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public ResponseBuilder streamingEntity(Consumer<Observer<byte[]>> entityStreamer) {
-        PublishSubject<byte[]> entitySubject = PublishSubject.create();
+        ReplaySubject<byte[]> entitySubject = ReplaySubject.create();
 
         streamingEntityThreadPool.execute(() -> entityStreamer.accept(entitySubject));
 
