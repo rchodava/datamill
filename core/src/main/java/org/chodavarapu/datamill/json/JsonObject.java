@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -156,6 +157,11 @@ public class JsonObject implements Json, ReflectableValue {
         return this;
     }
 
+    public JsonObject put(String key, JsonObject object) {
+        this.object.put(key, object.object);
+        return this;
+    }
+
     public JsonObject put(String key, JsonArray array) {
         object.put(key, array.array);
         return this;
@@ -163,6 +169,10 @@ public class JsonObject implements Json, ReflectableValue {
 
     public <T> JsonObject put(Member member, T value) {
         return put(member.name(), value);
+    }
+
+    public Set<String> propertyNames() {
+        return object.keySet();
     }
 
     @Override
