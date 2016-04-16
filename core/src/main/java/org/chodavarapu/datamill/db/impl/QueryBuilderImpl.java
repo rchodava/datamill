@@ -1,7 +1,17 @@
 package org.chodavarapu.datamill.db.impl;
 
 import com.google.common.base.Joiner;
-import org.chodavarapu.datamill.db.*;
+import org.chodavarapu.datamill.db.ConditionBuilder;
+import org.chodavarapu.datamill.db.InsertBuilder;
+import org.chodavarapu.datamill.db.InsertSuffixBuilder;
+import org.chodavarapu.datamill.db.JoinBuilder;
+import org.chodavarapu.datamill.db.QueryBuilder;
+import org.chodavarapu.datamill.db.Row;
+import org.chodavarapu.datamill.db.RowBuilder;
+import org.chodavarapu.datamill.db.SelectBuilder;
+import org.chodavarapu.datamill.db.UpdateBuilder;
+import org.chodavarapu.datamill.db.UpdateQueryExecution;
+import org.chodavarapu.datamill.db.WhereBuilder;
 import org.chodavarapu.datamill.reflection.Member;
 import org.chodavarapu.datamill.reflection.Outline;
 import org.chodavarapu.datamill.values.Times;
@@ -14,6 +24,7 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +59,11 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static final String SQL_UPDATE = "UPDATE ";
     private static final String SQL_IS = " IS ";
     private static final String SQL_AND = " AND ";
+    private static final String SQL_IN = " IN ";
+
+    private static final String OPEN_PARENTHESIS = "(";
+    private static final String CLOSE_PARENTHESIS = ")";
+    private static final String COMMA = ",";
 
     private static void appendUpdateAssignments(StringBuilder query, List<Object> parameters, Map<String, ?> values) {
         List<String> setters = new ArrayList<>(values.size());
@@ -243,6 +259,12 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
+        public <T> WhereBuilder<UpdateQueryExecution> in(String column, Collection<T> values) {
+            addInClause(column, values);
+            return  this;
+        }
+
+        @Override
         public UpdateQueryExecution execute() {
             return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
@@ -275,6 +297,12 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         @Override
         public <T> WhereBuilder<Observable<Row>> is(String column, T value) {
             addIsClause(column, value);
+            return  this;
+        }
+
+        @Override
+        public <T> WhereBuilder<Observable<Row>> in(String column, Collection<T> values) {
+            addInClause(column, values);
             return  this;
         }
 
@@ -321,6 +349,26 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
             }
         }
 
+        protected <T> void addInClause(String column, Collection<T> values) {
+            if (!values.isEmpty()) {
+                query.append(column);
+                query.append(SQL_IN);
+
+                query.append(OPEN_PARENTHESIS);
+                Iterator<T> iterator = values.iterator();
+                while(iterator.hasNext()) {
+                    query.append(SQL_PARAMETER_PLACEHOLDER);
+                    iterator.next();
+                    if (iterator.hasNext()) {
+                        query.append(COMMA);
+                    }
+                }
+                query.append(CLOSE_PARENTHESIS);
+
+                parameters.addAll(values);
+            }
+        }
+
         @Override
         public ConditionBuilder<R> and() {
             query.append(SQL_AND);
@@ -345,6 +393,16 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         @Override
         public <T> WhereBuilder<R> is(Member member, T value) {
             return is(member.outline().pluralName(), member.name(), value);
+        }
+
+        @Override
+        public <T> WhereBuilder<R> in(String table, String column, Collection<T> values) {
+            return in(qualifiedName(table, column), values);
+        }
+
+        @Override
+        public <T> WhereBuilder<R> in(Member member, Collection<T> values) {
+            return in(member.outline().pluralName(), member.name(), values);
         }
 
         @Override
