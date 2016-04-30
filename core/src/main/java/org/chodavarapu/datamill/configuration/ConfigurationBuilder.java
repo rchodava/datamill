@@ -2,6 +2,7 @@ package org.chodavarapu.datamill.configuration;
 
 import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.values.StringValue;
+import org.chodavarapu.datamill.values.Value;
 import rx.functions.*;
 
 import java.util.function.Consumer;
@@ -17,8 +18,17 @@ public class ConfigurationBuilder<T> {
     }
 
     public ConfigurationBuilder<T> configure(Consumer<T> configuration) {
-        configuration.accept(bean.unwrap());
+        configuration.accept(get());
         return this;
+    }
+
+    public ConfigurationBuilder<T> configure(Action2<ConfigurationBuilder<T>, T> configuration) {
+        configuration.call(this, get());
+        return this;
+    }
+
+    public T get() {
+        return bean.unwrap();
     }
 
     public ConfigurationBuilder<T> ifSystemPropertyExists(String name, Consumer<ConfigurationBuilder<T>> configuration) {
@@ -49,6 +59,10 @@ public class ConfigurationBuilder<T> {
         }
 
         return value;
+    }
+
+    public Value getRequiredSystemProperty(String name) {
+        return new StringValue(getSystemProperty(name, true));
     }
 
     private <P> ConfigurationBuilder<T> fromSystemProperty(Consumer<T> propertyInvoker, String name,
