@@ -172,4 +172,8 @@ public class ConfigurationBuilder<T> {
     public ConfigurationBuilder<T> fromRequiredSystemProperty(Consumer<T> propertyInvoker, String name) {
         return fromRequiredSystemProperty(propertyInvoker, name, null);
     }
+
+    public ConfigurationBuilder<T> fromOptionalSystemProperty(Consumer<T> propertyInvoker, String name) {
+        return fromSystemProperty(propertyInvoker, name, null, false);
+    }
 }
