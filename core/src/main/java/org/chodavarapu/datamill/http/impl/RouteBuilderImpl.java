@@ -1,13 +1,9 @@
 package org.chodavarapu.datamill.http.impl;
 
-import org.chodavarapu.datamill.http.Method;
-import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.http.Route;
+import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.http.builder.*;
-import org.chodavarapu.datamill.http.ServerRequest;
 import org.chodavarapu.datamill.reflection.Bean;
 import rx.Observable;
-import rx.functions.Func1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +18,6 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     @Override
     public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean) {
         return ifMatchesBeanMethod(bean);
-    }
-
-    @Override
-    public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean, Func1<Response, Response> postProcessor) {
-        return ifMatchesBeanMethod(bean, postProcessor);
     }
 
     @Override
@@ -51,7 +42,9 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
 
     @Override
     public ElseBuilder ifMatchesBeanMethod(Bean<?> bean) {
-        return ifMatchesBeanMethod(bean, r -> r);
+        return ifMatchesBeanMethod(bean,
+                (request, method) ->
+                        bean.<Observable<Response>, ServerRequest>invoke(method, request));
     }
 
     @Override
@@ -60,14 +53,6 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
             BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route) {
         matchers.add(new BeanMethodMatcher(bean, route));
         return this;
-    }
-
-    @Override
-    public ElseBuilder ifMatchesBeanMethod(Bean<?> bean, Func1<Response, Response> postProcessor) {
-        return ifMatchesBeanMethod(bean,
-                (request, method) ->
-                        bean.<Observable<Response>, ServerRequest>invoke(method, request)
-                        .map(r -> postProcessor.call(r)));
     }
 
     @Override
@@ -89,19 +74,19 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     }
 
     @Override
-    public Route orElse(Route route) {
+    public PostProcessedRoute orElse(Route route) {
         matchers.add(new TautologyMatcher(route));
         return new MatcherBasedRoute(matchers);
     }
 
     @Override
-    public Route orElse(Observable<Response> response) {
+    public PostProcessedRoute orElse(Observable<Response> response) {
         matchers.add(new TautologyMatcher(response));
         return new MatcherBasedRoute(matchers);
     }
 
     @Override
-    public Route orElse(Response response) {
+    public PostProcessedRoute orElse(Response response) {
         matchers.add(new TautologyMatcher(response));
         return new MatcherBasedRoute(matchers);
     }
