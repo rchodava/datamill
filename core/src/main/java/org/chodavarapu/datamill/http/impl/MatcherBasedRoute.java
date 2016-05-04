@@ -1,12 +1,11 @@
 package org.chodavarapu.datamill.http.impl;
 
 import com.google.common.base.Joiner;
-import org.chodavarapu.datamill.http.Method;
-import org.chodavarapu.datamill.http.ServerRequest;
-import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.http.Route;
+import org.chodavarapu.datamill.http.*;
 import rx.Observable;
+import rx.functions.Func1;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -14,11 +13,26 @@ import java.util.Set;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class MatcherBasedRoute implements Route {
+public class MatcherBasedRoute implements PostProcessedRoute {
     private final List<Matcher> matchers;
+    private final List<Func1<Response, Response>> postProcessors = new ArrayList<>();
 
     public MatcherBasedRoute(List<Matcher> matchers) {
         this.matchers = matchers;
+    }
+
+    @Override
+    public Route andFinally(Func1<Response, Response> postProcessor) {
+        postProcessors.add(postProcessor);
+        return this;
+    }
+
+    private Response postProcess(Response response) {
+        for (Func1<Response, Response> postProcessor : postProcessors) {
+            response = postProcessor.call(response);
+        }
+
+        return response;
     }
 
     @Override
@@ -34,17 +48,16 @@ public class MatcherBasedRoute implements Route {
 
             if (availableMethods.size() > 0) {
                 return request.respond(b ->
-                        b.header("Allow", Joiner.on(',').join(availableMethods))
-                        .header("Access-Control-Allow-Headers", "Authorization")
-                        .header("Access-Control-Allow-Origin", "*")
-                        .ok());
+                        b.header("Access-Control-Allow-Methods", Joiner.on(',').join(availableMethods))
+                        .ok())
+                        .map(this::postProcess);
             }
         }
 
         for (Matcher matcher : matchers) {
             Observable<Response> responseObservable = matcher.applyIfMatches(request);
             if (responseObservable != null) {
-                return responseObservable;
+                return responseObservable.map(this::postProcess);
             }
         }
 

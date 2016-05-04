@@ -1,12 +1,8 @@
 package org.chodavarapu.datamill.http.builder;
 
-import org.chodavarapu.datamill.http.Method;
-import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.http.Route;
-import org.chodavarapu.datamill.http.ServerRequest;
+import org.chodavarapu.datamill.http.*;
 import org.chodavarapu.datamill.reflection.Bean;
 import rx.Observable;
-import rx.functions.Func1;
 
 import java.util.function.BiFunction;
 
@@ -21,10 +17,7 @@ public interface ElseBuilder {
     ElseBuilder elseIfMatchesBeanMethod(
             Bean<?> bean,
             BiFunction<ServerRequest, org.chodavarapu.datamill.reflection.Method, Observable<Response>> route);
-    ElseBuilder elseIfMatchesBeanMethod(
-            Bean<?> bean,
-            Func1<Response, Response> postProcessor);
-    Route orElse(Route route);
-    Route orElse(Observable<Response> response);
-    Route orElse(Response response);
+    PostProcessedRoute orElse(Route route);
+    PostProcessedRoute orElse(Observable<Response> response);
+    PostProcessedRoute orElse(Response response);
 }
