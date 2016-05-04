@@ -3,14 +3,20 @@ package org.chodavarapu.datamill.configuration;
 import org.chodavarapu.datamill.reflection.Bean;
 import org.chodavarapu.datamill.values.StringValue;
 import org.chodavarapu.datamill.values.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.functions.*;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.function.Consumer;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ConfigurationBuilder<T> {
+    private static final Logger logger = LoggerFactory.getLogger(ConfigurationBuilder.class);
+
     private final Bean<T> bean;
 
     public ConfigurationBuilder(Bean<T> bean) {
@@ -96,9 +102,9 @@ public class ConfigurationBuilder<T> {
     }
 
     private <P> ConfigurationBuilder<T> fromSystemProperties(Consumer<T> propertyInvoker,
-                                                                     String name1, String name2, String name3,
-                                                                     Func3<String, String, String, P> derivation,
-                                                                     boolean required) {
+                                                             String name1, String name2, String name3,
+                                                             Func3<String, String, String, P> derivation,
+                                                             boolean required) {
         String value1 = getSystemProperty(name1, required);
         String value2 = getSystemProperty(name2, required);
         String value3 = getSystemProperty(name3, required);
@@ -114,9 +120,9 @@ public class ConfigurationBuilder<T> {
     }
 
     private <P> ConfigurationBuilder<T> fromSystemProperties(Consumer<T> propertyInvoker,
-                                                                    String name1, String name2, String name3, String name4,
-                                                                    Func4<String, String, String, String, P> derivation,
-                                                                     boolean required) {
+                                                             String name1, String name2, String name3, String name4,
+                                                             Func4<String, String, String, String, P> derivation,
+                                                             boolean required) {
         String value1 = getSystemProperty(name1, required);
         String value2 = getSystemProperty(name2, required);
         String value3 = getSystemProperty(name3, required);
@@ -133,9 +139,9 @@ public class ConfigurationBuilder<T> {
     }
 
     private <P> ConfigurationBuilder<T> fromSystemProperties(Consumer<T> propertyInvoker,
-                                                                    String name1, String name2, String name3, String name4, String name5,
-                                                                    Func5<String, String, String, String, String, P> derivation,
-                                                                     boolean required) {
+                                                             String name1, String name2, String name3, String name4, String name5,
+                                                             Func5<String, String, String, String, String, P> derivation,
+                                                             boolean required) {
         String value1 = getSystemProperty(name1, required);
         String value2 = getSystemProperty(name2, required);
         String value3 = getSystemProperty(name3, required);
@@ -153,7 +159,7 @@ public class ConfigurationBuilder<T> {
     }
 
     private <V> ConfigurationBuilder<T> fromSystemProperty(Consumer<T> propertyInvoker, String name,
-                                                                  V defaultValue, boolean required) {
+                                                           V defaultValue, boolean required) {
         String value = getSystemProperty(name, required);
         if (value != null) {
             bean.set(propertyInvoker, new StringValue(value));
@@ -175,5 +181,29 @@ public class ConfigurationBuilder<T> {
 
     public ConfigurationBuilder<T> fromOptionalSystemProperty(Consumer<T> propertyInvoker, String name) {
         return fromSystemProperty(propertyInvoker, name, null, false);
+    }
+
+    public ConfigurationBuilder<T> fromLocalAddress(Consumer<T> propertyInvoker) {
+        try {
+            bean.set(propertyInvoker, InetAddress.getLocalHost().getHostAddress());
+        } catch (UnknownHostException e) {
+            logger.debug("Error retrieving local host name, using localhost", e);
+            bean.set(propertyInvoker, "localhost");
+        }
+
+        return this;
+    }
+
+    public <P> ConfigurationBuilder<T> fromLocalAddress(Consumer<T> propertyInvoker, Func1<String, P> derivation) {
+        String localAddress;
+        try {
+            localAddress = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+            logger.debug("Error retrieving local host name, using localhost", e);
+            localAddress = "localhost";
+        }
+
+        bean.set(propertyInvoker, derivation.call(localAddress));
+        return this;
     }
 }

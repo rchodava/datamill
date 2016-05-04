@@ -2,6 +2,7 @@ package org.chodavarapu.datamill.reflection.impl;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Defaults;
+import com.sun.beans.TypeResolver;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.Proxy;
 import org.atteo.evo.inflector.English;
@@ -15,6 +16,8 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.time.LocalDateTime;
@@ -30,6 +33,62 @@ import java.util.function.Consumer;
  */
 public class OutlineImpl<T> implements Outline<T> {
     private static Method OBJECT_GET_CLASS_METHOD;
+
+    private static String capitalize(String string) {
+        if (string != null && string.length() > 0) {
+            return Character.toUpperCase(string.charAt(0)) + string.substring(1);
+        }
+
+        return string;
+    }
+
+    private static Method findMethod(Class<?> start, String methodName, int numberOfArguments, Class<?> arguments[]) {
+        for (Class<?> clazz = start; clazz != null; clazz = clazz.getSuperclass()) {
+            Method methods[] = clazz.getDeclaredMethods();
+            for (int i = 0; i < methods.length; i++) {
+                Method method = methods[i];
+
+                if (method == null || !Modifier.isPublic(method.getModifiers())) {
+                    continue;
+                }
+
+                if (method.getName().equals(methodName)) {
+                    Type[] parameters = method.getGenericParameterTypes();
+                    if (parameters.length == numberOfArguments) {
+                        if (arguments != null) {
+                            boolean differentParameterType = false;
+                            if (numberOfArguments > 0) {
+                                for (int j = 0; j < numberOfArguments; j++) {
+                                    if (TypeResolver.erase(TypeResolver.resolveInClass(start, parameters[j])) !=
+                                            arguments[j]) {
+                                        differentParameterType = true;
+                                        continue;
+                                    }
+                                }
+
+                                if (differentParameterType) {
+                                    continue;
+                                }
+                            }
+                        }
+
+                        return method;
+                    }
+                }
+            }
+        }
+
+        Class interfaces[] = start.getInterfaces();
+        for (int i = 0 ; i < interfaces.length; i++) {
+            Method method = findMethod(interfaces[i], methodName, numberOfArguments, null);
+            if (method != null) {
+                return method;
+            }
+        }
+
+        return null;
+    }
+
     private static Method getObjectGetClassMethod() {
         if (OBJECT_GET_CLASS_METHOD == null) {
             try {
@@ -274,16 +333,35 @@ public class OutlineImpl<T> implements Outline<T> {
     }
 
     private class PropertyImpl<T> extends MemberImpl implements Property<T> {
+
         private final PropertyDescriptor descriptor;
+        private final Method writeMethod;
 
         public PropertyImpl(PropertyDescriptor descriptor) {
             super(descriptor.getName());
 
             this.descriptor = descriptor;
+            this.writeMethod = introspectWriteMethod(descriptor);
+        }
+
+        private Method introspectWriteMethod(PropertyDescriptor descriptor) {
+            Method method = descriptor.getWriteMethod();
+            if (method == null) {
+                Class<?> cls = descriptor.getReadMethod().getDeclaringClass();
+
+                Class<?> type = descriptor.getPropertyType();
+
+                String writeMethodName = "set" + capitalize(descriptor.getName());
+
+                Class<?>[] args = (type == null) ? null : new Class<?>[] { type };
+                method = findMethod(cls, writeMethodName, 1, args);
+            }
+
+            return method;
         }
 
         public boolean isReadOnly() {
-            return descriptor.getWriteMethod() == null;
+            return writeMethod == null;
         }
 
         public boolean isSimple() {
@@ -347,7 +425,6 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         public <P> void set(T instance, P value) {
-            java.lang.reflect.Method writeMethod = descriptor.getWriteMethod();
             if (writeMethod != null) {
                 if (!writeMethod.isAccessible()) {
                     performSecure(() -> writeMethod.setAccessible(true));
