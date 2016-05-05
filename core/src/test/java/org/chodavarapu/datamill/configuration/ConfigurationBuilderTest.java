@@ -5,9 +5,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.io.StringWriter;
 import java.net.InetAddress;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -112,6 +116,22 @@ public class ConfigurationBuilderTest {
                 .configure((b, c) -> c.setProperty(b.getRequiredSystemProperty("test").asString()))
                 .get();
         assertEquals("value", configuration.getProperty());
+    }
+
+    @Test
+    public void printProperties() {
+        System.setProperty("test", "value");
+
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
+        PrintStream outStream = System.out;
+        System.setOut(new PrintStream(output));
+        new ConfigurationBuilder(new OutlineBuilder().wrap(new Configuration())).printSystemProperties();
+        String properties = new String(output.toByteArray());
+
+        assertTrue(properties.contains("test"));
+        assertTrue(properties.contains("value"));
+
+        System.setOut(outStream);
     }
 
     @Test
