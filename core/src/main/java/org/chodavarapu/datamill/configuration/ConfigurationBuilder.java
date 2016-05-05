@@ -9,6 +9,7 @@ import rx.functions.*;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -45,6 +46,11 @@ public class ConfigurationBuilder<T> {
                                                           Consumer<ConfigurationBuilder<T>> configuration,
                                                           Consumer<ConfigurationBuilder<T>> elseConfiguration) {
         String value = System.getProperty(name);
+
+        if (value == null) {
+            value = System.getenv(name);
+        }
+
         if (value != null) {
             if (configuration != null) {
                 configuration.accept(this);
@@ -60,6 +66,11 @@ public class ConfigurationBuilder<T> {
 
     private String getSystemProperty(String name, boolean required) {
         String value = System.getProperty(name);
+
+        if (value == null) {
+            value = System.getenv(name);
+        }
+
         if (value == null && required) {
             throw new IllegalStateException("Expected " + name + " to be found in the system properties list!");
         }
@@ -204,6 +215,26 @@ public class ConfigurationBuilder<T> {
         }
 
         bean.set(propertyInvoker, derivation.call(localAddress));
+        return this;
+    }
+
+    public ConfigurationBuilder<T> printSystemProperties() {
+        StringBuilder properties = new StringBuilder();
+        for (Map.Entry<Object, Object> property : System.getProperties().entrySet()) {
+            properties.append(property.getKey() != null ? property.getKey().toString() : "<null>");
+            properties.append("=");
+            properties.append(property.getValue() != null ? property.getValue().toString() : "<null>");
+            properties.append("; ");
+        }
+
+        for (Map.Entry<String, String> property : System.getenv().entrySet()) {
+            properties.append(property.getKey() != null ? property.getKey() : "<null>");
+            properties.append("=");
+            properties.append(property.getValue() != null ? property.getValue() : "<null>");
+            properties.append("; ");
+        }
+
+        logger.debug("System Properties: { {} }", properties);
         return this;
     }
 }
