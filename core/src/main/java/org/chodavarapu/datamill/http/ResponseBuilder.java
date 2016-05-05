@@ -23,4 +23,6 @@ public interface ResponseBuilder {
     ResponseBuilder streamingJson(Consumer<Observer<Json>> jsonStreamer);
     Response unauthorized();
     Response unauthorized(String content);
+    Response forbidden();
+    Response forbidden(String content);
 }

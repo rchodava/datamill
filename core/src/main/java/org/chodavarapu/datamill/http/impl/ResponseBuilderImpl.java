@@ -138,4 +138,14 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     public Response unauthorized(String content) {
         return new ResponseImpl(Status.UNAUTHORIZED, headers, new ValueEntity(new StringValue(content)));
     }
+
+    @Override
+    public Response forbidden() {
+        return new ResponseImpl(Status.FORBIDDEN, headers, entity);
+    }
+
+    @Override
+    public Response forbidden(String content) {
+        return new ResponseImpl(Status.FORBIDDEN, headers, new ValueEntity(new StringValue(content)));
+    }
 }
