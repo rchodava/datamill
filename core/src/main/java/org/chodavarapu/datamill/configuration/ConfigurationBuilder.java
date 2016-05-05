@@ -74,7 +74,7 @@ public class ConfigurationBuilder<T> {
     private <P> ConfigurationBuilder<T> fromSystemProperty(Consumer<T> propertyInvoker, String name,
                                                            Func1<String, P> derivation, boolean required) {
         String value = getSystemProperty(name, required);
-        bean.set(propertyInvoker, derivation.call(value));
+        bean.set(propertyInvoker, derivation != null ? derivation.call(value) : value);
 
         return this;
     }
@@ -170,9 +170,9 @@ public class ConfigurationBuilder<T> {
         return this;
     }
 
-    public <V> ConfigurationBuilder<T> fromRequiredSystemProperty(Consumer<T> propertyInvoker, String name,
+    public <V> ConfigurationBuilder<T> fromOptionalSystemProperty(Consumer<T> propertyInvoker, String name,
                                                                   V defaultValue) {
-        return fromSystemProperty(propertyInvoker, name, defaultValue, true);
+        return fromSystemProperty(propertyInvoker, name, defaultValue, false);
     }
 
     public ConfigurationBuilder<T> fromRequiredSystemProperty(Consumer<T> propertyInvoker, String name) {
