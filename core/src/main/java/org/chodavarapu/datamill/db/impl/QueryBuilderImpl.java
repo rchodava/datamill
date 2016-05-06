@@ -589,7 +589,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
     private static class EmptyUpdateSuffixBuilder implements InsertSuffixBuilder {
         @Override
         public Observable<Integer> count() {
-            return Observable.empty();
+            return Observable.just(0);
         }
 
         @Override
