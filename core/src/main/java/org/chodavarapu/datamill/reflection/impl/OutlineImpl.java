@@ -20,7 +20,6 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,6 +31,123 @@ import java.util.function.Consumer;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class OutlineImpl<T> implements Outline<T> {
+    private final TripleArgumentTypeSwitch<Property, T, Value, Void> propertySetterSwitch =
+            new TripleArgumentTypeSwitch<Property, T, Value, Void>() {
+                @Override
+                protected Void caseBoolean(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asBoolean());
+                    return null;
+                }
+
+                @Override
+                protected Void caseBooleanWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Boolean) value3.asObject(Boolean.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseByte(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asByte());
+                    return null;
+                }
+
+                @Override
+                protected Void caseByteWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Byte) value3.asObject(Byte.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseCharacter(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asCharacter());
+                    return null;
+                }
+
+                @Override
+                protected Void caseCharacterWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Character) value3.asObject(Character.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseShort(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asShort());
+                    return null;
+                }
+
+                @Override
+                protected Void caseShortWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Short) value3.asObject(Short.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseInteger(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asInteger());
+                    return null;
+                }
+
+                @Override
+                protected Void caseIntegerWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Integer) value3.asObject(Integer.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseLong(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asLong());
+                    return null;
+                }
+
+                @Override
+                protected Void caseLongWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Long) value3.asObject(Long.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseFloat(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asFloat());
+                    return null;
+                }
+
+                @Override
+                protected Void caseFloatWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Float) value3.asObject(Float.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseDouble(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asDouble());
+                    return null;
+                }
+
+                @Override
+                protected Void caseDoubleWrapper(Property value1, T value2, Value value3) {
+                    value1.set(value2, (Double) value3.asObject(Double.class));
+                    return null;
+                }
+
+                @Override
+                protected Void caseLocalDateTime(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asLocalDateTime());
+                    return null;
+                }
+
+                @Override
+                protected Void caseByteArray(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asByteArray());
+                    return null;
+                }
+
+                @Override
+                protected Void defaultCase(Property value1, T value2, Value value3) {
+                    value1.set(value2, value3.asString());
+                    return null;
+                }
+            };
+
     private static Method OBJECT_GET_CLASS_METHOD;
 
     private static String capitalize(String string) {
@@ -294,45 +410,7 @@ public class OutlineImpl<T> implements Outline<T> {
         public Bean<T> set(Consumer<T> propertyInvoker, Value value) {
             Property descriptor = OutlineImpl.this.property(propertyInvoker);
             Class<?> type = descriptor.type();
-            if (type == boolean.class) {
-                descriptor.set(instance, value.asBoolean());
-            } else if (type == Boolean.class) {
-                descriptor.set(instance, (Boolean) value.asObject(Boolean.class));
-            } else if (type == byte.class) {
-                descriptor.set(instance, value.asByte());
-            } else if (type == Byte.class) {
-                descriptor.set(instance, (Byte) value.asObject(Byte.class));
-            } else if (type == char.class) {
-                descriptor.set(instance, value.asCharacter());
-            } else if (type == Character.class) {
-                descriptor.set(instance, (Character) value.asObject(Character.class));
-            } else if (type == short.class) {
-                descriptor.set(instance, value.asShort());
-            } else if (type == Short.class) {
-                descriptor.set(instance, (Short) value.asObject(Short.class));
-            } else if (type == int.class) {
-                descriptor.set(instance, value.asInteger());
-            } else if (type == Integer.class) {
-                descriptor.set(instance, (Integer) value.asObject(Integer.class));
-            } else if (type == long.class) {
-                descriptor.set(instance, value.asLong());
-            } else if (type == Long.class) {
-                descriptor.set(instance, (Long) value.asObject(Long.class));
-            } else if (type == float.class) {
-                descriptor.set(instance, value.asFloat());
-            } else if (type == Float.class) {
-                descriptor.set(instance, (Float) value.asObject(Float.class));
-            } else if (type == double.class) {
-                descriptor.set(instance, value.asDouble());
-            } else if (type == Double.class) {
-                descriptor.set(instance, (Double) value.asObject(Double.class));
-            } else if (type == LocalDateTime.class) {
-                descriptor.set(instance, value.asLocalDateTime());
-            } else if (type == byte[].class) {
-                descriptor.set(instance, value.asByteArray());
-            } else {
-                descriptor.set(instance, value.asString());
-            }
+            propertySetterSwitch.doSwitch(type, descriptor, instance, value);
             return this;
         }
 

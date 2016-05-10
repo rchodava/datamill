@@ -1,5 +1,7 @@
 package org.chodavarapu.datamill.values;
 
+import org.chodavarapu.datamill.reflection.impl.TypeSwitch;
+
 import java.time.LocalDateTime;
 import java.util.UnknownFormatConversionException;
 import java.util.function.Function;
@@ -8,6 +10,64 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class StringValue implements ReflectableValue {
+    private static final TypeSwitch<StringValue, String, Object> stringCastSwitch =
+            new TypeSwitch<StringValue, String, Object>() {
+                @Override
+                protected Object caseBoolean(StringValue value1, String value2) {
+                    return value2 != null ? value1.asBoolean() : null;
+                }
+
+                @Override
+                protected Object caseByte(StringValue value1, String value2) {
+                    return value2 != null ? value1.asByte() : null;
+                }
+
+                @Override
+                protected Object caseCharacter(StringValue value1, String value2) {
+                    return value2 != null ? value1.asCharacter() : null;
+                }
+
+                @Override
+                protected Object caseShort(StringValue value1, String value2) {
+                    return value2 != null ? value1.asShort() : null;
+                }
+
+                @Override
+                protected Object caseInteger(StringValue value1, String value2) {
+                    return value2 != null ? value1.asInteger() : null;
+                }
+
+                @Override
+                protected Object caseLong(StringValue value1, String value2) {
+                    return value2 != null ? value1.asLong() : null;
+                }
+
+                @Override
+                protected Object caseFloat(StringValue value1, String value2) {
+                    return value2 != null ? value1.asFloat() : null;
+                }
+
+                @Override
+                protected Object caseDouble(StringValue value1, String value2) {
+                    return value2 != null ? value1.asDouble() : null;
+                }
+
+                @Override
+                protected Object caseLocalDateTime(StringValue value1, String value2) {
+                    return value2 != null ? value1.asLocalDateTime() : null;
+                }
+
+                @Override
+                protected Object caseByteArray(StringValue value1, String value2) {
+                    return value2 != null ? value1.asByteArray() : null;
+                }
+
+                @Override
+                protected Object defaultCase(StringValue value1, String value2) {
+                    return value1.asString();
+                }
+            };
+
     private String value;
 
     public StringValue(String value) {
@@ -74,45 +134,7 @@ public class StringValue implements ReflectableValue {
 
     @Override
     public Object asObject(Class<?> type) {
-        if (type == boolean.class) {
-            return value != null ? asBoolean() : null;
-        } else if (type == Boolean.class) {
-            return value != null ? asBoolean() : null;
-        } else if (type == byte.class) {
-            return value != null ? asByte() : null;
-        } else if (type == Byte.class) {
-            return value != null ? asByte() : null;
-        } else if (type == char.class) {
-            return value != null ? asCharacter() : null;
-        } else if (type == Character.class) {
-            return value != null ? asCharacter() : null;
-        } else if (type == short.class) {
-            return value != null ? asShort() : null;
-        } else if (type == Short.class) {
-            return value != null ? asShort() : null;
-        } else if (type == int.class) {
-            return value != null ? asInteger() : null;
-        } else if (type == Integer.class) {
-            return value != null ? asInteger() : null;
-        } else if (type == long.class) {
-            return value != null ? asLong() : null;
-        } else if (type == Long.class) {
-            return value != null ? asLong() : null;
-        } else if (type == float.class) {
-            return value != null ? asFloat() : null;
-        } else if (type == Float.class) {
-            return value != null ? asFloat() : null;
-        } else if (type == double.class) {
-            return value != null ? asDouble() : null;
-        } else if (type == Double.class) {
-            return value != null ? asDouble() : null;
-        } else if (type == LocalDateTime.class) {
-            return value != null ? asLocalDateTime() : null;
-        } else if (type == byte[].class) {
-            return value != null ? asByteArray() : null;
-        } else {
-            return asString();
-        }
+        return stringCastSwitch.doSwitch(type, this, value);
     }
 
     @Override
