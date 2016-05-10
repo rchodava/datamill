@@ -15,6 +15,7 @@ public interface Value {
     float asFloat();
     int asInteger();
     LocalDateTime asLocalDateTime();
+    Object asObject(Class<?> type);
     long asLong();
     short asShort();
     String asString();

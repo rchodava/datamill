@@ -73,6 +73,49 @@ public class StringValue implements ReflectableValue {
     }
 
     @Override
+    public Object asObject(Class<?> type) {
+        if (type == boolean.class) {
+            return value != null ? asBoolean() : null;
+        } else if (type == Boolean.class) {
+            return value != null ? asBoolean() : null;
+        } else if (type == byte.class) {
+            return value != null ? asByte() : null;
+        } else if (type == Byte.class) {
+            return value != null ? asByte() : null;
+        } else if (type == char.class) {
+            return value != null ? asCharacter() : null;
+        } else if (type == Character.class) {
+            return value != null ? asCharacter() : null;
+        } else if (type == short.class) {
+            return value != null ? asShort() : null;
+        } else if (type == Short.class) {
+            return value != null ? asShort() : null;
+        } else if (type == int.class) {
+            return value != null ? asInteger() : null;
+        } else if (type == Integer.class) {
+            return value != null ? asInteger() : null;
+        } else if (type == long.class) {
+            return value != null ? asLong() : null;
+        } else if (type == Long.class) {
+            return value != null ? asLong() : null;
+        } else if (type == float.class) {
+            return value != null ? asFloat() : null;
+        } else if (type == Float.class) {
+            return value != null ? asFloat() : null;
+        } else if (type == double.class) {
+            return value != null ? asDouble() : null;
+        } else if (type == Double.class) {
+            return value != null ? asDouble() : null;
+        } else if (type == LocalDateTime.class) {
+            return value != null ? asLocalDateTime() : null;
+        } else if (type == byte[].class) {
+            return value != null ? asByteArray() : null;
+        } else {
+            return asString();
+        }
+    }
+
+    @Override
     public short asShort() {
         return Short.parseShort(value);
     }

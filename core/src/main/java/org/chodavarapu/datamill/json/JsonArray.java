@@ -103,6 +103,15 @@ public class JsonArray implements Json, ReflectableValue {
     }
 
     @Override
+    public Object asObject(Class<?> type) {
+        if (type == String.class) {
+            return asString();
+        }
+
+        return this;
+    }
+
+    @Override
     public boolean isBoolean() {
         return false;
     }

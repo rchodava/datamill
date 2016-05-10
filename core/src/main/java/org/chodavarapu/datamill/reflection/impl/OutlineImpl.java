@@ -294,22 +294,38 @@ public class OutlineImpl<T> implements Outline<T> {
         public Bean<T> set(Consumer<T> propertyInvoker, Value value) {
             Property descriptor = OutlineImpl.this.property(propertyInvoker);
             Class<?> type = descriptor.type();
-            if (type == boolean.class || type == Boolean.class) {
+            if (type == boolean.class) {
                 descriptor.set(instance, value.asBoolean());
-            } else if (type == byte.class || type == Byte.class) {
+            } else if (type == Boolean.class) {
+                descriptor.set(instance, (Boolean) value.asObject(Boolean.class));
+            } else if (type == byte.class) {
                 descriptor.set(instance, value.asByte());
-            } else if (type == char.class || type == Character.class) {
+            } else if (type == Byte.class) {
+                descriptor.set(instance, (Byte) value.asObject(Byte.class));
+            } else if (type == char.class) {
                 descriptor.set(instance, value.asCharacter());
-            } else if (type == short.class || type == Short.class) {
+            } else if (type == Character.class) {
+                descriptor.set(instance, (Character) value.asObject(Character.class));
+            } else if (type == short.class) {
                 descriptor.set(instance, value.asShort());
-            } else if (type == int.class || type == Integer.class) {
+            } else if (type == Short.class) {
+                descriptor.set(instance, (Short) value.asObject(Short.class));
+            } else if (type == int.class) {
                 descriptor.set(instance, value.asInteger());
-            } else if (type == long.class || type == Long.class) {
+            } else if (type == Integer.class) {
+                descriptor.set(instance, (Integer) value.asObject(Integer.class));
+            } else if (type == long.class) {
                 descriptor.set(instance, value.asLong());
-            } else if (type == float.class || type == Float.class) {
+            } else if (type == Long.class) {
+                descriptor.set(instance, (Long) value.asObject(Long.class));
+            } else if (type == float.class) {
                 descriptor.set(instance, value.asFloat());
-            } else if (type == double.class || type == Double.class) {
+            } else if (type == Float.class) {
+                descriptor.set(instance, (Float) value.asObject(Float.class));
+            } else if (type == double.class) {
                 descriptor.set(instance, value.asDouble());
+            } else if (type == Double.class) {
+                descriptor.set(instance, (Double) value.asObject(Double.class));
             } else if (type == LocalDateTime.class) {
                 descriptor.set(instance, value.asLocalDateTime());
             } else if (type == byte[].class) {

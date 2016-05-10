@@ -80,6 +80,15 @@ public class JsonObject implements Json, ReflectableValue {
     }
 
     @Override
+    public Object asObject(Class<?> type) {
+        if (type == String.class) {
+            return asString();
+        }
+
+        return this;
+    }
+
+    @Override
     public short asShort() {
         throw new JsonException("A JSON object cannot be converted to a short!");
     }
@@ -279,6 +288,49 @@ public class JsonObject implements Json, ReflectableValue {
         @Override
         public long asLong() {
             return object.getLong(name);
+        }
+
+        @Override
+        public Object asObject(Class<?> type) {
+            if (type == boolean.class) {
+                return object.has(name) ? asBoolean() : null;
+            } else if (type == Boolean.class) {
+                return object.has(name) ? asBoolean() : null;
+            } else if (type == byte.class) {
+                return object.has(name) ? asByte() : null;
+            } else if (type == Byte.class) {
+                return object.has(name) ? asByte() : null;
+            } else if (type == char.class) {
+                return object.has(name) ? asCharacter() : null;
+            } else if (type == Character.class) {
+                return object.has(name) ? asCharacter() : null;
+            } else if (type == short.class) {
+                return object.has(name) ? asShort() : null;
+            } else if (type == Short.class) {
+                return object.has(name) ? asShort() : null;
+            } else if (type == int.class) {
+                return object.has(name) ? asInteger() : null;
+            } else if (type == Integer.class) {
+                return object.has(name) ? asInteger() : null;
+            } else if (type == long.class) {
+                return object.has(name) ? asLong() : null;
+            } else if (type == Long.class) {
+                return object.has(name) ? asLong() : null;
+            } else if (type == float.class) {
+                return object.has(name) ? asFloat() : null;
+            } else if (type == Float.class) {
+                return object.has(name) ? asFloat() : null;
+            } else if (type == double.class) {
+                return object.has(name) ? asDouble() : null;
+            } else if (type == Double.class) {
+                return object.has(name) ? asDouble() : null;
+            } else if (type == LocalDateTime.class) {
+                return object.has(name) ? asLocalDateTime() : null;
+            } else if (type == byte[].class) {
+                return object.has(name) ? asByteArray() : null;
+            } else {
+                return asJson();
+            }
         }
 
         @Override
