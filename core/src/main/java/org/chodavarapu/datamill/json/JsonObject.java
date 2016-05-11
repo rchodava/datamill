@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.json;
 
 import org.chodavarapu.datamill.reflection.Member;
+import org.chodavarapu.datamill.reflection.impl.TripleArgumentTypeSwitch;
 import org.chodavarapu.datamill.values.ReflectableValue;
 import org.chodavarapu.datamill.values.Value;
 import org.json.JSONArray;
@@ -16,6 +17,64 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class JsonObject implements Json, ReflectableValue {
+    private static final TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object> propertyAsObjectSwitch =
+            new TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object>() {
+                @Override
+                protected Object caseBoolean(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asBoolean() : null;
+                }
+
+                @Override
+                protected Object caseByte(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asByte() : null;
+                }
+
+                @Override
+                protected Object caseCharacter(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asCharacter() : null;
+                }
+
+                @Override
+                protected Object caseShort(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asShort() : null;
+                }
+
+                @Override
+                protected Object caseInteger(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asInteger() : null;
+                }
+
+                @Override
+                protected Object caseLong(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asLong() : null;
+                }
+
+                @Override
+                protected Object caseFloat(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asFloat() : null;
+                }
+
+                @Override
+                protected Object caseDouble(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asDouble() : null;
+                }
+
+                @Override
+                protected Object caseLocalDateTime(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asLocalDateTime() : null;
+                }
+
+                @Override
+                protected Object caseByteArray(JSONObject value1, String value2, JsonProperty value3) {
+                    return value1.has(value2) ? value3.asByteArray() : null;
+                }
+
+                @Override
+                protected Object defaultCase(JSONObject value1, String value2, JsonProperty value3) {
+                    return value3.asJson();
+                }
+            };
+
     final JSONObject object;
 
     private JsonObject(JSONObject object) {
@@ -77,6 +136,15 @@ public class JsonObject implements Json, ReflectableValue {
     @Override
     public long asLong() {
         throw new JsonException("A JSON object cannot be converted to a long!");
+    }
+
+    @Override
+    public Object asObject(Class<?> type) {
+        if (type == String.class) {
+            return asString();
+        }
+
+        return this;
     }
 
     @Override
@@ -279,6 +347,11 @@ public class JsonObject implements Json, ReflectableValue {
         @Override
         public long asLong() {
             return object.getLong(name);
+        }
+
+        @Override
+        public Object asObject(Class<?> type) {
+            return propertyAsObjectSwitch.doSwitch(type, object, name, this);
         }
 
         @Override

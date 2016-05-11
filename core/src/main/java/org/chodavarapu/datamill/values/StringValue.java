@@ -1,5 +1,7 @@
 package org.chodavarapu.datamill.values;
 
+import org.chodavarapu.datamill.reflection.impl.TypeSwitch;
+
 import java.time.LocalDateTime;
 import java.util.UnknownFormatConversionException;
 import java.util.function.Function;
@@ -8,6 +10,64 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class StringValue implements ReflectableValue {
+    private static final TypeSwitch<StringValue, String, Object> stringCastSwitch =
+            new TypeSwitch<StringValue, String, Object>() {
+                @Override
+                protected Object caseBoolean(StringValue value1, String value2) {
+                    return value2 != null ? value1.asBoolean() : null;
+                }
+
+                @Override
+                protected Object caseByte(StringValue value1, String value2) {
+                    return value2 != null ? value1.asByte() : null;
+                }
+
+                @Override
+                protected Object caseCharacter(StringValue value1, String value2) {
+                    return value2 != null ? value1.asCharacter() : null;
+                }
+
+                @Override
+                protected Object caseShort(StringValue value1, String value2) {
+                    return value2 != null ? value1.asShort() : null;
+                }
+
+                @Override
+                protected Object caseInteger(StringValue value1, String value2) {
+                    return value2 != null ? value1.asInteger() : null;
+                }
+
+                @Override
+                protected Object caseLong(StringValue value1, String value2) {
+                    return value2 != null ? value1.asLong() : null;
+                }
+
+                @Override
+                protected Object caseFloat(StringValue value1, String value2) {
+                    return value2 != null ? value1.asFloat() : null;
+                }
+
+                @Override
+                protected Object caseDouble(StringValue value1, String value2) {
+                    return value2 != null ? value1.asDouble() : null;
+                }
+
+                @Override
+                protected Object caseLocalDateTime(StringValue value1, String value2) {
+                    return value2 != null ? value1.asLocalDateTime() : null;
+                }
+
+                @Override
+                protected Object caseByteArray(StringValue value1, String value2) {
+                    return value2 != null ? value1.asByteArray() : null;
+                }
+
+                @Override
+                protected Object defaultCase(StringValue value1, String value2) {
+                    return value1.asString();
+                }
+            };
+
     private String value;
 
     public StringValue(String value) {
@@ -70,6 +130,11 @@ public class StringValue implements ReflectableValue {
     @Override
     public int asInteger() {
         return Integer.parseInt(value);
+    }
+
+    @Override
+    public Object asObject(Class<?> type) {
+        return stringCastSwitch.doSwitch(type, this, value);
     }
 
     @Override

@@ -127,6 +127,11 @@ public class RowImpl implements Row {
         }
 
         @Override
+        public Object asObject(Class<?> type) {
+            return safeRetrieve(k -> resultSet.getObject(key));
+        }
+
+        @Override
         public short asShort() {
             return safeRetrieve(k -> resultSet.getShort(key));
         }
@@ -192,6 +197,11 @@ public class RowImpl implements Row {
         @Override
         public boolean asBoolean() {
             return safeRetrieve(k -> resultSet.getBoolean(key));
+        }
+
+        @Override
+        public Object asObject(Class<?> type) {
+            return safeRetrieve(k -> resultSet.getObject(key));
         }
 
         @Override
