@@ -48,7 +48,7 @@ import java.util.function.Function;
  */
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
-    private final TemplateBasedUriBuilder uriBuilder = new TemplateBasedUriBuilder();
+    private final TemplateBasedUriBuilder templateBasedUriBuilder = new TemplateBasedUriBuilder();
 
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
@@ -72,38 +72,30 @@ public class Client {
             Multimap<String, String> queryParameters,
             Map<String, ?> options,
             Entity entity) {
+
         if (uriParameters != null && uriParameters.size() > 0) {
-            uri = uriBuilder.build(uri, uriParameters);
+            uri = templateBasedUriBuilder.build(uri, uriParameters);
         }
-        URIBuilder uriBuilder = new URIBuilder();
 
-
-        int firstSlash = uri.indexOf('/');
-        uriBuilder.setScheme(uri.substring(0, firstSlash - 1));
-
-        String uriNoScheme = uri.substring(firstSlash + 1, uri.length());
-        uriBuilder.setHost(uriNoScheme.substring(1));
-
-        URI anURI = null;
+        URI parsedURI;
         try {
-            anURI = appendQueryParameters(uriBuilder, queryParameters);
+            URIBuilder uriBuilder = new URIBuilder(uri);
+            parsedURI = appendQueryParameters(uriBuilder, queryParameters);
         } catch (URISyntaxException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("Could not build URI for " + uri);
         }
 
-        final URI theURI = anURI;
+        final URI targetURI = parsedURI;
         final String composedUri = uri;
 
         return Async.fromCallable(() -> {
-            PipedOutputStream pipedOutputStream = null;
-            PipedInputStream pipedInputStream = null;
 
-            try {
-
+            try (PipedOutputStream pipedOutputStream = buildPipedOutputStream();
+                 PipedInputStream pipedInputStream = buildPipedInputStream()) {
 
                 CloseableHttpClient httpclient = HttpClients.createDefault();
 
-                HttpUriRequest request = buildHttpRequest(method, theURI);
+                HttpUriRequest request = buildHttpRequest(method, targetURI);
 
                 if (options != null && options.size() > 0) {
                     Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
@@ -126,8 +118,6 @@ public class Client {
                         throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
                     }
 
-                    pipedOutputStream = buildPipedOutputStream();
-                    pipedInputStream = buildPipedInputStream();
                     pipedInputStream.connect(pipedOutputStream);
 
                     BasicHttpEntity httpEntity = new BasicHttpEntity();
@@ -145,27 +135,28 @@ public class Client {
                     }
                 }
 
-                CloseableHttpResponse httpResponse = httpclient.execute(request);
+                CloseableHttpResponse httpResponse = null;
 
-                int responseCode = httpResponse.getStatusLine().getStatusCode();
-                Map<String, String> combinedHeaders = new HashMap<>();
+                try {
 
-                for (Header header : httpResponse.getAllHeaders()) {
-                    combinedHeaders.put(header.getName(), header.getValue());
+                    httpResponse = httpclient.execute(request);
+
+                    int responseCode = httpResponse.getStatusLine().getStatusCode();
+                    Map<String, String> combinedHeaders = new HashMap<>();
+
+                    for (Header header : httpResponse.getAllHeaders()) {
+                        combinedHeaders.put(header.getName(), header.getValue());
+                    }
+
+                    return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(httpResponse.getEntity().getContent()));
+                } finally {
+                    if (httpResponse != null) {
+                        try {
+                            httpResponse.close();
+                        } catch (IOException e) {}
+                    }
                 }
 
-                return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(httpResponse.getEntity().getContent()));
-            } finally {
-                if (pipedInputStream != null) {
-                    try {
-                        pipedInputStream.close();
-                    } catch (IOException e) {}
-                }
-                if (pipedOutputStream != null) {
-                    try {
-                        pipedOutputStream.close();
-                    } catch (IOException e) {}
-                }
             }
         }, Schedulers.io());
     }
