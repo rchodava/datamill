@@ -86,79 +86,100 @@ public class Client {
         }
 
         final URI targetURI = parsedURI;
-        final String composedUri = uri;
 
         return Async.fromCallable(() -> {
 
-            try (PipedOutputStream pipedOutputStream = buildPipedOutputStream();
-                 PipedInputStream pipedInputStream = buildPipedInputStream()) {
+            CloseableHttpClient httpclient = HttpClients.createDefault();
 
-                CloseableHttpClient httpclient = HttpClients.createDefault();
+            HttpUriRequest request = buildHttpRequest(method, targetURI);
 
-                HttpUriRequest request = buildHttpRequest(method, targetURI);
+            setRequestOptions(request, options);
 
-                if (options != null && options.size() > 0) {
-                    Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
-                    if (connectTimeout instanceof Integer) {
-                        RequestConfig requestConfig = RequestConfig.custom()
-                                .setConnectTimeout((int) connectTimeout)
-                                .build();
-                        ((HttpRequestBase) request).setConfig(requestConfig);
-                    }
-                }
+            setRequestHeaders(request, headers);
 
-                if (headers != null) {
-                    for (Map.Entry<String, String> header : headers.entries()) {
-                        request.addHeader(header.getKey(), header.getValue());
-                    }
-                }
+            debugRequest(method, targetURI, headers);
 
-                if (entity != null) {
-                    if (!(request instanceof HttpEntityEnclosingRequestBase)) {
-                        throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
-                    }
+            CloseableHttpResponse httpResponse = null;
 
-                    pipedInputStream.connect(pipedOutputStream);
-
-                    BasicHttpEntity httpEntity = new BasicHttpEntity();
-                    httpEntity.setContent(pipedInputStream);
-                    ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
-
-                    writeEntityOutOverConnection(entity, pipedOutputStream);
-                }
-
-                logger.debug("Making HTTP request {} {}", method.name(), composedUri);
-                if (headers != null && logger.isDebugEnabled()) {
-                    logger.debug("  HTTP request headers:");
-                    for (Map.Entry<String, String> header : headers.entries()) {
-                        logger.debug("    {}: {}", header.getKey(), header.getValue());
-                    }
-                }
-
-                CloseableHttpResponse httpResponse = null;
-
-                try {
-
-                    httpResponse = httpclient.execute(request);
-
-                    int responseCode = httpResponse.getStatusLine().getStatusCode();
-                    Map<String, String> combinedHeaders = new HashMap<>();
-
-                    for (Header header : httpResponse.getAllHeaders()) {
-                        combinedHeaders.put(header.getName(), header.getValue());
-                    }
-
-                    return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(httpResponse.getEntity().getContent()));
-                } finally {
-                    if (httpResponse != null) {
-                        try {
-                            httpResponse.close();
-                        } catch (IOException e) {}
-                    }
-                }
-
+            if (entity != null) {
+                httpResponse = doWithEntity(entity, httpclient, request);
             }
+            else {
+                httpResponse = doExecute(httpclient, request);
+            }
+
+            Map<String, String> combinedHeaders = populateResponseHeaders(httpResponse);
+
+            int responseCode = httpResponse.getStatusLine().getStatusCode();
+
+            return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(httpResponse.getEntity().getContent()));
+
         }, Schedulers.io());
+    }
+
+    private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+        if (!(request instanceof HttpEntityEnclosingRequestBase)) {
+            throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
+        }
+        try (PipedOutputStream pipedOutputStream = buildPipedOutputStream();
+             PipedInputStream pipedInputStream = buildPipedInputStream()) {
+            pipedInputStream.connect(pipedOutputStream);
+
+            BasicHttpEntity httpEntity = new BasicHttpEntity();
+            httpEntity.setContent(pipedInputStream);
+            ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
+
+            writeEntityOutOverConnection(entity, pipedOutputStream);
+
+            return doExecute(httpclient, request);
+        }
+    }
+
+
+    private CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+        return httpclient.execute(request);
+    }
+
+    private void debugRequest(Method method, URI composedUri, Multimap<String, String> headers) {
+       if (logger.isDebugEnabled()) {
+           logger.debug("Making HTTP request {} {}", method.name(), composedUri);
+           if (headers != null && logger.isDebugEnabled()) {
+               logger.debug("  HTTP request headers:");
+               for (Map.Entry<String, String> header : headers.entries()) {
+                   logger.debug("    {}: {}", header.getKey(), header.getValue());
+               }
+           }
+       }
+    }
+
+    private Map<String, String> populateResponseHeaders(CloseableHttpResponse httpResponse) {
+        Map<String, String> combinedHeaders = new HashMap<>();
+
+        for (Header header : httpResponse.getAllHeaders()) {
+            combinedHeaders.put(header.getName(), header.getValue());
+        }
+
+        return combinedHeaders;
+    }
+
+    private void setRequestHeaders(HttpUriRequest request, Multimap<String, String> headers) {
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entries()) {
+                request.addHeader(header.getKey(), header.getValue());
+            }
+        }
+    }
+
+    private void setRequestOptions(HttpUriRequest request, Map<String, ?> options) {
+        if (options != null && options.size() > 0) {
+            Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
+            if (connectTimeout instanceof Integer) {
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setConnectTimeout((int) connectTimeout)
+                        .build();
+                ((HttpRequestBase) request).setConfig(requestConfig);
+            }
+        }
     }
 
     protected PipedOutputStream buildPipedOutputStream() {
