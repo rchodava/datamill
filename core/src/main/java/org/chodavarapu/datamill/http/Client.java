@@ -88,32 +88,42 @@ public class Client {
         final URI targetURI = parsedURI;
 
         return Async.fromCallable(() -> {
-
-            CloseableHttpClient httpclient = HttpClients.createDefault();
-
+            CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpUriRequest request = buildHttpRequest(method, targetURI);
-
             setRequestOptions(request, options);
-
             setRequestHeaders(request, headers);
-
-            debugRequest(method, targetURI, headers);
+            printRequestIfDebugging(method, targetURI, headers);
 
             CloseableHttpResponse httpResponse = null;
 
             if (entity != null) {
-                httpResponse = doWithEntity(entity, httpclient, request);
+                httpResponse = doWithEntity(entity, httpClient, request);
+            } else {
+                httpResponse = doExecute(httpClient, request);
             }
-            else {
-                httpResponse = doExecute(httpclient, request);
-            }
 
-            Map<String, String> combinedHeaders = populateResponseHeaders(httpResponse);
+            CloseableHttpResponse finalResponse = httpResponse;
 
-            int responseCode = httpResponse.getStatusLine().getStatusCode();
+            Map<String, String> combinedHeaders = populateResponseHeaders(finalResponse);
+            int responseCode = finalResponse.getStatusLine().getStatusCode();
+            return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders,
+                    new InputStreamEntity(finalResponse.getEntity().getContent(), () -> {
+                        if (finalResponse != null) {
+                            try {
+                                finalResponse.close();
+                            } catch (IOException e) {
+                                logger.debug("Error while closing response stream!", e);
+                            }
+                        }
 
-            return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(httpResponse.getEntity().getContent()));
-
+                        if (httpClient != null) {
+                            try {
+                                httpClient.close();
+                            } catch (IOException e) {
+                                logger.debug("Error while closing client!", e);
+                            }
+                        }
+                    }));
         }, Schedulers.io());
     }
 
@@ -136,20 +146,20 @@ public class Client {
     }
 
 
-    private CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+    protected CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
         return httpclient.execute(request);
     }
 
-    private void debugRequest(Method method, URI composedUri, Multimap<String, String> headers) {
-       if (logger.isDebugEnabled()) {
-           logger.debug("Making HTTP request {} {}", method.name(), composedUri);
-           if (headers != null && logger.isDebugEnabled()) {
-               logger.debug("  HTTP request headers:");
-               for (Map.Entry<String, String> header : headers.entries()) {
-                   logger.debug("    {}: {}", header.getKey(), header.getValue());
-               }
-           }
-       }
+    private void printRequestIfDebugging(Method method, URI composedUri, Multimap<String, String> headers) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Making HTTP request {} {}", method.name(), composedUri);
+            if (headers != null && logger.isDebugEnabled()) {
+                logger.debug("  HTTP request headers:");
+                for (Map.Entry<String, String> header : headers.entries()) {
+                    logger.debug("    {}: {}", header.getKey(), header.getValue());
+                }
+            }
+        }
     }
 
     private Map<String, String> populateResponseHeaders(CloseableHttpResponse httpResponse) {
@@ -192,15 +202,24 @@ public class Client {
 
     protected HttpUriRequest buildHttpRequest(Method method, URI uri) {
         switch (method) {
-            case OPTIONS: return new HttpOptions(uri);
-            case GET: return new HttpGet(uri);
-            case HEAD: return new HttpHead(uri);
-            case POST: return new HttpPost(uri);
-            case PUT: return new HttpPut(uri);
-            case DELETE:return new HttpDelete(uri);
-            case TRACE: return new HttpTrace(uri);
-            case PATCH: return new HttpPatch(uri);
-            default: throw new IllegalArgumentException("Method " + method + " is not implemented!");
+            case OPTIONS:
+                return new HttpOptions(uri);
+            case GET:
+                return new HttpGet(uri);
+            case HEAD:
+                return new HttpHead(uri);
+            case POST:
+                return new HttpPost(uri);
+            case PUT:
+                return new HttpPut(uri);
+            case DELETE:
+                return new HttpDelete(uri);
+            case TRACE:
+                return new HttpTrace(uri);
+            case PATCH:
+                return new HttpPatch(uri);
+            default:
+                throw new IllegalArgumentException("Method " + method + " is not implemented!");
         }
     }
 
@@ -209,8 +228,8 @@ public class Client {
             queryParameters.entries().stream().forEach(entry -> {
                 try {
                     uriBuilder.setParameter(URLEncoder.encode(entry.getKey(), "UTF-8"), entry.getValue());
+                } catch (UnsupportedEncodingException e) {
                 }
-                catch (UnsupportedEncodingException e) {}
             });
         }
         return uriBuilder.build();
@@ -228,7 +247,6 @@ public class Client {
                 .doOnCompleted(() -> {
                     try {
                         pipedOutputStream.close();
-                        onEntitySendingCompletion(entity);
                     } catch (IOException e) {
                         throw new HttpException("Error while closing stream!", e);
                     }
@@ -236,9 +254,7 @@ public class Client {
                 .doOnError(e -> {
                     try {
                         pipedOutputStream.close();
-                        onErrorSendingEntity(entity);
                     } catch (IOException closing) {
-                        onErrorSendingEntity(entity);
                         throw new HttpException("Error while closing stream due to an original exception!", e);
                     }
 
@@ -271,12 +287,6 @@ public class Client {
 
     public Observable<Response> get(Function<RequestBuilder, Request> builder) {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.GET)));
-    }
-
-    protected void onErrorSendingEntity(Entity entity) {
-    }
-
-    protected void onEntitySendingCompletion(Entity entity) {
     }
 
     public Observable<Response> patch(String uri, Entity entity) {

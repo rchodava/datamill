@@ -4,6 +4,7 @@ import org.chodavarapu.datamill.http.Entity;
 import org.chodavarapu.datamill.http.HttpException;
 import org.chodavarapu.datamill.json.JsonObject;
 import rx.Observable;
+import rx.functions.Action0;
 import rx.observables.StringObservable;
 
 import java.io.ByteArrayOutputStream;
@@ -15,9 +16,15 @@ import java.io.InputStream;
  */
 public class InputStreamEntity implements Entity {
     private final InputStream inputStream;
+    private final Action0 completionHandler;
 
     public InputStreamEntity(InputStream inputStream) {
+        this(inputStream, null);
+    }
+
+    public InputStreamEntity(InputStream inputStream, Action0 completionHandler) {
         this.inputStream = inputStream;
+        this.completionHandler = completionHandler;
     }
 
     @Override
@@ -40,7 +47,8 @@ public class InputStreamEntity implements Entity {
 
     @Override
     public Observable<byte[]> asChunks() {
-        return StringObservable.from(inputStream);
+        return StringObservable.from(inputStream)
+                .doAfterTerminate(completionHandler != null ? completionHandler : () -> {});
     }
 
     @Override

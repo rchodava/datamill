@@ -1,32 +1,26 @@
 package org.chodavarapu.datamill.http;
 
 import com.google.common.collect.ImmutableMap;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpOptions;
-import org.apache.http.client.methods.HttpPatch;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpTrace;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.methods.*;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicStatusLine;
 import org.chodavarapu.datamill.http.impl.ValueEntity;
 import org.chodavarapu.datamill.values.StringValue;
 import org.junit.Test;
 import rx.Observable;
 
-import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.PipedOutputStream;
 import java.net.URI;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -211,11 +205,7 @@ public class ClientTest {
     }
 
     private class TestClient extends Client {
-        private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        private Semaphore entitySent = new Semaphore(0);
-
         private PipedOutputStream spiedPipedOutputStream;
-
         private HttpUriRequest request;
 
         public TestClient() {
@@ -233,8 +223,12 @@ public class ClientTest {
         }
 
         @Override
-        protected void onEntitySendingCompletion(Entity entity) {
-            entitySent.release();
+        protected CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+            CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getAllHeaders()).thenReturn(new Header[0]);
+            when(response.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+            return response;
         }
 
         public HttpUriRequest getRequest() {
