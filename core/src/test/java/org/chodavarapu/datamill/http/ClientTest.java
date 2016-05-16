@@ -1,21 +1,27 @@
 package org.chodavarapu.datamill.http;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.methods.*;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicStatusLine;
 import org.chodavarapu.datamill.http.impl.ValueEntity;
 import org.chodavarapu.datamill.values.StringValue;
 import org.junit.Test;
 import rx.Observable;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URLConnection;
+import java.io.PipedOutputStream;
+import java.net.URI;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 import java.util.function.Function;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
 /**
@@ -24,19 +30,20 @@ import static org.mockito.Mockito.*;
 public class ClientTest {
     private void verifyConnectionSetup(TestClient client, Method method, String uri, Map<String, String> headers, String entity)
             throws Exception {
-        assertEquals(uri, client.getLastUri());
-        verify(client.getMockConnection(), times(1)).setRequestMethod(method.name());
+        HttpUriRequest request = client.getRequest();
+
+        assertThat(request.getURI().toString(), equalTo(uri));
+        assertThat(request.getMethod(), equalTo(method.name()));
 
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
-                verify(client.getMockConnection(), times(1)).addRequestProperty(header.getKey(), header.getValue());
+                verify(request, times(1)).addHeader(header.getKey(), header.getValue());
             }
-        } else {
-            verify(client.getMockConnection(), times(0)).addRequestProperty(anyString(), anyString());
         }
 
         if (entity != null) {
-            assertEquals(entity, client.getLastOutputValue());
+            byte[] testAsBytes = entity.getBytes();
+            verify(client.getSpiedPipedOutputStream()).write(testAsBytes, 0, testAsBytes.length);
         }
     }
 
@@ -200,42 +207,77 @@ public class ClientTest {
     }
 
     private class TestClient extends Client {
-        private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        private String uri;
-        private HttpURLConnection mockConnection;
-        private Semaphore entitySent = new Semaphore(0);
+        private PipedOutputStream spiedPipedOutputStream;
+        private HttpUriRequest request;
 
         public TestClient() {
-            mockConnection = mock(HttpURLConnection.class);
-            try {
-                when(mockConnection.getOutputStream()).thenReturn(outputStream);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+        }
+
+
+        PipedOutputStream getSpiedPipedOutputStream() {
+            return spiedPipedOutputStream;
+        }
+
+        @Override
+        protected PipedOutputStream buildPipedOutputStream() {
+            this.spiedPipedOutputStream =  spy(PipedOutputStream.class);
+            return this.spiedPipedOutputStream;
+        }
+
+        @Override
+        protected CloseableHttpResponse doExecute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
+            CloseableHttpResponse response = mock(CloseableHttpResponse.class);
+            when(response.getAllHeaders()).thenReturn(new Header[0]);
+            when(response.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+            when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+
+            if (request instanceof HttpEntityEnclosingRequest) {
+                ByteStreams.toByteArray(((HttpEntityEnclosingRequest) request).getEntity().getContent());
             }
+
+            return response;
         }
 
-        @Override
-        protected URLConnection createConnection(String uri) throws IOException {
-            this.uri = uri;
-            return mockConnection;
+        public HttpUriRequest getRequest() {
+            return request;
         }
 
-        public String getLastUri() {
-            return uri;
-        }
-
-        public HttpURLConnection getMockConnection() {
-            return mockConnection;
-        }
-
-        @Override
-        protected void onEntitySendingCompletion(Entity entity) {
-            entitySent.release();
-        }
-
-        public String getLastOutputValue() {
-            entitySent.acquireUninterruptibly();
-            return new String(outputStream.toByteArray());
+        protected HttpUriRequest buildHttpRequest(Method method, URI uri) {
+            switch (method) {
+                case OPTIONS:
+                    HttpOptions httpOptions = new HttpOptions(uri);
+                    this.request = spy(httpOptions);
+                    return request;
+                case GET:
+                    HttpGet httpGet = new HttpGet(uri);
+                    this.request = spy(httpGet);
+                    return request;
+                case HEAD:
+                    HttpHead httpHead = new HttpHead(uri);
+                    this.request = spy(httpHead);
+                    return request;
+                case POST:
+                    HttpPost httpPost = new HttpPost(uri);
+                    this.request = spy(httpPost);
+                    return request;
+                case PUT:
+                    HttpPut httpPut = new HttpPut(uri);
+                    this.request = spy(httpPut);
+                    return request;
+                case DELETE:
+                    HttpDelete httpDelete = new HttpDelete(uri);
+                    this.request = spy(httpDelete);
+                    return request;
+                case TRACE:
+                    HttpTrace httpTrace = new HttpTrace(uri);
+                    this.request = spy(httpTrace);
+                    return request;
+                case PATCH:
+                    HttpPatch httpPatch = new HttpPatch(uri);
+                    this.request = spy(httpPatch);
+                    return request;
+                default: throw new IllegalArgumentException("Method " + method + " is not implemented!");
+            }
         }
     }
 }

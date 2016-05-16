@@ -1,9 +1,30 @@
 package org.chodavarapu.datamill.http;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import org.chodavarapu.datamill.http.impl.*;
+import org.apache.http.Header;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpTrace;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.BasicHttpEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.chodavarapu.datamill.http.impl.InputStreamEntity;
+import org.chodavarapu.datamill.http.impl.RequestBuilderImpl;
+import org.chodavarapu.datamill.http.impl.ResponseImpl;
+import org.chodavarapu.datamill.http.impl.TemplateBasedUriBuilder;
+import org.chodavarapu.datamill.http.impl.ValueEntity;
 import org.chodavarapu.datamill.values.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,16 +33,13 @@ import rx.schedulers.Schedulers;
 import rx.util.async.Async;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -30,7 +48,7 @@ import java.util.function.Function;
  */
 public class Client {
     private static final Logger logger = LoggerFactory.getLogger(Client.class);
-    private final TemplateBasedUriBuilder uriBuilder = new TemplateBasedUriBuilder();
+    private final TemplateBasedUriBuilder templateBasedUriBuilder = new TemplateBasedUriBuilder();
 
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
@@ -40,10 +58,6 @@ public class Client {
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Value entity) {
         return request(method, headers, uri, new ValueEntity(entity));
-    }
-
-    protected URLConnection createConnection(String uri) throws IOException {
-        return new URL(uri).openConnection();
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Entity entity) {
@@ -58,37 +72,87 @@ public class Client {
             Multimap<String, String> queryParameters,
             Map<String, ?> options,
             Entity entity) {
+
         if (uriParameters != null && uriParameters.size() > 0) {
-            uri = uriBuilder.build(uri, uriParameters);
+            uri = templateBasedUriBuilder.build(uri, uriParameters);
         }
 
-        uri = appendQueryParameters(uri, queryParameters);
+        URI parsedURI;
+        try {
+            URIBuilder uriBuilder = new URIBuilder(uri);
+            parsedURI = appendQueryParameters(uriBuilder, queryParameters);
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("Could not build URI for " + uri);
+        }
 
-        final String composedUri = uri;
+        final URI targetURI = parsedURI;
 
         return Async.fromCallable(() -> {
-            URLConnection urlConnection = createConnection(composedUri);
-            HttpURLConnection httpConnection = (HttpURLConnection) urlConnection;
+            CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpUriRequest request = buildHttpRequest(method, targetURI);
+            setRequestOptions(request, options);
+            setRequestHeaders(request, headers);
+            printRequestIfDebugging(method, targetURI, headers);
 
-            httpConnection.setRequestMethod(method.toString());
-
-            if (options != null && options.size() > 0) {
-                Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
-                if (connectTimeout instanceof Integer) {
-                    httpConnection.setConnectTimeout((int) connectTimeout);
-                }
-            }
-
-            if (headers != null) {
-                for (Map.Entry<String, String> header : headers.entries()) {
-                    httpConnection.addRequestProperty(header.getKey(), header.getValue());
-                }
-            }
+            CloseableHttpResponse httpResponse = null;
 
             if (entity != null) {
-                writeEntityOutOverConnection(entity, httpConnection);
+                httpResponse = doWithEntity(entity, httpClient, request);
+            } else {
+                httpResponse = doExecute(httpClient, request);
             }
 
+            CloseableHttpResponse finalResponse = httpResponse;
+
+            Map<String, String> combinedHeaders = populateResponseHeaders(finalResponse);
+            int responseCode = finalResponse.getStatusLine().getStatusCode();
+            return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders,
+                    new InputStreamEntity(finalResponse.getEntity().getContent(), () -> {
+                        if (finalResponse != null) {
+                            try {
+                                finalResponse.close();
+                            } catch (IOException e) {
+                                logger.debug("Error while closing response stream!", e);
+                            }
+                        }
+
+                        if (httpClient != null) {
+                            try {
+                                httpClient.close();
+                            } catch (IOException e) {
+                                logger.debug("Error while closing client!", e);
+                            }
+                        }
+                    }));
+        }, Schedulers.io());
+    }
+
+    private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
+        if (!(request instanceof HttpEntityEnclosingRequestBase)) {
+            throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
+        }
+
+        PipedOutputStream pipedOutputStream = buildPipedOutputStream();
+        PipedInputStream pipedInputStream = buildPipedInputStream();
+
+        pipedInputStream.connect(pipedOutputStream);
+
+        BasicHttpEntity httpEntity = new BasicHttpEntity();
+        httpEntity.setContent(pipedInputStream);
+        ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
+
+        writeEntityOutOverConnection(entity, pipedOutputStream);
+
+        return doExecute(httpClient, request);
+    }
+
+
+    protected CloseableHttpResponse doExecute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
+        return httpClient.execute(request);
+    }
+
+    private void printRequestIfDebugging(Method method, URI composedUri, Multimap<String, String> headers) {
+        if (logger.isDebugEnabled()) {
             logger.debug("Making HTTP request {} {}", method.name(), composedUri);
             if (headers != null && logger.isDebugEnabled()) {
                 logger.debug("  HTTP request headers:");
@@ -96,76 +160,102 @@ public class Client {
                     logger.debug("    {}: {}", header.getKey(), header.getValue());
                 }
             }
-
-            int responseCode = httpConnection.getResponseCode();
-            InputStream inputStream = httpConnection.getInputStream();
-
-            Map<String, List<String>> responseHeaders = httpConnection.getHeaderFields();
-            Map<String, String> combinedHeaders = new HashMap<>();
-            for (Map.Entry<String, List<String>> header : responseHeaders.entrySet()) {
-                if (header.getValue().size() > 1) {
-                    combinedHeaders.put(header.getKey(), Joiner.on(',').join(header.getValue()));
-                } else {
-                    combinedHeaders.put(header.getKey(), header.getValue().get(0));
-                }
-            }
-
-            return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders, new InputStreamEntity(inputStream));
-        }, Schedulers.io());
+        }
     }
 
-    private String appendQueryParameters(String uri, Multimap<String, String> queryParameters) {
-        if (queryParameters != null && queryParameters.size() > 0) {
-            try {
-                StringBuilder queryBuilder = new StringBuilder("?");
-                Iterator<Map.Entry<String, String>> iterator = queryParameters.entries().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<String, String> parameter = iterator.next();
+    private Map<String, String> populateResponseHeaders(CloseableHttpResponse httpResponse) {
+        Map<String, String> combinedHeaders = new HashMap<>();
 
-                    queryBuilder.append(URLEncoder.encode(parameter.getKey(), "UTF-8"));
-                    queryBuilder.append('=');
+        for (Header header : httpResponse.getAllHeaders()) {
+            combinedHeaders.put(header.getName(), header.getValue());
+        }
 
-                    if (parameter.getValue() != null) {
-                        queryBuilder.append(URLEncoder.encode(parameter.getValue()));
-                    }
+        return combinedHeaders;
+    }
 
-                    if (iterator.hasNext()) {
-                        queryBuilder.append('&');
-                    }
-                }
-
-                uri = uri + queryBuilder.toString();
-            } catch (UnsupportedEncodingException e) {
+    private void setRequestHeaders(HttpUriRequest request, Multimap<String, String> headers) {
+        if (headers != null) {
+            for (Map.Entry<String, String> header : headers.entries()) {
+                request.addHeader(header.getKey(), header.getValue());
             }
         }
-        return uri;
     }
 
-    private void writeEntityOutOverConnection(Entity entity, HttpURLConnection httpConnection) throws IOException {
-        httpConnection.setDoOutput(true);
-        OutputStream outputStream = httpConnection.getOutputStream();
+    private void setRequestOptions(HttpUriRequest request, Map<String, ?> options) {
+        if (options != null && options.size() > 0) {
+            Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
+            if (connectTimeout instanceof Integer) {
+                RequestConfig requestConfig = RequestConfig.custom()
+                        .setConnectTimeout((int) connectTimeout)
+                        .build();
+                ((HttpRequestBase) request).setConfig(requestConfig);
+            }
+        }
+    }
+
+    protected PipedOutputStream buildPipedOutputStream() {
+        return new PipedOutputStream();
+    }
+
+    protected PipedInputStream buildPipedInputStream() {
+        return new PipedInputStream();
+    }
+
+    protected HttpUriRequest buildHttpRequest(Method method, URI uri) {
+        switch (method) {
+            case OPTIONS:
+                return new HttpOptions(uri);
+            case GET:
+                return new HttpGet(uri);
+            case HEAD:
+                return new HttpHead(uri);
+            case POST:
+                return new HttpPost(uri);
+            case PUT:
+                return new HttpPut(uri);
+            case DELETE:
+                return new HttpDelete(uri);
+            case TRACE:
+                return new HttpTrace(uri);
+            case PATCH:
+                return new HttpPatch(uri);
+            default:
+                throw new IllegalArgumentException("Method " + method + " is not implemented!");
+        }
+    }
+
+    private URI appendQueryParameters(URIBuilder uriBuilder, Multimap<String, String> queryParameters) throws URISyntaxException {
+        if (queryParameters != null && queryParameters.size() > 0) {
+            queryParameters.entries().stream().forEach(entry -> {
+                try {
+                    uriBuilder.setParameter(URLEncoder.encode(entry.getKey(), "UTF-8"), entry.getValue());
+                } catch (UnsupportedEncodingException e) {
+                }
+            });
+        }
+        return uriBuilder.build();
+    }
+
+    private void writeEntityOutOverConnection(Entity entity, PipedOutputStream pipedOutputStream) throws IOException {
         entity.asChunks().observeOn(Schedulers.io())
                 .doOnNext(bytes -> {
                     try {
-                        outputStream.write(bytes);
+                        pipedOutputStream.write(bytes);
                     } catch (IOException e) {
                         throw new HttpException("Error writing entity!", e);
                     }
                 })
                 .doOnCompleted(() -> {
                     try {
-                        outputStream.close();
-                        onEntitySendingCompletion(entity);
+                        pipedOutputStream.close();
                     } catch (IOException e) {
                         throw new HttpException("Error while closing stream!", e);
                     }
                 })
                 .doOnError(e -> {
                     try {
-                        outputStream.close();
-                        onErrorSendingEntity(entity);
+                        pipedOutputStream.close();
                     } catch (IOException closing) {
-                        onErrorSendingEntity(entity);
                         throw new HttpException("Error while closing stream due to an original exception!", e);
                     }
 
@@ -198,12 +288,6 @@ public class Client {
 
     public Observable<Response> get(Function<RequestBuilder, Request> builder) {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.GET)));
-    }
-
-    protected void onErrorSendingEntity(Entity entity) {
-    }
-
-    protected void onEntitySendingCompletion(Entity entity) {
     }
 
     public Observable<Response> patch(String uri, Entity entity) {
