@@ -1,8 +1,10 @@
 package org.chodavarapu.datamill.http;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.ByteStreams;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpVersion;
 import org.apache.http.client.methods.*;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -223,11 +225,16 @@ public class ClientTest {
         }
 
         @Override
-        protected CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+        protected CloseableHttpResponse doExecute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
             CloseableHttpResponse response = mock(CloseableHttpResponse.class);
             when(response.getAllHeaders()).thenReturn(new Header[0]);
             when(response.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
             when(response.getEntity()).thenReturn(mock(HttpEntity.class));
+
+            if (request instanceof HttpEntityEnclosingRequest) {
+                ByteStreams.toByteArray(((HttpEntityEnclosingRequest) request).getEntity().getContent());
+            }
+
             return response;
         }
 

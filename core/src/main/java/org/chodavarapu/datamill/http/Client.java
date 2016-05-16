@@ -127,27 +127,28 @@ public class Client {
         }, Schedulers.io());
     }
 
-    private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
+    private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
         if (!(request instanceof HttpEntityEnclosingRequestBase)) {
             throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
         }
-        try (PipedOutputStream pipedOutputStream = buildPipedOutputStream();
-             PipedInputStream pipedInputStream = buildPipedInputStream()) {
-            pipedInputStream.connect(pipedOutputStream);
 
-            BasicHttpEntity httpEntity = new BasicHttpEntity();
-            httpEntity.setContent(pipedInputStream);
-            ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
+        PipedOutputStream pipedOutputStream = buildPipedOutputStream();
+        PipedInputStream pipedInputStream = buildPipedInputStream();
 
-            writeEntityOutOverConnection(entity, pipedOutputStream);
+        pipedInputStream.connect(pipedOutputStream);
 
-            return doExecute(httpclient, request);
-        }
+        BasicHttpEntity httpEntity = new BasicHttpEntity();
+        httpEntity.setContent(pipedInputStream);
+        ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
+
+        writeEntityOutOverConnection(entity, pipedOutputStream);
+
+        return doExecute(httpClient, request);
     }
 
 
-    protected CloseableHttpResponse doExecute(CloseableHttpClient httpclient, HttpUriRequest request) throws IOException {
-        return httpclient.execute(request);
+    protected CloseableHttpResponse doExecute(CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
+        return httpClient.execute(request);
     }
 
     private void printRequestIfDebugging(Method method, URI composedUri, Multimap<String, String> headers) {
