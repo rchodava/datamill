@@ -21,6 +21,7 @@ import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.chodavarapu.datamill.http.impl.InputStreamEntity;
+import org.chodavarapu.datamill.http.impl.EmptyEntity;
 import org.chodavarapu.datamill.http.impl.RequestBuilderImpl;
 import org.chodavarapu.datamill.http.impl.ResponseImpl;
 import org.chodavarapu.datamill.http.impl.TemplateBasedUriBuilder;
@@ -107,24 +108,31 @@ public class Client {
             Map<String, String> combinedHeaders = populateResponseHeaders(finalResponse);
             int responseCode = finalResponse.getStatusLine().getStatusCode();
             return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders,
-                    new InputStreamEntity(finalResponse.getEntity().getContent(), () -> {
-                        if (finalResponse != null) {
-                            try {
-                                finalResponse.close();
-                            } catch (IOException e) {
-                                logger.debug("Error while closing response stream!", e);
-                            }
-                        }
-
-                        if (httpClient != null) {
-                            try {
-                                httpClient.close();
-                            } catch (IOException e) {
-                                logger.debug("Error while closing client!", e);
-                            }
-                        }
-                    }));
+                    buildResponseEntity(finalResponse, httpClient));
         }, Schedulers.io());
+    }
+
+    private Entity buildResponseEntity(CloseableHttpResponse finalResponse, CloseableHttpClient httpClient) throws IOException {
+        if (finalResponse != null && finalResponse.getEntity() != null) {
+            return new InputStreamEntity(finalResponse.getEntity().getContent(), () -> {
+                try {
+                    finalResponse.close();
+                } catch (IOException e) {
+                    logger.debug("Error while closing response stream!", e);
+                }
+
+                if (httpClient != null) {
+                    try {
+                        httpClient.close();
+                    } catch (IOException e) {
+                        logger.debug("Error while closing client!", e);
+                    }
+                }
+            });
+        }
+        else {
+            return new EmptyEntity();
+        }
     }
 
     private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
