@@ -4,6 +4,13 @@
     <groupId>org.chodavarapu.datamill</groupId>
     <artifactId>datamill</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.16</version>
+        </dependency>
+    </dependencies>
     <packaging>pom</packaging>
     <name>Data Mill</name>
 
@@ -13,6 +20,7 @@
 
     <modules>
         <module>core</module>
+        <module>cucumber</module>
     </modules>
 
     <build>
