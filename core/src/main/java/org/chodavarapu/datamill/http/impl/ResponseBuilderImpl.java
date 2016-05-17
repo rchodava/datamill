@@ -148,4 +148,9 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     public Response forbidden(String content) {
         return new ResponseImpl(Status.FORBIDDEN, headers, new ValueEntity(new StringValue(content)));
     }
+
+    @Override
+    public Response conflict(String content) {
+        return new ResponseImpl(Status.CONFLICT, headers, new ValueEntity(new StringValue(content)));
+    }
 }
