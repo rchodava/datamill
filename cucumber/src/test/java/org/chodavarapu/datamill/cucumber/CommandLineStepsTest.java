@@ -16,16 +16,19 @@ public class CommandLineStepsTest {
     @Test
     public void executeAndVerifyFiles() throws Exception {
         PropertyStore store = new PropertyStore();
+        store.put("fileName", "test.txt");
+
         PlaceholderResolver resolver = new PlaceholderResolver(store);
 
         CommandLineSteps steps = new CommandLineSteps(store, resolver);
 
-        steps.executeCommand("ping localhost");
+        steps.executeCommand("echo \"Hello\"");
 
         File temporaryDirectory = (File) store.get(CommandLineSteps.TEMPORARY_DIRECTORY);
         Files.write("Hello", new File(temporaryDirectory, "test.txt"), Charset.defaultCharset());
 
         steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("test.txt"));
+        steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("{fileName}"));
 
         steps.cleanUp();
 
