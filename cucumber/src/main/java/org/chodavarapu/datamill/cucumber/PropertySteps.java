@@ -15,7 +15,7 @@ import static org.junit.Assert.fail;
  */
 public class PropertySteps {
     private final PropertyStore propertyStore;
-    private final HTMLLinkExtractor linkExtractor = new HTMLLinkExtractor();
+    private final HtmlLinkExtractor linkExtractor = new HtmlLinkExtractor();
 
     public PropertySteps(PropertyStore propertyStore) {
         this.propertyStore = propertyStore;
@@ -25,7 +25,7 @@ public class PropertySteps {
     @And("^the first link in stored HTML " + Phrases.PROPERTY_KEY + " is stored as " + Phrases.PROPERTY_KEY + "$")
     public void extractFirstLinkFromStoredHtml(String htmlKey, String propertyKey) {
         String html = (String) propertyStore.get(htmlKey);
-        List<HTMLLinkExtractor.HtmlLink> links = linkExtractor.extractLinks(html);
+        List<HtmlLinkExtractor.HtmlLink> links = linkExtractor.extractLinks(html);
 
         if (links.size() > 0) {
             propertyStore.put(propertyKey, links.get(0).getLinkTarget());
