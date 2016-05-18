@@ -3,7 +3,6 @@ package org.chodavarapu.datamill.cucumber;
 import org.chodavarapu.datamill.http.Client;
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
-import org.chodavarapu.datamill.json.JsonObject;
 import org.chodavarapu.datamill.values.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +22,9 @@ public class HttpClient {
         logger.debug("Making a {} request to {} with headers {} and payload {}", method, uri, headers, payload);
         switch (method) {
             case GET: return client.get(uri, headers);
-            case POST:  return client.post(uri, headers, payload != null ? new StringValue(payload) : new JsonObject());
-            case PATCH:  return client.patch(uri, headers, payload != null ? new StringValue(payload) : new JsonObject());
-            case PUT:  return client.put(uri, headers, payload != null ? new StringValue(payload) : new JsonObject());
+            case POST:  return client.post(uri, headers, payload != null ? new StringValue(payload) : null);
+            case PATCH:  return client.patch(uri, headers, payload != null ? new StringValue(payload) : null);
+            case PUT:  return client.put(uri, headers, payload != null ? new StringValue(payload) : null);
             case DELETE:  return client.delete(uri, headers);
             default: throw new UnsupportedOperationException("Method " + method + " is not implemented by client");
         }

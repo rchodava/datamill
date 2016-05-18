@@ -37,6 +37,9 @@ public class ValueEntity implements Entity {
 
     @Override
     public Observable<String> asString() {
+        if (value == null) {
+            return Observable.empty();
+        }
         return Observable.just(value.asString());
     }
 }
