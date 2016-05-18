@@ -32,7 +32,7 @@ public class EmailSteps {
     private Wiser smtpServer;
 
     private final int DEFAULT_SMTP_PORT = 1025;
-    private final String SMTP_PORT = "SMTP_PORT";
+    public final static String SMTP_PORT = "SMTP_PORT";
 
     public EmailSteps(PropertyStore propertyStore, PlaceholderResolver placeholderResolver) {
         this.propertyStore = propertyStore;

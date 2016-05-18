@@ -63,19 +63,8 @@ public class HttpStepsTest {
         server = new Server(
                 rb -> rb.ifMatchesBeanMethod(new OutlineBuilder().wrap(testController))
                         .orElse(r -> r.respond(b -> b.notFound())));
-        serverPort = findRandomPort();
+        serverPort = TestUtil.findRandomPort(DEFAULT_SERVER_PORT);
         server.listen("localhost", serverPort);
-
-    }
-
-    private Integer findRandomPort()  {
-        try {
-            try (ServerSocket socket = new ServerSocket(0)) {
-                return socket.getLocalPort();
-            }
-        } catch (IOException e) {}
-
-        return DEFAULT_SERVER_PORT;
     }
 
     @Test
