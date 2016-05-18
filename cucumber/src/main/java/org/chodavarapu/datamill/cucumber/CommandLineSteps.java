@@ -24,7 +24,7 @@ import static org.junit.Assert.fail;
  */
 public class CommandLineSteps {
     private static final Logger logger = LoggerFactory.getLogger(CommandLineSteps.class);
-    private static final String TEMPORARY_DIRECTORY = "$$temporaryDirectory";
+    static final String TEMPORARY_DIRECTORY = "$$temporaryDirectory";
 
     private final PlaceholderResolver placeholderResolver;
     private final PropertyStore propertyStore;
@@ -50,7 +50,7 @@ public class CommandLineSteps {
     }
 
     @Then("^the temporary directory should have the files:$")
-    public void verifyTemporaryDirectoryHasFiles(List<String> names) throws Throwable {
+    public void verifyTemporaryDirectoryHasFiles(List<String> names) throws Exception {
         File temporaryDirectory = (File) propertyStore.get(TEMPORARY_DIRECTORY);
         if (temporaryDirectory != null && temporaryDirectory.isDirectory()) {
             for (String name : names) {
