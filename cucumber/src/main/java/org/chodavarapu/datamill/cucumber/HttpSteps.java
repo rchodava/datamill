@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.cucumber;
 
 import com.google.common.base.Strings;
+import com.jayway.jsonpath.JsonPath;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
@@ -73,6 +74,20 @@ public class HttpSteps {
         }
     }
 
+    @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response and JSON with (.+) matching:$")
+    public void assertStatusAndJsonResponsePortion(int statusCode, String path, String expectedJson) {
+        assertStatus(statusCode);
+
+        String actualJsonBody = (String) propertyStore.get(LAST_RESPONSE_BODY_KEY);
+        if (actualJsonBody != null && !actualJsonBody.isEmpty()) {
+            Object portion = JsonPath.read(actualJsonBody, path);
+            String resolvedExpectedJson = placeholderResolver.resolve(expectedJson);
+            assertTrue(FuzzyJsonTester.isJsonSimilarEnough(resolvedExpectedJson, portion.toString()));
+        } else {
+            fail("Response was empty when expecting a non-empty JSON body!");
+        }
+    }
+
     @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response with a non-empty " + Phrases.HTTP_BODY + "$")
     public void assertStatusAndNonEmptyResponse(int statusCode) {
         assertStatus(statusCode);
@@ -91,6 +106,13 @@ public class HttpSteps {
     public void storeResponse(String key) {
         String lastResponseBody = (String) propertyStore.get(LAST_RESPONSE_BODY_KEY);
         propertyStore.put(key, lastResponseBody);
+    }
+
+    @And("^(.+) from the JSON response is stored as (.+)$")
+    public void storeJsonResponsePortion(String path, String key) {
+        String lastResponseBody = (String) propertyStore.get(LAST_RESPONSE_BODY_KEY);
+        Object portion = JsonPath.read(lastResponseBody, path);
+        propertyStore.put(key, portion);
     }
 
     @And("^a request header (.+) is added with value \"(.*)\"$")

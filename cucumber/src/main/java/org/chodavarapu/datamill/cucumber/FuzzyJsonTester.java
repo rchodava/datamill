@@ -35,7 +35,7 @@ public class FuzzyJsonTester {
     }
 
     private static boolean areJsonObjectsSimilarEnough(JSONObject expected, JSONObject actual) {
-        if (!expected.keySet().containsAll(actual.keySet())) {
+        if (!actual.keySet().containsAll(expected.keySet())) {
             return false;
         }
 
@@ -85,7 +85,13 @@ public class FuzzyJsonTester {
                 boolean foundSimilarActualObject = false;
 
                 for (int j = 0; j < actualArray.length(); j++) {
-//                    if (expectedArray.get())
+                    if (isSimilar(expectedArray.get(i), actualArray.get(j))) {
+                        foundSimilarActualObject = true;
+                    }
+                }
+
+                if (!foundSimilarActualObject) {
+                    return false;
                 }
             }
         }

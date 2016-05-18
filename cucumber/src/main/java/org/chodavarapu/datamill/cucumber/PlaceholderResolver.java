@@ -132,6 +132,8 @@ public class PlaceholderResolver {
             return (String) value;
         } else if (value instanceof Value) {
             return ((Value) value).asString();
+        } else if (value != null) {
+            return value.toString();
         }
 
         return null;
