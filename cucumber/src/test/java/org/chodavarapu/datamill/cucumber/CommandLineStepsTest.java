@@ -23,6 +23,7 @@ public class CommandLineStepsTest {
         CommandLineSteps steps = new CommandLineSteps(store, resolver);
 
         steps.executeCommand("echo \"Hello\"");
+        steps.executeCommandExpectingFailure("ping 256.256.256.256");
 
         File temporaryDirectory = (File) store.get(CommandLineSteps.TEMPORARY_DIRECTORY);
         Files.write("Hello", new File(temporaryDirectory, "test.txt"), Charset.defaultCharset());

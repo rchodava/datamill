@@ -34,6 +34,22 @@ public class CommandLineSteps {
         this.placeholderResolver = placeholderResolver;
     }
 
+    @When("^" + Phrases.SUBJECT + " executes \"(.+)\", it should fail")
+    public void executeCommandExpectingFailure(String command) {
+        String resolvedCommand = placeholderResolver.resolve(command);
+        try {
+            File temporaryDirectory = Files.createTempDir();
+            propertyStore.put(TEMPORARY_DIRECTORY, temporaryDirectory);
+            int result = Runtime.getRuntime().exec(resolvedCommand, null, temporaryDirectory).waitFor();
+            if (result == 0) {
+                fail("Expected " + resolvedCommand + " to fail but got a zero result!");
+            }
+        } catch (InterruptedException | IOException e) {
+            fail("Error while executing " + resolvedCommand);
+        }
+    }
+
+
     @When("^" + Phrases.SUBJECT + " executes \"(.+)\" from a temporary directory")
     public void executeCommand(String command) {
         String resolvedCommand = placeholderResolver.resolve(command);
