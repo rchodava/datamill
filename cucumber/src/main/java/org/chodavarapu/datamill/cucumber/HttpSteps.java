@@ -12,15 +12,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
 public class HttpSteps {
-    private final static String RESPONSE_KEY = "$$response";
-    private final static String LAST_RESPONSE_BODY_KEY = "$$lastResponseBody";
-    private final static String HEADER_KEY = "$$header";
+    final static String RESPONSE_KEY = "$$response";
+    final static String LAST_RESPONSE_BODY_KEY = "$$lastResponseBody";
+    final static String HEADER_KEY = "$$header";
 
     private final PropertyStore propertyStore;
     private final PlaceholderResolver placeholderResolver;
@@ -50,15 +53,15 @@ public class HttpSteps {
         userMakesCallWithProvidedPayload(method, uri, payload);
     }
 
-    private Response makeCall(Method method, String uri, String payload) {
+    private void makeCall(Method method, String uri, String payload) {
         final String resolvedUri = placeholderResolver.resolve(uri);
         final String resolvedPayload = placeholderResolver.resolve(payload);
 
-        return httpClient.request(method, resolvedUri, getHeaders(), resolvedPayload)
+        httpClient.request(method, resolvedUri, getHeaders(), resolvedPayload)
                 .doOnNext(response -> {
                     propertyStore.put(RESPONSE_KEY, response);
                     propertyStore.put(LAST_RESPONSE_BODY_KEY, getResponseBodyAsString(response));
-                }).toBlocking().last();
+                }).toBlocking().lastOrDefault(null);
     }
 
     @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response and JSON matching:$")
