@@ -25,4 +25,5 @@ public interface ResponseBuilder {
     Response unauthorized(String content);
     Response forbidden();
     Response forbidden(String content);
+    Response conflict(String content);
 }
