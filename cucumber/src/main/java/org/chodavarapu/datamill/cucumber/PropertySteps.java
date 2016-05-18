@@ -15,7 +15,7 @@ import static org.junit.Assert.fail;
  */
 public class PropertySteps {
     private final PropertyStore propertyStore;
-    private final HtmlLinkExtractor linkExtractor = new HtmlLinkExtractor();
+    private final HTMLLinkExtractor linkExtractor = new HTMLLinkExtractor();
 
     public PropertySteps(PropertyStore propertyStore) {
         this.propertyStore = propertyStore;
@@ -25,7 +25,7 @@ public class PropertySteps {
     @And("^the first link in stored HTML " + Phrases.PROPERTY_KEY + " is stored as " + Phrases.PROPERTY_KEY + "$")
     public void extractFirstLinkFromStoredHtml(String htmlKey, String propertyKey) {
         String html = (String) propertyStore.get(htmlKey);
-        List<HtmlLinkExtractor.HtmlLink> links = linkExtractor.extractLinks(html);
+        List<HTMLLinkExtractor.HtmlLink> links = linkExtractor.extractLinks(html);
 
         if (links.size() > 0) {
             propertyStore.put(propertyKey, links.get(0).getLinkTarget());
@@ -74,5 +74,10 @@ public class PropertySteps {
     public void generatePassword(String password, String key) {
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
         propertyStore.put(key, hashed);
+    }
+
+    @Given("^" + Phrases.PROPERTY_KEY + " stored value is removed$")
+    public void removeProperty(String key) {
+        propertyStore.remove(key);
     }
 }

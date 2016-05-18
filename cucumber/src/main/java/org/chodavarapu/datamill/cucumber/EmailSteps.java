@@ -4,12 +4,17 @@ import cucumber.api.java.After;
 import cucumber.api.java.Before;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Then;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subethamail.wiser.Wiser;
 import org.subethamail.wiser.WiserMessage;
 
-import javax.mail.*;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 import javax.mail.internet.MimeMultipart;
-
 import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
@@ -19,9 +24,15 @@ import static org.junit.Assert.fail;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class EmailSteps {
+
+    private final static Logger logger = LoggerFactory.getLogger(EmailSteps.class);
+
     private final PlaceholderResolver placeholderResolver;
     private final PropertyStore propertyStore;
     private Wiser smtpServer;
+
+    private final int DEFAULT_SMTP_PORT = 1025;
+    private final String SMTP_PORT = "SMTP_PORT";
 
     public EmailSteps(PropertyStore propertyStore, PlaceholderResolver placeholderResolver) {
         this.propertyStore = propertyStore;
@@ -30,8 +41,20 @@ public class EmailSteps {
 
     @Before("@emailing")
     public void startUpServer() {
-        smtpServer = new Wiser();
+        smtpServer = new Wiser(getSmtpPort());
         smtpServer.start();
+    }
+
+    private int getSmtpPort() {
+        String smtpPort = System.getProperty(SMTP_PORT);
+        if (smtpPort != null) {
+            try {
+                return Integer.valueOf(smtpPort);
+            } catch (Exception e) {
+                logger.debug("Could not parse SMTP port {}", smtpPort);
+            }
+        }
+        return DEFAULT_SMTP_PORT;
     }
 
     private String getCompleteContent(Message message) throws IOException, MessagingException {

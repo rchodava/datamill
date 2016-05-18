@@ -1,38 +1,24 @@
 package org.chodavarapu.datamill.cucumber;
 
 import cucumber.api.java.en.Given;
+import cucumber.api.java.en.Then;
 import org.chodavarapu.datamill.db.DatabaseClient;
-import org.json.JSONException;
+import org.chodavarapu.datamill.db.Row;
 import org.json.JSONObject;
+import rx.Observable;
 
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class DatabaseSteps {
-//    @Then("^the (.+) table should have (.+) where (.+)$")
-//    public void checkDatabase(String tableName, String criteriaFragment, String testFragment) {
-//        String modifiedTestFragment = getReplacedString(placeholderPattern, testFragment, placeholderRemover, standardPlaceholderReplacer);
-//        String modifiedCriteriaFragment = getReplacedString(placeholderPattern, criteriaFragment, placeholderRemover, placeholderReplacer);
-//        Row row = executeSelect(buildQuery(tableName, modifiedTestFragment, modifiedCriteriaFragment)).toBlocking().lastOrDefault(null);
-//        assertThat(row, notNullValue());
-//    }
-//
-//    @Then("^the (.+) table should contain a row where (.+)$")
-//    public void checkDatabase(String tableName, String testFragment) {
-//        String modifiedTestFragment = getReplacedString(placeholderPattern, testFragment, placeholderRemover, standardPlaceholderReplacer);
-//        Row row = executeSelect(buildQuery(tableName, modifiedTestFragment, null)).toBlocking().lastOrDefault(null);
-//        assertThat(row, notNullValue());
-//    }
-//
-//    @And("^the (.+) in the (.+) table row where (.+) is stored as (.+)$")
-//    public void storeDatabaseValue(String columnName, String tableName, String testFragment, String key) {
-//        String modifiedTestFragment = getReplacedString(placeholderPattern, testFragment, placeholderRemover, standardPlaceholderReplacer);
-//        executeSelect(buildQuery(tableName, modifiedTestFragment, null))
-//                .doOnNext(row -> addToRepository(key, row.column(columnName).asString()))
-//                .toBlocking().last();
-//    }
+
+    private final static String SQL_SELECT = "SELECT * FROM ";
+    private final static String SQL_WHERE = " WHERE ";
+    private final static String SQL_AND = " AND ";
 
     private final PlaceholderResolver placeholderResolver;
 
@@ -64,4 +50,40 @@ public class DatabaseSteps {
 
         assertEquals("Failed to insert row into " + tableName, 1, count);
     }
+
+    @Then("^the (.+) table in (.+) should have (.+) where (.+)$")
+    public void checkDatabaseRowExists(String tableName, String databaseUrl, String criteriaFragment, String testFragment) {
+        String resolvedUrl = placeholderResolver.resolve(databaseUrl);
+        String resolvedCriteriaFragment = placeholderResolver.resolve(criteriaFragment);
+        String resolvedTestFragment = placeholderResolver.resolve(testFragment);
+        Row row = executeSelect(resolvedUrl, buildQuery(tableName, resolvedCriteriaFragment, resolvedTestFragment)).toBlocking().lastOrDefault(null);
+        assertThat(row, notNullValue());
+    }
+
+    @Then("^the (.+) table in (.+) should contain a row where (.+)$")
+    public void checkDatabaseRowExists(String tableName, String databaseUrl, String testFragment) {
+        String resolvedUrl = placeholderResolver.resolve(databaseUrl);
+        String resolvedTestFragment = placeholderResolver.resolve(testFragment);
+        Row row = executeSelect(resolvedUrl, buildQuery(tableName, resolvedTestFragment, null)).toBlocking().lastOrDefault(null);
+        assertThat(row, notNullValue());
+    }
+
+    private Observable<Row> executeSelect(String resolvedUrl, String sql, Object... parameters) {
+        return new DatabaseClient(resolvedUrl).query(sql, parameters);
+    }
+
+    protected String buildQuery(String tableName, String testFragment, String criteriaFragment) {
+        StringBuilder queryBuilder = new StringBuilder(SQL_SELECT);
+
+        queryBuilder.append(tableName);
+        queryBuilder.append(SQL_WHERE);
+        queryBuilder.append(testFragment);
+
+        if (criteriaFragment != null && !criteriaFragment.isEmpty()) {
+            queryBuilder.append(SQL_AND);
+            queryBuilder.append(criteriaFragment);
+        }
+        return queryBuilder.toString();
+    }
+
 }

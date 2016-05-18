@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 /**
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
-public class HtmlLinkExtractor {
+public class HTMLLinkExtractor {
 
     private Pattern patternTag, patternLink;
     private Matcher matcherTag, matcherLink;
@@ -18,7 +18,7 @@ public class HtmlLinkExtractor {
             "\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))";
 
 
-    public HtmlLinkExtractor() {
+    public HTMLLinkExtractor() {
         patternTag = Pattern.compile(HTML_A_TAG_PATTERN);
         patternLink = Pattern.compile(HTML_A_HREF_TAG_PATTERN);
     }
