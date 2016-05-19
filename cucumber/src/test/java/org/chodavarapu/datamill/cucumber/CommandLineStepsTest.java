@@ -7,14 +7,16 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class CommandLineStepsTest {
     @Test
-    public void executeAndVerifyFiles() throws Exception {
+    public void commandLineSteps() throws Exception {
         PropertyStore store = new PropertyStore();
         store.put("fileName", "test.txt");
 
@@ -31,9 +33,22 @@ public class CommandLineStepsTest {
         steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("test.txt"));
         steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("{fileName}"));
 
+        Files.write("Hello", new File(temporaryDirectory, "test2.txt"), Charset.defaultCharset());
+        steps.delete("test2.txt");
+        assertFalse(new File(temporaryDirectory, "test2.txt").exists());
+
+        steps.createFile("test3.txt", "Hello");
+        steps.appendFile("test3.txt", "World");
+        assertEquals("HelloWorld", Files.readFirstLine(new File(temporaryDirectory, "test3.txt"), Charset.defaultCharset()));
+
+        steps.move("test3.txt", "test4.txt");
+        assertFalse(new File(temporaryDirectory, "test3.txt").exists());
+        assertTrue(new File(temporaryDirectory, "test4.txt").exists());
+
         steps.cleanUp();
 
         assertFalse(new File(temporaryDirectory, "test.txt").exists());
+        assertFalse(new File(temporaryDirectory, "test4.txt").exists());
         assertFalse(temporaryDirectory.exists());
     }
 }
