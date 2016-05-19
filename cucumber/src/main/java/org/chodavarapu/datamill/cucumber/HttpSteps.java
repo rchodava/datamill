@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.cucumber;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Multimap;
 import com.jayway.jsonpath.JsonPath;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
@@ -111,15 +112,19 @@ public class HttpSteps {
     public void assertResponseAndHeaders(int statusCode, Map<String, String> headers) {
         Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
         assertThat(storedResponse.status().getCode(), is(statusCode));
-        for (Map.Entry<String, String> expectedHeaders : headers.entrySet()) {
-            String resolvedExpectedValue = placeholderResolver.resolve(expectedHeaders.getValue());
-            Iterator<String> iterator = storedResponse.headers().get(expectedHeaders.getKey()).iterator();
+        compareHeaders(headers, storedResponse.headers());
+    }
+
+    void compareHeaders(Map<String, String> expectedHeaders, Multimap<String, String> actualHeaders) {
+        for (Map.Entry<String, String> expectedHeadersEntries : expectedHeaders.entrySet()) {
+            String resolvedExpectedValue = placeholderResolver.resolve(expectedHeadersEntries.getValue());
+            Iterator<String> iterator = actualHeaders.get(expectedHeadersEntries.getKey()).iterator();
             if (iterator.hasNext()) {
                 String actualValue = iterator.next();
                 assertThat(resolvedExpectedValue, equalTo(actualValue));
                 continue;
             }
-            fail("Could not find corresponding header in response for " + expectedHeaders.getKey());
+            fail("Could not find corresponding header in response for " + expectedHeadersEntries.getKey());
         }
     }
 

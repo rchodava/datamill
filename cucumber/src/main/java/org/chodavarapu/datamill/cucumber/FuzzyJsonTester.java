@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
 public class FuzzyJsonTester {
-    private static final String ANY_VALUE = "ANY_VALUE";
+    private static final String ANY_VALUE = "*";
     private static final Logger logger = LoggerFactory.getLogger(FuzzyJsonTester.class);
 
     private static boolean areJsonObjectsSimilarEnough(JsonObject expected, JsonObject actual) {
@@ -57,7 +57,7 @@ public class FuzzyJsonTester {
     }
 
     private static boolean isSimilar(Object expected, Object actual) {
-        logger.debug("Comparing EXPECTED {} and ACTUAL {}", expected, actual);
+        logger.debug("Comparing expected {} and actual {}", expected, actual);
         if (expected instanceof String && actual instanceof String) {
             return expected.equals(ANY_VALUE) || expected.equals(actual);
         } else if (expected instanceof Number && actual instanceof Number) {

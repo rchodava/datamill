@@ -1,5 +1,6 @@
 package org.chodavarapu.datamill.cucumber;
 
+import com.google.common.collect.ImmutableMap;
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
 import org.chodavarapu.datamill.http.Server;
@@ -16,8 +17,6 @@ import org.junit.Test;
 import rx.Observable;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.util.Collections;
 import java.util.Map;
 
@@ -150,20 +149,44 @@ public class HttpStepsTest {
         assertThat(((Map<String, String>) propertyStore.get(HEADER_KEY)).get(STORE_KEY), is(HEADER_VALUE));
     }
 
+    @Test
+    public void assertResponseAndHeaders_worksAsExpected() {
+        Map<String, String> responseHeaders = ImmutableMap.of("ExpectedHeader", "ExpectedHeaderValue");
+        prepareResponse(Status.OK, EXPECTED_JSON, responseHeaders);
+
+        final String inputJson = "{ \"input\" : \"json\"}";
+        httpSteps.userMakesCallWithProvidedPayload(Method.POST, String.format(URI, serverPort, "test/post"), inputJson);
+
+        httpSteps.assertResponseAndHeaders(Status.OK.getCode(), responseHeaders);
+
+        assertResponse(EXPECTED_JSON, responseHeaders);
+    }
+
     private void prepareResponse(Status status, String expectedJson) {
+        prepareResponse(status, expectedJson, Collections.emptyMap());
+    }
+
+    private void prepareResponse(Status status, String expectedJson, Map<String, String> headers) {
         if (expectedJson == null) {
-            reponse = new ResponseImpl(status, Collections.emptyMap(), null);
+            reponse = new ResponseImpl(status, headers, null);
         }
         else {
-            reponse = new ResponseImpl(status, Collections.emptyMap(), new InputStreamEntity(new ByteArrayInputStream(expectedJson.getBytes())));
+            reponse = new ResponseImpl(status, headers, new InputStreamEntity(new ByteArrayInputStream(expectedJson.getBytes())));
         }
         testController.setResponse(reponse);
     }
 
     private void assertResponse(String expectedJsonResponse) {
+        assertResponse(expectedJsonResponse, null);
+    }
+
+    private void assertResponse(String expectedJsonResponse, Map<String, String> expectedHeaders) {
         Response receivedResponse = (Response) propertyStore.get(RESPONSE_KEY);
         assertThat(reponse.status(), is(receivedResponse.status()));
         assertThat(propertyStore.get(LAST_RESPONSE_BODY_KEY), is(expectedJsonResponse));
+        if (expectedHeaders != null && !expectedHeaders.isEmpty()) {
+            httpSteps.compareHeaders(expectedHeaders, receivedResponse.headers());
+        }
     }
 
     private class TestController {
