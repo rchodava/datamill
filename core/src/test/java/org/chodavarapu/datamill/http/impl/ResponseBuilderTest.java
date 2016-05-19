@@ -6,6 +6,7 @@ import org.chodavarapu.datamill.json.JsonArray;
 import org.chodavarapu.datamill.json.JsonObject;
 import org.json.JSONArray;
 import org.junit.Test;
+import rx.Observable;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,14 +50,16 @@ public class ResponseBuilderTest {
         builder.streamingEntity(observer -> {
             observer.onNext("Test Content ".getBytes());
             observer.onNext("More Content".getBytes());
-            observer.onCompleted();
+
+            return Observable.empty();
         });
         assertEquals("Test Content More Content", builder.ok().entity().asString().toBlocking().lastOrDefault(null));
 
         builder.streamingJson(observer -> {
             observer.onNext(new JsonObject().put("test", "value"));
             observer.onNext(new JsonArray(new String[] { "test1", "test2" }));
-            observer.onCompleted();
+
+            return Observable.empty();
         });
 
         JSONArray array = new JSONArray(builder.ok().entity().asString().toBlocking().lastOrDefault(null));

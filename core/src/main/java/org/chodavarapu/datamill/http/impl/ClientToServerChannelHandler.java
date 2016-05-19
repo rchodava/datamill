@@ -15,6 +15,7 @@ import org.chodavarapu.datamill.http.ServerRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.Subscription;
 import rx.subjects.ReplaySubject;
 
 import java.util.Map;
@@ -30,6 +31,8 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     private final BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor;
     private final Route route;
     private final ExecutorService threadPool;
+    private volatile boolean channelClosed;
+    private volatile Subscription entitySubscription;
 
     private ReplaySubject<byte[]> entityStream;
     private ServerRequestImpl serverRequest;
@@ -45,6 +48,18 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGeneralServerError(ChannelHandlerContext context) {
         context.write(new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR));
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext context) throws Exception {
+        channelClosed = true;
+        if (entitySubscription != null) {
+            if (!entitySubscription.isUnsubscribed()) {
+                entitySubscription.unsubscribe();
+            }
+
+            entitySubscription = null;
+        }
     }
 
     @Override
@@ -184,25 +199,26 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
         Entity responseEntity = serverResponse.entity();
         if (responseEntity != null) {
             threadPool.execute(() -> {
-                boolean[] first = {true};
-                responseEntity.asChunks()
-                        .doOnNext(bytes -> {
-                            if (first[0]) {
-                                sendResponseStart(context, originalRequest,
-                                        serverResponse.status().getCode(),
-                                        serverResponse.headers(),
-                                        bytes == null ? -1 : bytes.length);
-                                sendContent(context, bytes);
+                if (!channelClosed) {
+                    boolean[] first = {true};
+                    entitySubscription = responseEntity.asChunks()
+                            .doOnNext(bytes -> {
+                                if (first[0]) {
+                                    sendResponseStart(context, originalRequest,
+                                            serverResponse.status().getCode(),
+                                            serverResponse.headers(),
+                                            bytes == null ? -1 : bytes.length);
+                                    sendContent(context, bytes);
 
-                                first[0] = false;
-                            } else {
-                                sendContent(context, bytes);
-                            }
-                        })
-                        .finallyDo(() -> {
-                            sendResponseEnd(context, originalRequest);
-                        })
-                        .toBlocking().lastOrDefault(null);
+                                    first[0] = false;
+                                } else {
+                                    sendContent(context, bytes);
+                                }
+                            })
+                            .finallyDo(() -> {
+                                sendResponseEnd(context, originalRequest);
+                            }).subscribe();
+                }
             });
         } else {
             sendFullResponse(context, originalRequest, serverResponse.status().getCode(), serverResponse.headers());
