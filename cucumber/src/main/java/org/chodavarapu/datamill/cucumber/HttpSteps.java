@@ -9,8 +9,10 @@ import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -103,6 +105,22 @@ public class HttpSteps {
     public void assertStatus(int statusCode) {
         Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
         assertThat(storedResponse.status().getCode(), is(statusCode));
+    }
+
+    @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response with headers:$")
+    public void assertResponseAndHeaders(int statusCode, Map<String, String> headers) {
+        Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
+        assertThat(storedResponse.status().getCode(), is(statusCode));
+        for (Map.Entry<String, String> expectedHeaders : headers.entrySet()) {
+            String resolvedExpectedValue = placeholderResolver.resolve(expectedHeaders.getValue());
+            Iterator<String> iterator = storedResponse.headers().get(expectedHeaders.getKey()).iterator();
+            if (iterator.hasNext()) {
+                String actualValue = iterator.next();
+                assertThat(resolvedExpectedValue, equalTo(actualValue));
+                continue;
+            }
+            fail("Could not find corresponding header in response for " + expectedHeaders.getKey());
+        }
     }
 
     @And("^the response " + Phrases.HTTP_BODY + " is stored as (.+)$")
