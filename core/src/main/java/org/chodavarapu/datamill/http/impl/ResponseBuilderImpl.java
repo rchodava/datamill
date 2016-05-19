@@ -8,12 +8,14 @@ import org.chodavarapu.datamill.http.ResponseBuilder;
 import org.chodavarapu.datamill.http.Status;
 import org.chodavarapu.datamill.json.Json;
 import org.chodavarapu.datamill.values.StringValue;
+import rx.Observable;
 import rx.Observer;
+import rx.Subscription;
+import rx.functions.Func1;
 import rx.subjects.ReplaySubject;
 
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -84,49 +86,40 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
-    public ResponseBuilder streamingEntity(Consumer<Observer<byte[]>> entityStreamer) {
+    public ResponseBuilder streamingEntity(Func1<Observer<byte[]>, Observable<byte[]>> entityStreamer) {
         ReplaySubject<byte[]> entitySubject = ReplaySubject.create();
 
-        streamingEntityThreadPool.execute(() -> entityStreamer.accept(entitySubject));
+        Subscription[] entityStreamerSubscription = new Subscription[1];
+
+        streamingEntityThreadPool.execute(() -> {
+            entityStreamerSubscription[0] = entityStreamer.call(entitySubject)
+                    .doOnNext(bytes -> entitySubject.onNext(bytes))
+                    .doOnCompleted(() -> entitySubject.onCompleted())
+                    .subscribe();
+        });
+
+        entitySubject.doOnUnsubscribe(() -> {
+            if (entityStreamerSubscription[0] != null && !entityStreamerSubscription[0].isUnsubscribed()) {
+                entityStreamerSubscription[0].unsubscribe();
+            }
+        });
 
         this.entity = new StreamedChunksEntity(entitySubject, Charset.defaultCharset());
         return this;
     }
 
     @Override
-    public ResponseBuilder streamingJson(Consumer<Observer<Json>> jsonStreamer) {
-        boolean firstJsonObject[] = new boolean[] { true };
-        return streamingEntity(byteObserver -> {
-            jsonStreamer.accept(new Observer<Json>() {
-                {
-                    byteObserver.onNext("[".getBytes());
-                }
-
-                @Override
-                public void onCompleted() {
-                    byteObserver.onNext("]".getBytes());
-                    byteObserver.onCompleted();
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    byteObserver.onError(e);
-                }
-
-                @Override
-                public void onNext(Json jsonObject) {
-                    if (jsonObject != null) {
-                        if (!firstJsonObject[0]) {
-                            byteObserver.onNext(",".getBytes());
-                        } else {
-                            firstJsonObject[0] = false;
-                        }
-
-                        byteObserver.onNext(jsonObject.toString().getBytes());
-                    }
-                }
-            });
-        });
+    public ResponseBuilder streamingJson(Func1<Observer<Json>, Observable<Json>> jsonStreamer) {
+        return streamingEntity(entity -> Observable.concat(
+                Observable.just("[".getBytes()),
+                Observable.defer(() ->
+                        jsonStreamer.call(new DelegatingObserver<Json, byte[]>(entity) {
+                            @Override
+                            protected byte[] map(Json source) {
+                                return (source.toString() + ",").getBytes();
+                            }
+                        }).map(json -> (json.toString() + ",").getBytes())),
+                Observable.just("]".getBytes())));
     }
 
     @Override
@@ -152,5 +145,30 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     @Override
     public Response conflict(String content) {
         return new ResponseImpl(Status.CONFLICT, headers, new ValueEntity(new StringValue(content)));
+    }
+
+    private static abstract class DelegatingObserver<S, T> implements Observer<S> {
+        private final Observer<T> target;
+
+        DelegatingObserver(Observer<T> target) {
+            this.target = target;
+        }
+
+        @Override
+        public void onNext(S s) {
+            target.onNext(map(s));
+        }
+
+        protected abstract T map(S source);
+
+        @Override
+        public void onError(Throwable e) {
+            target.onError(e);
+        }
+
+        @Override
+        public void onCompleted() {
+            target.onCompleted();
+        }
     }
 }
