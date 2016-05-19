@@ -4,11 +4,16 @@ import org.chodavarapu.datamill.json.JsonObject;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
 public class FuzzyJsonTester {
+    private static final String ANY_VALUE = "*";
+    private static final Logger logger = LoggerFactory.getLogger(FuzzyJsonTester.class);
+
     private static boolean areJsonObjectsSimilarEnough(JsonObject expected, JsonObject actual) {
         if (!actual.propertyNames().containsAll(expected.propertyNames())) {
             return false;
@@ -17,7 +22,7 @@ public class FuzzyJsonTester {
         for (String propertyName : expected.propertyNames()) {
             JsonObject.JsonProperty expectedProperty = expected.get(propertyName);
             JsonObject.JsonProperty actualProperty = actual.get(propertyName);
-            if ("ANY_VALUE".equals(expectedProperty.asString())) {
+            if (ANY_VALUE.equals(expectedProperty.asString())) {
                 // When we can't anticipate the return value of a property (i.e. db set id) we must set ANY_VALUE as the property
                 // value so that comparison only fails if it is not found in actual json object
                 if (actualProperty == null) {
@@ -52,8 +57,9 @@ public class FuzzyJsonTester {
     }
 
     private static boolean isSimilar(Object expected, Object actual) {
+        logger.debug("Comparing expected {} and actual {}", expected, actual);
         if (expected instanceof String && actual instanceof String) {
-            return expected.equals(actual);
+            return expected.equals(ANY_VALUE) || expected.equals(actual);
         } else if (expected instanceof Number && actual instanceof Number) {
             return expected.getClass() == actual.getClass() && expected.equals(actual);
         } else if (expected instanceof JSONObject && actual instanceof JSONObject) {

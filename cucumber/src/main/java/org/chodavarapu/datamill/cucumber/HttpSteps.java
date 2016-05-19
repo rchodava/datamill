@@ -1,6 +1,7 @@
 package org.chodavarapu.datamill.cucumber;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.Multimap;
 import com.jayway.jsonpath.JsonPath;
 import cucumber.api.java.en.And;
 import cucumber.api.java.en.Given;
@@ -9,8 +10,10 @@ import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
@@ -103,6 +106,26 @@ public class HttpSteps {
     public void assertStatus(int statusCode) {
         Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
         assertThat(storedResponse.status().getCode(), is(statusCode));
+    }
+
+    @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response with headers:$")
+    public void assertResponseAndHeaders(int statusCode, Map<String, String> headers) {
+        Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
+        assertThat(storedResponse.status().getCode(), is(statusCode));
+        compareHeaders(headers, storedResponse.headers());
+    }
+
+    void compareHeaders(Map<String, String> expectedHeaders, Multimap<String, String> actualHeaders) {
+        for (Map.Entry<String, String> expectedHeadersEntries : expectedHeaders.entrySet()) {
+            String resolvedExpectedValue = placeholderResolver.resolve(expectedHeadersEntries.getValue());
+            Iterator<String> iterator = actualHeaders.get(expectedHeadersEntries.getKey()).iterator();
+            if (iterator.hasNext()) {
+                String actualValue = iterator.next();
+                assertThat(resolvedExpectedValue, equalTo(actualValue));
+                continue;
+            }
+            fail("Could not find corresponding header in response for " + expectedHeadersEntries.getKey());
+        }
     }
 
     @And("^the response " + Phrases.HTTP_BODY + " is stored as (.+)$")
