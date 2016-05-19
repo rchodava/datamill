@@ -91,6 +91,14 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
         Subscription[] entityStreamerSubscription = new Subscription[1];
 
+        Observable<byte[]> disposingSubject = Observable.using(() -> null,
+                __ -> entitySubject,
+                __ -> {
+                    if (entityStreamerSubscription[0] != null && !entityStreamerSubscription[0].isUnsubscribed()) {
+                        entityStreamerSubscription[0].unsubscribe();
+                    }
+                });
+
         streamingEntityThreadPool.execute(() -> {
             entityStreamerSubscription[0] = entityStreamer.call(entitySubject)
                     .doOnNext(bytes -> entitySubject.onNext(bytes))
@@ -98,13 +106,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
                     .subscribe();
         });
 
-        entitySubject.doOnUnsubscribe(() -> {
-            if (entityStreamerSubscription[0] != null && !entityStreamerSubscription[0].isUnsubscribed()) {
-                entityStreamerSubscription[0].unsubscribe();
-            }
-        });
-
-        this.entity = new StreamedChunksEntity(entitySubject, Charset.defaultCharset());
+        this.entity = new StreamedChunksEntity(disposingSubject, Charset.defaultCharset());
         return this;
     }
 
