@@ -54,7 +54,9 @@ public class PropertySteps {
 
     @Given("^a random alphanumeric (?:name|string) is stored as " + Phrases.PROPERTY_KEY + "$")
     public void generateRandomAlphanumeric(String key) {
-        propertyStore.put(key, RandomGenerator.generateRandomAlphanumeric(16));
+        if (!propertyStore.contains(key)) {
+            propertyStore.put(key, RandomGenerator.generateRandomAlphanumeric(16));
+        }
     }
 
     @Given("^" + Phrases.SUBJECT + " store" + Phrases.OPTIONAL_PLURAL + " a random alphanumeric (?:name|string) as " +
