@@ -192,21 +192,21 @@ public class CommandLineSteps {
         }
     }
 
-    @Then("^the result should not contain \"(.+)\"$")
+    @Then("^the command output should not contain \"(.+)\"$")
     public void verifyCommandExecutionResultDoesNotContain(String expectedCommandExecutionResult) throws Exception {
         String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
         String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);
         assertFalse(actualCommandExecutionResult.contains(resolvedExpectedCommandExecutionResult));
     }
 
-    @Then("^the result should contain \"(.+)\"$")
+    @Then("^the command output should contain \"(.+)\"$")
     public void verifyCommandExecutionResultContains(String expectedCommandExecutionResult) throws Exception {
         String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
         String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);
         assertTrue(actualCommandExecutionResult.contains(resolvedExpectedCommandExecutionResult));
     }
 
-    @Then("^the result should be \"(.+)\"$")
+    @Then("^the command output should be \"(.+)\"$")
     public void verifyCommandExecutionResultIs(String expectedCommandExecutionResult) throws Exception {
         String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
         String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);

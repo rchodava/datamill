@@ -21,7 +21,7 @@ public class PlaceholderResolver {
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^\\}]+)\\}");
     private static final String RANDOM_ALPHANUMERIC_PLACEHOLDER_PREFIX = "randomAlphanumeric";
     private static final String HASHED_PLACEHOLDER_PREFIX = "blowfish:";
-    private static final String DATE_FORMATTER_PLACEHOLDER_PREFIX = "dateFormatter:";
+    private static final String DATE_FORMATTER_PLACEHOLDER_PREFIX = "currentTime:";
 
     private final PropertyStore propertyStore;
 
