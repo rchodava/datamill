@@ -48,6 +48,7 @@ public class CommandLineSteps {
         File temporaryDirectory = (File) propertyStore.get(TEMPORARY_DIRECTORY);
         if (temporaryDirectory == null || !temporaryDirectory.isDirectory()) {
             temporaryDirectory = Files.createTempDir();
+            logger.debug("Adding temporary directory to store: {}", temporaryDirectory);
             propertyStore.put(TEMPORARY_DIRECTORY, temporaryDirectory);
         }
 
@@ -160,6 +161,7 @@ public class CommandLineSteps {
             }
             if (executionResult.getSecond() != null && !executionResult.getSecond().isEmpty()) {
                 String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getSecond());
+                logger.debug("Command execution of [{}] returned following results: {}", resolvedCommand, commandResult);
                 propertyStore.put(COMMAND_RESULT, commandResult);
             }
         } catch (InterruptedException | IOException e) {
