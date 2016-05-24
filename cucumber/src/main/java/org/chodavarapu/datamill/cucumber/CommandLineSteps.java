@@ -1,14 +1,19 @@
 package org.chodavarapu.datamill.cucumber;
 
+import com.google.common.base.Joiner;
 import com.google.common.io.Files;
 import cucumber.api.java.After;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import org.chodavarapu.datamill.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -16,7 +21,10 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -26,6 +34,7 @@ import static org.junit.Assert.fail;
 public class CommandLineSteps {
     private static final Logger logger = LoggerFactory.getLogger(CommandLineSteps.class);
     static final String TEMPORARY_DIRECTORY = "$$temporaryDirectory";
+    static final String COMMAND_RESULT = "$$commandResult";
 
     private final PlaceholderResolver placeholderResolver;
     private final PropertyStore propertyStore;
@@ -144,9 +153,14 @@ public class CommandLineSteps {
             File temporaryDirectory = getOrCreateTemporaryDirectory();
             File workingDirectory = resolvedRelativePath != null ?
                     new File(temporaryDirectory, resolvedRelativePath) : temporaryDirectory;
-            int result = Runtime.getRuntime().exec(resolvedCommand, null, workingDirectory).waitFor();
-            if (result != 0) {
-                fail("Received result code " + result + " after executing " + resolvedCommand);
+            Process process = Runtime.getRuntime().exec(resolvedCommand, null, workingDirectory);
+            Pair<Integer, List<String>> executionResult = doRunProcess(process);
+            if (executionResult.getFirst() != 0) {
+                fail("Received result code " + executionResult.getFirst() + " after executing " + resolvedCommand);
+            }
+            if (executionResult.getSecond() != null && !executionResult.getSecond().isEmpty()) {
+                String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getSecond());
+                propertyStore.put(COMMAND_RESULT, commandResult);
             }
         } catch (InterruptedException | IOException e) {
             fail("Error while executing " + resolvedCommand);
@@ -176,6 +190,27 @@ public class CommandLineSteps {
         }
     }
 
+    @Then("^the result should not contain \"(.+)\"$")
+    public void verifyCommandExecutionResultDoesNotContain(String expectedCommandExecutionResult) throws Exception {
+        String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
+        String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);
+        assertFalse(actualCommandExecutionResult.contains(resolvedExpectedCommandExecutionResult));
+    }
+
+    @Then("^the result should contain \"(.+)\"$")
+    public void verifyCommandExecutionResultContains(String expectedCommandExecutionResult) throws Exception {
+        String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
+        String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);
+        assertTrue(actualCommandExecutionResult.contains(resolvedExpectedCommandExecutionResult));
+    }
+
+    @Then("^the result should be \"(.+)\"$")
+    public void verifyCommandExecutionResultIs(String expectedCommandExecutionResult) throws Exception {
+        String resolvedExpectedCommandExecutionResult = placeholderResolver.resolve(expectedCommandExecutionResult);
+        String actualCommandExecutionResult = (String) propertyStore.get(COMMAND_RESULT);
+        assertEquals(actualCommandExecutionResult, resolvedExpectedCommandExecutionResult);
+    }
+
     private static void delete(File folder) throws IOException {
         java.nio.file.Files.walkFileTree(Paths.get(folder.getPath()), new SimpleFileVisitor<Path>() {
             @Override
@@ -200,4 +235,37 @@ public class CommandLineSteps {
             delete(temporaryDirectory);
         }
     }
+
+    private Pair<Integer, List<String>> doRunProcess(Process process) throws IOException, InterruptedException {
+        List<String> output = readLinesFromStream(process.getInputStream());
+        int result = process.waitFor();
+
+        return new Pair<>(result, output);
+    }
+
+    private List<String> readLinesFromStream(InputStream inputStream) throws InterruptedException {
+        BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
+        List<String> output = new CopyOnWriteArrayList<>();
+
+        Thread processOutputThread = new Thread(() -> {
+            try {
+                String line;
+                do {
+                    line = processOutput.readLine();
+                    if (line != null) {
+                        output.add(line);
+                        logger.debug("{}", line);
+                    }
+                } while (line != null && !Thread.interrupted());
+            } catch (IOException e) {}
+        });
+
+        processOutputThread.start();
+
+        if (processOutputThread != null) {
+            processOutputThread.join(500);
+        }
+        return output;
+    }
+
 }
