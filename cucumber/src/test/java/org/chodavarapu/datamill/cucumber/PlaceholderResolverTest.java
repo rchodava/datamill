@@ -15,6 +15,7 @@ public class PlaceholderResolverTest {
         PropertyStore store = new PropertyStore();
         store.put("property1", "value1");
         store.put("prop2", "value2");
+        store.put("base64Prop", "user:pass");
         store.put("json", "{\"name\": \"test\", \"count\": 3}");
 
         PlaceholderResolver resolver = new PlaceholderResolver(store);
@@ -31,5 +32,8 @@ public class PlaceholderResolverTest {
         assertEquals("Hello world!", resolver.resolve("Hello world!"));
         assertEquals(33, resolver.resolve("H{randomAlphanumeric32}").length());
         assertTrue(BCrypt.checkpw("pass", resolver.resolve("{blowfish:pass}")));
+        assertTrue(BCrypt.checkpw("value2", resolver.resolve("{blowfish:prop2}")));
+        assertEquals("dXNlcjpwYXNz", resolver.resolve("{base64:user:pass}"));
+        assertEquals("dXNlcjpwYXNz", resolver.resolve("{base64:base64Prop}"));
     }
 }

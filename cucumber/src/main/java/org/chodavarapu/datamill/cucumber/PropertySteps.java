@@ -14,11 +14,13 @@ import static org.junit.Assert.fail;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class PropertySteps {
+    private final PlaceholderResolver placeholderResolver;
     private final PropertyStore propertyStore;
     private final HtmlLinkExtractor linkExtractor = new HtmlLinkExtractor();
 
-    public PropertySteps(PropertyStore propertyStore) {
+    public PropertySteps(PropertyStore propertyStore, PlaceholderResolver placeholderResolver) {
         this.propertyStore = propertyStore;
+        this.placeholderResolver = placeholderResolver;
     }
 
 
@@ -66,7 +68,8 @@ public class PropertySteps {
     @Given("^" + Phrases.SUBJECT + " store" + Phrases.OPTIONAL_PLURAL + " (.+) as " +
             Phrases.PROPERTY_KEY + "$")
     public void storeProperty(String value, String key) {
-        propertyStore.put(key, value);
+        String resolvedValue = placeholderResolver.resolve(value);
+        propertyStore.put(key, resolvedValue);
     }
 
     @Given("^" + Phrases.SUBJECT + " hash(?:es)? (.+) (?:using Blowfish |using BCrypt )?and stores it as " +

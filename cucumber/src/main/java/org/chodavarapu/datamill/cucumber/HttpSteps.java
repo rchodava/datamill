@@ -103,6 +103,16 @@ public class HttpSteps {
         assertFalse(Strings.isNullOrEmpty(responseEntity));
     }
 
+    @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response with " + Phrases.HTTP_BODY + " containing \"(.+)\"$")
+    public void assertStatusAndResponseWithContent(int statusCode, String expectedContent) {
+        assertStatus(statusCode);
+
+        String responseEntity = (String) propertyStore.get(LAST_RESPONSE_BODY_KEY);
+
+        String resolvedExpectedContent = placeholderResolver.resolve(expectedContent);
+        assertTrue(responseEntity.contains(resolvedExpectedContent));
+    }
+
     @Then("^" + Phrases.SUBJECT + " should get a (\\d+) response$")
     public void assertStatus(int statusCode) {
         Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
@@ -146,6 +156,12 @@ public class HttpSteps {
     public void addValueToHeader(String headerKey, String value) {
         Map<String, String> headers = initAndGetHeaders();
         headers.put(headerKey, placeholderResolver.resolve(value));
+    }
+
+    @And("^the request header (.+) is removed$")
+    public void removeHeader(String header) {
+        Map<String, String> headers = initAndGetHeaders();
+        headers.remove(header);
     }
 
     public Status getLastResponseStatus() {

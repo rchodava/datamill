@@ -12,13 +12,15 @@ import static org.junit.Assert.assertTrue;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class PropertyStepsTest {
+    private PlaceholderResolver resolver;
     private PropertyStore store;
     private PropertySteps steps;
 
     @Before
     public void setUp() {
         store = new PropertyStore();
-        steps = new PropertySteps(store);
+        resolver = new PlaceholderResolver(store);
+        steps = new PropertySteps(store, resolver);
     }
 
     @Test
@@ -51,5 +53,8 @@ public class PropertyStepsTest {
         assertEquals("value", store.get("test"));
         steps.removeProperty("test");
         assertNull(store.get("test"));
+        store.put("property1", "value1");
+        steps.storeProperty("{property1}", "test2");
+        assertEquals("value1", store.get("test2"));
     }
 }
