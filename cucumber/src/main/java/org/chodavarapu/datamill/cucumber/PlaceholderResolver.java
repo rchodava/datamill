@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.functions.Func1;
 
+import java.util.Base64;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.regex.Matcher;
@@ -21,6 +22,7 @@ public class PlaceholderResolver {
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^\\}]+)\\}");
     private static final String RANDOM_ALPHANUMERIC_PLACEHOLDER_PREFIX = "randomAlphanumeric";
     private static final String HASHED_PLACEHOLDER_PREFIX = "blowfish:";
+    private static final String BASE64_PLACEHOLDER_PREFIX = "base64:";
     private static final String DATE_FORMATTER_PLACEHOLDER_PREFIX = "currentTime:";
 
     private final PropertyStore propertyStore;
@@ -86,7 +88,28 @@ public class PlaceholderResolver {
     private String resolveHashedPasswordPlaceholder(String key) {
         if (key.startsWith(HASHED_PLACEHOLDER_PREFIX)) {
             key = key.substring(HASHED_PLACEHOLDER_PREFIX.length());
+
+            String resolved = resolvePlaceholder(key);
+            if (resolved != null) {
+                key = resolved;
+            }
+
             return BCrypt.hashpw(key, BCrypt.gensalt());
+        }
+
+        return null;
+    }
+
+    private String resolveBase64Placeholder(String key) {
+        if (key.startsWith(BASE64_PLACEHOLDER_PREFIX)) {
+            key = key.substring(BASE64_PLACEHOLDER_PREFIX.length());
+
+            String resolved = resolvePlaceholder(key);
+            if (resolved != null) {
+                key = resolved;
+            }
+
+            return new String(Base64.getEncoder().encode(key.getBytes()));
         }
 
         return null;
@@ -113,6 +136,11 @@ public class PlaceholderResolver {
         }
 
         value = resolveHashedPasswordPlaceholder(key);
+        if (value != null) {
+            return value;
+        }
+
+        value = resolveBase64Placeholder(key);
         if (value != null) {
             return value;
         }

@@ -158,6 +158,12 @@ public class HttpSteps {
         headers.put(headerKey, placeholderResolver.resolve(value));
     }
 
+    @And("^the request header (.+) is removed$")
+    public void removeHeader(String header) {
+        Map<String, String> headers = initAndGetHeaders();
+        headers.remove(header);
+    }
+
     public Status getLastResponseStatus() {
         Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
         return storedResponse.status();

@@ -25,6 +25,7 @@ import static org.chodavarapu.datamill.cucumber.HttpSteps.LAST_RESPONSE_BODY_KEY
 import static org.chodavarapu.datamill.cucumber.HttpSteps.RESPONSE_KEY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertNull;
 
 
 /**
@@ -147,6 +148,19 @@ public class HttpStepsTest {
         httpSteps.addValueToHeader(STORE_KEY, HEADER_VALUE);
 
         assertThat(((Map<String, String>) propertyStore.get(HEADER_KEY)).get(STORE_KEY), is(HEADER_VALUE));
+    }
+
+    @Test
+    public void removeHeader_worksAsExpected() {
+        prepareResponse(Status.OK, EXPECTED_JSON);
+
+        final String inputJson = "{ \"input\" : \"json\"}";
+        httpSteps.userMakesCallWithProvidedPayload(Method.POST, String.format(URI, serverPort, "test/post"), inputJson);
+
+        httpSteps.addValueToHeader(STORE_KEY, HEADER_VALUE);
+        httpSteps.removeHeader(STORE_KEY);
+
+        assertNull(((Map<String, String>) propertyStore.get(HEADER_KEY)).get(STORE_KEY));
     }
 
     @Test
