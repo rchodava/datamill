@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.functions.Func1;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +21,7 @@ public class PlaceholderResolver {
     private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("\\{([^\\}]+)\\}");
     private static final String RANDOM_ALPHANUMERIC_PLACEHOLDER_PREFIX = "randomAlphanumeric";
     private static final String HASHED_PLACEHOLDER_PREFIX = "blowfish:";
+    private static final String DATE_FORMATTER_PLACEHOLDER_PREFIX = "currentTime:";
 
     private final PropertyStore propertyStore;
 
@@ -89,6 +92,15 @@ public class PlaceholderResolver {
         return null;
     }
 
+    private String resolveDateFormatterPlaceholder(String key) {
+        if (key.startsWith(DATE_FORMATTER_PLACEHOLDER_PREFIX)) {
+            key = key.substring(DATE_FORMATTER_PLACEHOLDER_PREFIX.length());
+            return new SimpleDateFormat(key).format(Calendar.getInstance().getTime());
+        }
+
+        return null;
+    }
+
     private String resolvePlaceholder(String key) {
         String value = findPropertyInStore(key);
         if (value != null) {
@@ -101,6 +113,11 @@ public class PlaceholderResolver {
         }
 
         value = resolveHashedPasswordPlaceholder(key);
+        if (value != null) {
+            return value;
+        }
+
+        value = resolveDateFormatterPlaceholder(key);
         if (value != null) {
             return value;
         }
