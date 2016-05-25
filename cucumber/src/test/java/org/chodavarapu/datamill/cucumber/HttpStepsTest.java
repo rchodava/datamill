@@ -162,16 +162,26 @@ public class HttpStepsTest {
         assertResponse(EXPECTED_JSON, responseHeaders);
     }
 
+    @Test
+    public void getLastResponseStatus_worksAsExpected() {
+        prepareResponse(Status.OK, EXPECTED_JSON, null);
+
+        final String inputJson = "{ \"input\" : \"json\"}";
+        httpSteps.userMakesCallWithProvidedPayload(Method.POST, String.format(URI, serverPort, "test/post"), inputJson);
+
+        assertThat(httpSteps.getLastResponseStatus(), is(Status.OK));
+    }
+
     private void prepareResponse(Status status, String expectedJson) {
         prepareResponse(status, expectedJson, Collections.emptyMap());
     }
 
     private void prepareResponse(Status status, String expectedJson, Map<String, String> headers) {
         if (expectedJson == null) {
-            reponse = new ResponseImpl(status, headers, null);
+            reponse = new ResponseImpl(status, headers == null ? Collections.emptyMap() : headers, null);
         }
         else {
-            reponse = new ResponseImpl(status, headers, new InputStreamEntity(new ByteArrayInputStream(expectedJson.getBytes())));
+            reponse = new ResponseImpl(status, headers == null ? Collections.emptyMap() : headers, new InputStreamEntity(new ByteArrayInputStream(expectedJson.getBytes())));
         }
         testController.setResponse(reponse);
     }

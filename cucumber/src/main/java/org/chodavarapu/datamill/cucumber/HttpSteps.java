@@ -8,6 +8,7 @@ import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import org.chodavarapu.datamill.http.Method;
 import org.chodavarapu.datamill.http.Response;
+import org.chodavarapu.datamill.http.Status;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -145,6 +146,11 @@ public class HttpSteps {
     public void addValueToHeader(String headerKey, String value) {
         Map<String, String> headers = initAndGetHeaders();
         headers.put(headerKey, placeholderResolver.resolve(value));
+    }
+
+    public Status getLastResponseStatus() {
+        Response storedResponse = (Response) propertyStore.get(RESPONSE_KEY);
+        return storedResponse.status();
     }
 
     private Map<String, String> initAndGetHeaders() {

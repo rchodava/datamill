@@ -29,9 +29,8 @@ public class PropertyStore {
         return store.get(key);
     }
 
-    public void clear() {
-        logger.debug("Clearing property store");
-        store.clear();
+    public boolean contains(String key) {
+        return store.containsKey(key);
     }
 
     public Collection<Object> values() {
