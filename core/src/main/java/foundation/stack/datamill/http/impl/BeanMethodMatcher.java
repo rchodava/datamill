@@ -5,6 +5,7 @@ import foundation.stack.datamill.http.Route;
 import foundation.stack.datamill.http.ServerRequest;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.reflection.Bean;
+import foundation.stack.datamill.reflection.Method;
 import foundation.stack.datamill.reflection.Outline;
 import rx.Observable;
 

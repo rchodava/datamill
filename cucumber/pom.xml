@@ -3,9 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.chodavarapu.datamill</groupId>
-        <artifactId>datamill</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <groupId>foundation.stack.datamill</groupId>
+        <artifactId>parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../parent</relativePath>
     </parent>
 
     <artifactId>cucumber</artifactId>
@@ -14,44 +15,38 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.chodavarapu.datamill</groupId>
+            <groupId>foundation.stack.datamill</groupId>
             <artifactId>core</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.16</version>
         </dependency>
         <dependency>
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-java</artifactId>
-            <version>1.2.4</version>
         </dependency>
         <dependency>
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-picocontainer</artifactId>
-            <version>1.2.4</version>
         </dependency>
         <dependency>
             <groupId>com.jayway.jsonpath</groupId>
             <artifactId>json-path</artifactId>
-            <version>2.2.0</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.12</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.subethamail</groupId>
             <artifactId>subethasmtp</artifactId>
-            <version>3.1.7</version>
         </dependency>
         <dependency>
             <groupId>org.hsqldb</groupId>
             <artifactId>hsqldb</artifactId>
-            <version>2.3.3</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
