@@ -8,6 +8,8 @@
     <packaging>pom</packaging>
 
     <name>datamill Dependency Management Parent</name>
+    <url>https://github.com/rchodava/datamill</url>
+    <description>A Java framework for web applications using a functional reactive style built on RxJava</description>
 
     <developers>
         <developer>

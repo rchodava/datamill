@@ -10,7 +10,10 @@
 
     <artifactId>cucumber</artifactId>
     <packaging>jar</packaging>
+
     <name>datamill Cucumber Integration</name>
+    <url>https://github.com/rchodava/datamill</url>
+    <description>A Java framework for web applications using a functional reactive style built on RxJava</description>
 
     <dependencies>
         <dependency>
