@@ -4,7 +4,7 @@
     <parent>
         <groupId>foundation.stack.datamill</groupId>
         <artifactId>parent</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.1.0</version>
         <relativePath>../parent</relativePath>
     </parent>
 
@@ -19,7 +19,7 @@
         <dependency>
             <groupId>foundation.stack.datamill</groupId>
             <artifactId>core</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
