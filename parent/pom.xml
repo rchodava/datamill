@@ -35,7 +35,7 @@
     <scm>
         <connection>scm:git:https://github.com/rchodava/datamill</connection>
         <developerConnection>scm:git:https://github.com/rchodava/datamill</developerConnection>
-        <url>https://github.com/path_to_repository</url>
+        <url>https://github.com/rchodava/datamill</url>
     </scm>
 
     <distributionManagement>
