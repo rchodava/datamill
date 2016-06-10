@@ -33,9 +33,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com:rchodava/datamill.git</connection>
-        <developerConnection>scm:git:git@github.com:rchodava/datamill.git</developerConnection>
-        <url>git@github.com:rchodava/datamill.git</url>
+        <connection>scm:git:https://github.com/rchodava/datamill</connection>
+        <developerConnection>scm:git:https://github.com/rchodava/datamill</developerConnection>
+        <url>https://github.com/path_to_repository</url>
     </scm>
 
     <distributionManagement>
