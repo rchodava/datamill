@@ -7,4 +7,6 @@ whose function and effect are hidden within complex framework code and documenta
 specify how data flows through your application, and how to modify that data as it does. And you do so using the simple
 style that RxJava allows.
 
+datamill is still in an early stage of development but we use it to build several large web applications we're working on. While we find it a joy to work with, we expect some issues may crop up, and some things will change.
+
 Check out our [Developer Guide](https://github.com/rchodava/datamill/wiki/Developer-Guide) to get started!
