@@ -10,3 +10,5 @@ style that RxJava allows.
 datamill is still in an early stage of development but we use it to build several large web applications we're working on. While we find it a joy to work with, we expect some issues may crop up, and some things will change.
 
 Check out our [Developer Guide](https://github.com/rchodava/datamill/wiki/Developer-Guide) to get started!
+
+We've also published an [introductory blog post](https://stacksandfoundations.wordpress.com/2016/06/09/a-functional-reactive-java-web-framework/).
