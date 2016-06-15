@@ -80,6 +80,12 @@ public class ConfigurationBuilder<T> {
         return this;
     }
 
+    public <P> ConfigurationBuilder<T> fromOptionalSystemProperty(Consumer<T> propertyInvoker, String name,
+                                                                  Func1<String, P> derivation) {
+        return fromSystemProperty(propertyInvoker, name, derivation, false);
+    }
+
+
     public <P> ConfigurationBuilder<T> fromRequiredSystemProperty(Consumer<T> propertyInvoker, String name,
                                                                   Func1<String, P> derivation) {
         return fromSystemProperty(propertyInvoker, name, derivation, true);
