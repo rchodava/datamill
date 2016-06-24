@@ -3,6 +3,7 @@ package foundation.stack.datamill.http.impl;
 import foundation.stack.datamill.http.Method;
 import foundation.stack.datamill.http.Request;
 import foundation.stack.datamill.http.RequestHeader;
+import foundation.stack.datamill.json.JsonArray;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import foundation.stack.datamill.json.JsonObject;
 import org.junit.Test;
@@ -51,6 +52,12 @@ public class RequestBuilderImplTest {
                         })
                 .map(stream -> stream.toByteArray())
                 .toBlocking().last())).get("name").asString());
+
+        request = new RequestBuilderImpl()
+                .entity(new JsonArray("[{\"name\" : \"value\"}]"))
+                .build();
+
+        assertEquals("value", request.entity().asJsonFromArray().toBlocking().last().get("name").asString());
     }
 
     @Test
