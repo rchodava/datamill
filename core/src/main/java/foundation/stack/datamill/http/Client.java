@@ -74,7 +74,7 @@ public class Client {
             Map<String, ?> options,
             Entity entity) {
 
-        if (uriParameters != null && uriParameters.size() > 0) {
+        if (uriParameters != null && !uriParameters.isEmpty()) {
             uri = templateBasedUriBuilder.build(uri, uriParameters);
         }
 
@@ -190,7 +190,7 @@ public class Client {
     }
 
     private void setRequestOptions(HttpUriRequest request, Map<String, ?> options) {
-        if (options != null && options.size() > 0) {
+        if (options != null && !options.isEmpty()) {
             Object connectTimeout = options.get(Request.OPTION_CONNECT_TIMEOUT);
             if (connectTimeout instanceof Integer) {
                 RequestConfig requestConfig = RequestConfig.custom()
@@ -233,7 +233,7 @@ public class Client {
     }
 
     private URI appendQueryParameters(URIBuilder uriBuilder, Multimap<String, String> queryParameters) throws URISyntaxException {
-        if (queryParameters != null && queryParameters.size() > 0) {
+        if (queryParameters != null && !queryParameters.isEmpty()) {
             queryParameters.entries().stream().forEach(entry -> {
                 try {
                     uriBuilder.setParameter(URLEncoder.encode(entry.getKey(), "UTF-8"), entry.getValue());

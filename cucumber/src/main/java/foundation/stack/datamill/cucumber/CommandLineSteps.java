@@ -186,7 +186,7 @@ public class CommandLineSteps {
                         resolvedFile.exists());
             }
         } else {
-            if (names.size() > 0) {
+            if (!names.isEmpty()) {
                 fail("A temporary directory was not created to verify the existence of any files!");
             }
         }

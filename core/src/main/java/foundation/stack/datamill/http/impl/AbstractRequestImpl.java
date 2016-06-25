@@ -18,7 +18,7 @@ public abstract class AbstractRequestImpl implements Request {
     protected static Value firstValue(Multimap<String, String> entries, String name) {
         if (entries != null) {
             Collection<String> values = entries.get(name);
-            if (values.size() > 0) {
+            if (!values.isEmpty()) {
                 return new StringValue(values.iterator().next());
             }
         }

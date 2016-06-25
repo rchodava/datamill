@@ -224,7 +224,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
         @Override
         public UpdateQueryExecution onDuplicateKeyUpdate(Map<String, ?> values) {
-            if (values.size() > 0) {
+            if (!values.isEmpty()) {
                 query.append(SQL_ON_DUPLICATE_KEY_UPDATE);
                 appendUpdateAssignments(query, parameters, values);
             }
@@ -281,7 +281,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
         @Override
         public Observable<Row> all() {
-            if (parameters.size() > 0) {
+            if (!parameters.isEmpty()) {
                 return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
             } else {
                 return QueryBuilderImpl.this.query(query.toString());
