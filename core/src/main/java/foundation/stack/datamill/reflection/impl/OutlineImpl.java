@@ -151,7 +151,7 @@ public class OutlineImpl<T> implements Outline<T> {
     private static Method OBJECT_GET_CLASS_METHOD;
 
     private static String capitalize(String string) {
-        if (string != null && string.length() > 0) {
+        if (string != null && !string.isEmpty()) {
             return Character.toUpperCase(string.charAt(0)) + string.substring(1);
         }
 

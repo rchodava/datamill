@@ -152,7 +152,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
             response.headers().setInt(HttpHeaderNames.CONTENT_LENGTH, contentLength);
         }
 
-        if (headers != null && headers.size() > 0) {
+        if (headers != null && !headers.isEmpty()) {
             for (Map.Entry<String, String> header : headers.entries()) {
                 response.headers().add(header.getKey(), header.getValue());
             }

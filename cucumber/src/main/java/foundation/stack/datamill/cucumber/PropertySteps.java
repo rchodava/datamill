@@ -29,7 +29,7 @@ public class PropertySteps {
         String html = (String) propertyStore.get(htmlKey);
         List<HtmlLinkExtractor.HtmlLink> links = linkExtractor.extractLinks(html);
 
-        if (links.size() > 0) {
+        if (!links.isEmpty()) {
             propertyStore.put(propertyKey, links.get(0).getLinkTarget());
         } else {
             fail("Could not find any links in stored HTML!");

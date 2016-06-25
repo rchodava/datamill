@@ -125,7 +125,7 @@ public class BeanMethodMatcher implements Matcher {
             }
         }
 
-        if (methods.size() > 0) {
+        if (!methods.isEmpty()) {
             return methods;
         }
 

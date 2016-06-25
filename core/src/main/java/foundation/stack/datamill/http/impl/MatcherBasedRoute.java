@@ -46,7 +46,7 @@ public class MatcherBasedRoute implements PostProcessedRoute {
                 }
             }
 
-            if (availableMethods.size() > 0) {
+            if (!availableMethods.isEmpty()) {
                 return request.respond(b ->
                         b.header("Access-Control-Allow-Methods", Joiner.on(',').join(availableMethods))
                         .ok())
