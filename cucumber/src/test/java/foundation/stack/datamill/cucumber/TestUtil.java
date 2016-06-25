@@ -8,6 +8,9 @@ import java.net.ServerSocket;
  */
 public class TestUtil {
 
+    private TestUtil() {
+    }
+
     public static Integer findRandomPort(int defaultPort)  {
         try {
             try (ServerSocket socket = new ServerSocket(0)) {

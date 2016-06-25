@@ -5,6 +5,9 @@ package foundation.stack.datamill.configuration;
  */
 public class SystemPropertyRetriever {
 
+    private SystemPropertyRetriever() {
+    }
+
     public static String getSystemProperty(String name, boolean required) {
         String value = System.getProperty(name);
 

@@ -15,6 +15,9 @@ import java.util.concurrent.ExecutorService;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestBuilder {
+    private ServerRequestBuilder() {
+    }
+
     public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<byte[]> entityStream, ExecutorService threadPool) {
         Charset messageCharset = HttpUtil.getCharset(request);
         return new ServerRequestImpl(
