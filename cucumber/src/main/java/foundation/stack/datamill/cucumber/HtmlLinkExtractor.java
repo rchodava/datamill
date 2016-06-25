@@ -1,5 +1,6 @@
 package foundation.stack.datamill.cucumber;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -25,7 +26,7 @@ public class HtmlLinkExtractor {
 
     public List<HtmlLink> extractLinks(final String html) {
 
-        Vector<HtmlLink> result = new Vector<HtmlLink>();
+        List<HtmlLink> result = new ArrayList<>();
 
         matcherTag = patternTag.matcher(html);
 
