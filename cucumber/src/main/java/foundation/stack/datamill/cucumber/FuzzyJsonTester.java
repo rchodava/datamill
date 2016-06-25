@@ -14,6 +14,9 @@ public class FuzzyJsonTester {
     private static final String ANY_VALUE = "*";
     private static final Logger logger = LoggerFactory.getLogger(FuzzyJsonTester.class);
 
+    private FuzzyJsonTester() {
+    }
+
     private static boolean areJsonObjectsSimilarEnough(JsonObject expected, JsonObject actual) {
         if (!actual.propertyNames().containsAll(expected.propertyNames())) {
             return false;

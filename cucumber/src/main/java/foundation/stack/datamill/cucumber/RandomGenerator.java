@@ -12,6 +12,9 @@ public class RandomGenerator {
             'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_'};
 
+    private RandomGenerator() {
+    }
+
     public static String generateRandomAlphanumeric(int length) {
         StringBuilder name = new StringBuilder("n");
         for (int i = 0; i < length - 2; i++) {

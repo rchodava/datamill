@@ -7,6 +7,9 @@ import java.time.temporal.Temporal;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Times {
+    private Times() {
+    }
+
     public static long toEpochMillis(Temporal temporal) {
         if (temporal instanceof LocalDate) {
             return ((LocalDate) temporal).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();

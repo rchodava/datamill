@@ -9,6 +9,9 @@ import org.jose4j.lang.ByteUtil;
  */
 public interface KeyGenerators {
     class Symmetric {
+        private Symmetric() {
+        }
+
         public static void main(String[] arguments) throws Exception {
             byte[] bytes = ByteUtil.randomBytes(ByteUtil.byteLength(512));
             OctetSequenceJsonWebKey key = new OctetSequenceJsonWebKey(new HmacKey(bytes));
@@ -18,6 +21,9 @@ public interface KeyGenerators {
     }
 
     class RSA {
+        private RSA() {
+        }
+
         public static void main(String[] arguments) throws Exception {
             RsaJsonWebKey key = RsaJwkGenerator.generateJwk(2048);
             key.setKeyId("k" + System.currentTimeMillis());
