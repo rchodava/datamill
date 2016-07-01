@@ -45,7 +45,7 @@ public class ConfigurationBuilder<T> {
     public ConfigurationBuilder<T> ifSystemPropertyExists(String name,
                                                           Consumer<ConfigurationBuilder<T>> configuration,
                                                           Consumer<ConfigurationBuilder<T>> elseConfiguration) {
-        String value = System.getProperty(name);
+        String value = getSystemProperty(name, false);
 
         if (value == null) {
             value = System.getenv(name);
