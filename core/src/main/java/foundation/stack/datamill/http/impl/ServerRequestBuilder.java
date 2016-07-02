@@ -7,6 +7,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpUtil;
 import rx.Observable;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -18,14 +19,14 @@ public class ServerRequestBuilder {
     private ServerRequestBuilder() {
     }
 
-    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<byte[]> entityStream, ExecutorService threadPool) {
+    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<ByteBuffer> bodyStream, ExecutorService threadPool) {
         Charset messageCharset = HttpUtil.getCharset(request);
         return new ServerRequestImpl(
                 request.method().name(),
                 buildHeadersMap(request.headers()),
                 request.uri(),
                 messageCharset,
-                new StreamedChunksEntity(entityStream, messageCharset),
+                new StreamedChunksBody(bodyStream, messageCharset),
                 threadPool);
     }
 

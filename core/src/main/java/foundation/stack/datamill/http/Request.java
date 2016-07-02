@@ -11,7 +11,7 @@ import java.util.Map;
 public interface Request {
     String OPTION_CONNECT_TIMEOUT = "connectTimeout";
 
-    Entity entity();
+    Body body();
 
     Multimap<String, String> headers();
 

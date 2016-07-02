@@ -92,7 +92,7 @@ public class ClientToServerChannelHandlerTest {
         verify(route).apply(requestCaptor.capture());
 
         ServerRequest appliedRequest = requestCaptor.getValue();
-        assertEquals("Test Content", appliedRequest.entity().asString().toBlocking().last());
+        assertEquals("Test Content", appliedRequest.body().asString().toBlocking().last());
     }
 
     @Test
@@ -120,7 +120,7 @@ public class ClientToServerChannelHandlerTest {
         verify(route).apply(requestCaptor.capture());
 
         ServerRequest appliedRequest = requestCaptor.getValue();
-        assertEquals("Test Content Additional Content", appliedRequest.entity().asString().toBlocking().last());
+        assertEquals("Test Content Additional Content", appliedRequest.body().asString().toBlocking().last());
     }
 
     @Test

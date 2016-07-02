@@ -1,17 +1,24 @@
 package foundation.stack.datamill.http.impl;
 
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.json.JsonObject;
 import rx.Observable;
+
+import java.nio.ByteBuffer;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class BytesEntity implements Entity {
+public class BytesBody implements Body {
     private byte[] bytes;
 
-    public BytesEntity(byte[] bytes) {
+    public BytesBody(byte[] bytes) {
         this.bytes = bytes;
+    }
+
+    @Override
+    public Observable<ByteBuffer> asBufferChunks() {
+        return asChunks().map(bytes -> ByteBuffer.wrap(bytes));
     }
 
     @Override

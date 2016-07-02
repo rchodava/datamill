@@ -4,7 +4,6 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -12,14 +11,12 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class InputStreamEntityTest {
+public class BytesBodyTest {
     @Test
-    public void entityStreaming() {
-        assertEquals("test", new InputStreamEntity(new ByteArrayInputStream("test".getBytes()))
-                .asString().toBlocking().last());
-        assertEquals("test", new String(new InputStreamEntity(new ByteArrayInputStream("test".getBytes()))
-                .asBytes().toBlocking().last()));
-        assertEquals("test", new String(new InputStreamEntity(new ByteArrayInputStream("test".getBytes()))
+    public void entityTests() {
+        assertEquals("test", new BytesBody("test".getBytes()).asString().toBlocking().last());
+        assertEquals("test", new String(new BytesBody("test".getBytes()).asBytes().toBlocking().last()));
+        assertEquals("test", new String(new BytesBody("test".getBytes())
                 .asChunks()
                 .collect(
                         () -> new ByteArrayOutputStream(),
@@ -30,7 +27,7 @@ public class InputStreamEntityTest {
                             }
                         })
                 .map(stream -> stream.toByteArray()).toBlocking().last()));
-        Assert.assertEquals("value", new InputStreamEntity(new ByteArrayInputStream("{\"name\":\"value\"}".getBytes()))
+        Assert.assertEquals("value", new BytesBody("{\"name\":\"value\"}".getBytes())
                 .asJson().toBlocking().last().get("name").asString());
     }
 }

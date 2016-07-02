@@ -2,8 +2,8 @@ package foundation.stack.datamill.http;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import foundation.stack.datamill.http.impl.InputStreamEntity;
-import foundation.stack.datamill.http.impl.ValueEntity;
+import foundation.stack.datamill.http.impl.InputStreamBody;
+import foundation.stack.datamill.http.impl.ValueBody;
 import org.apache.http.Header;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -22,7 +22,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import foundation.stack.datamill.http.impl.EmptyEntity;
+import foundation.stack.datamill.http.impl.EmptyBody;
 import foundation.stack.datamill.http.impl.RequestBuilderImpl;
 import foundation.stack.datamill.http.impl.ResponseImpl;
 import foundation.stack.datamill.http.impl.TemplateBasedUriBuilder;
@@ -54,15 +54,15 @@ public class Client {
     public Observable<Response> request(Function<RequestBuilder, Request> builder) {
         Request request = builder.apply(new RequestBuilderImpl());
         return request(request.method(), request.headers(), request.uri(), request.uriParameters(),
-                request.queryParameters(), request.options(), request.entity());
+                request.queryParameters(), request.options(), request.body());
     }
 
     public Observable<Response> request(Method method, Map<String, String> headers, String uri, Value entity) {
-        return request(method, headers, uri, new ValueEntity(entity));
+        return request(method, headers, uri, new ValueBody(entity));
     }
 
-    public Observable<Response> request(Method method, Map<String, String> headers, String uri, Entity entity) {
-        return request(method, headers != null ? Multimaps.forMap(headers) : null, uri, null, null, null, entity);
+    public Observable<Response> request(Method method, Map<String, String> headers, String uri, Body body) {
+        return request(method, headers != null ? Multimaps.forMap(headers) : null, uri, null, null, null, body);
     }
 
     public Observable<Response> request(
@@ -72,7 +72,7 @@ public class Client {
             Map<String, String> uriParameters,
             Multimap<String, String> queryParameters,
             Map<String, ?> options,
-            Entity entity) {
+            Body body) {
 
         if (uriParameters != null && !uriParameters.isEmpty()) {
             uri = templateBasedUriBuilder.build(uri, uriParameters);
@@ -97,8 +97,8 @@ public class Client {
 
             CloseableHttpResponse httpResponse = null;
 
-            if (entity != null) {
-                httpResponse = doWithEntity(entity, httpClient, request);
+            if (body != null) {
+                httpResponse = doWithEntity(body, httpClient, request);
             } else {
                 httpResponse = doExecute(httpClient, request);
             }
@@ -112,9 +112,9 @@ public class Client {
         }, Schedulers.io());
     }
 
-    private Entity buildResponseEntity(CloseableHttpResponse finalResponse, CloseableHttpClient httpClient) throws IOException {
+    private Body buildResponseEntity(CloseableHttpResponse finalResponse, CloseableHttpClient httpClient) throws IOException {
         if (finalResponse != null && finalResponse.getEntity() != null) {
-            return new InputStreamEntity(finalResponse.getEntity().getContent(), () -> {
+            return new InputStreamBody(finalResponse.getEntity().getContent(), () -> {
                 try {
                     finalResponse.close();
                 } catch (IOException e) {
@@ -131,13 +131,13 @@ public class Client {
             });
         }
         else {
-            return new EmptyEntity();
+            return new EmptyBody();
         }
     }
 
-    private CloseableHttpResponse doWithEntity(Entity entity, CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
+    private CloseableHttpResponse doWithEntity(Body body, CloseableHttpClient httpClient, HttpUriRequest request) throws IOException {
         if (!(request instanceof HttpEntityEnclosingRequestBase)) {
-            throw new IllegalArgumentException("Expecting to write an entity for a request type that does not support it!");
+            throw new IllegalArgumentException("Expecting to write an body for a request type that does not support it!");
         }
 
         PipedOutputStream pipedOutputStream = buildPipedOutputStream();
@@ -149,7 +149,7 @@ public class Client {
         httpEntity.setContent(pipedInputStream);
         ((HttpEntityEnclosingRequestBase) request).setEntity(httpEntity);
 
-        writeEntityOutOverConnection(entity, pipedOutputStream);
+        writeEntityOutOverConnection(body, pipedOutputStream);
 
         return doExecute(httpClient, request);
     }
@@ -244,13 +244,13 @@ public class Client {
         return uriBuilder.build();
     }
 
-    private void writeEntityOutOverConnection(Entity entity, PipedOutputStream pipedOutputStream) throws IOException {
-        entity.asChunks().observeOn(Schedulers.io())
+    private void writeEntityOutOverConnection(Body body, PipedOutputStream pipedOutputStream) throws IOException {
+        body.asChunks().observeOn(Schedulers.io())
                 .doOnNext(bytes -> {
                     try {
                         pipedOutputStream.write(bytes);
                     } catch (IOException e) {
-                        throw new HttpException("Error writing entity!", e);
+                        throw new HttpException("Error writing body!", e);
                     }
                 })
                 .doOnCompleted(() -> {
@@ -277,7 +277,7 @@ public class Client {
     }
 
     public Observable<Response> delete(String uri, Map<String, String> headers) {
-        return request(Method.DELETE, headers, uri, (Entity) null);
+        return request(Method.DELETE, headers, uri, (Body) null);
     }
 
 
@@ -290,7 +290,7 @@ public class Client {
     }
 
     public Observable<Response> get(String uri, Map<String, String> headers) {
-        return request(Method.GET, headers, uri, (Entity) null);
+        return request(Method.GET, headers, uri, (Body) null);
     }
 
 
@@ -298,16 +298,16 @@ public class Client {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.GET)));
     }
 
-    public Observable<Response> patch(String uri, Entity entity) {
-        return patch(uri, null, entity);
+    public Observable<Response> patch(String uri, Body body) {
+        return patch(uri, null, body);
     }
 
     public Observable<Response> patch(String uri, Value entity) {
         return patch(uri, null, entity);
     }
 
-    public Observable<Response> patch(String uri, Map<String, String> headers, Entity entity) {
-        return request(Method.PATCH, headers, uri, entity);
+    public Observable<Response> patch(String uri, Map<String, String> headers, Body body) {
+        return request(Method.PATCH, headers, uri, body);
     }
 
     public Observable<Response> patch(String uri, Map<String, String> headers, Value entity) {
@@ -318,16 +318,16 @@ public class Client {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.PATCH)));
     }
 
-    public Observable<Response> post(String uri, Entity entity) {
-        return post(uri, null, entity);
+    public Observable<Response> post(String uri, Body body) {
+        return post(uri, null, body);
     }
 
     public Observable<Response> post(String uri, Value entity) {
         return post(uri, null, entity);
     }
 
-    public Observable<Response> post(String uri, Map<String, String> headers, Entity entity) {
-        return request(Method.POST, headers, uri, entity);
+    public Observable<Response> post(String uri, Map<String, String> headers, Body body) {
+        return request(Method.POST, headers, uri, body);
     }
 
     public Observable<Response> post(String uri, Map<String, String> headers, Value entity) {
@@ -338,16 +338,16 @@ public class Client {
         return request(requestBuilder -> builder.apply(requestBuilder.method(Method.POST)));
     }
 
-    public Observable<Response> put(String uri, Entity entity) {
-        return put(uri, null, entity);
+    public Observable<Response> put(String uri, Body body) {
+        return put(uri, null, body);
     }
 
     public Observable<Response> put(String uri, Value entity) {
         return put(uri, null, entity);
     }
 
-    public Observable<Response> put(String uri, Map<String, String> headers, Entity entity) {
-        return request(Method.PUT, headers, uri, entity);
+    public Observable<Response> put(String uri, Map<String, String> headers, Body body) {
+        return request(Method.PUT, headers, uri, body);
     }
 
     public Observable<Response> put(String uri, Map<String, String> headers, Value entity) {

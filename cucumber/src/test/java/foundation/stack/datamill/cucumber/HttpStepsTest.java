@@ -9,7 +9,7 @@ import foundation.stack.datamill.http.Status;
 import foundation.stack.datamill.http.annotations.GET;
 import foundation.stack.datamill.http.annotations.POST;
 import foundation.stack.datamill.http.annotations.Path;
-import foundation.stack.datamill.http.impl.InputStreamEntity;
+import foundation.stack.datamill.http.impl.InputStreamBody;
 import foundation.stack.datamill.http.impl.ResponseImpl;
 import foundation.stack.datamill.reflection.OutlineBuilder;
 import org.junit.Before;
@@ -195,7 +195,7 @@ public class HttpStepsTest {
             reponse = new ResponseImpl(status, headers == null ? Collections.emptyMap() : headers, null);
         }
         else {
-            reponse = new ResponseImpl(status, headers == null ? Collections.emptyMap() : headers, new InputStreamEntity(new ByteArrayInputStream(expectedJson.getBytes())));
+            reponse = new ResponseImpl(status, headers == null ? Collections.emptyMap() : headers, new InputStreamBody(new ByteArrayInputStream(expectedJson.getBytes())));
         }
         testController.setResponse(reponse);
     }

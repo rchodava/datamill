@@ -1,7 +1,7 @@
 package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.Multimap;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.Method;
 import foundation.stack.datamill.http.Request;
 import foundation.stack.datamill.http.RequestHeader;
@@ -30,18 +30,18 @@ public abstract class AbstractRequestImpl implements Request {
     private final String method;
     private final String uri;
     private Map<String, String> uriParameters;
-    private final Entity entity;
+    private final Body body;
 
-    protected AbstractRequestImpl(String method, Multimap<String, String> headers, String uri, Entity entity) {
+    protected AbstractRequestImpl(String method, Multimap<String, String> headers, String uri, Body body) {
         this.method = method;
         this.headers = headers;
         this.uri = uri;
-        this.entity = entity;
+        this.body = body;
     }
 
     @Override
-    public Entity entity() {
-        return entity;
+    public Body body() {
+        return body;
     }
 
     @Override

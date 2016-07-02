@@ -1,18 +1,20 @@
 package foundation.stack.datamill.http.impl;
 
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.HttpException;
-import foundation.stack.datamill.http.Entity;
 import foundation.stack.datamill.json.JsonObject;
 import foundation.stack.datamill.values.Value;
 import rx.Observable;
 
+import java.nio.ByteBuffer;
+
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class ValueEntity implements Entity {
+public class ValueBody implements Body {
     private Value value;
 
-    public ValueEntity(Value value) {
+    public ValueBody(Value value) {
         this.value = value;
     }
 
@@ -24,6 +26,11 @@ public class ValueEntity implements Entity {
     @Override
     public Observable<byte[]> asChunks() {
         return asBytes();
+    }
+
+    @Override
+    public Observable<ByteBuffer> asBufferChunks() {
+        return asBytes().map(bytes -> ByteBuffer.wrap(bytes));
     }
 
     @Override

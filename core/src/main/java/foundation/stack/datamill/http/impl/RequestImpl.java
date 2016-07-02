@@ -1,7 +1,7 @@
 package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.Multimap;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 
 import java.util.Map;
 
@@ -20,8 +20,8 @@ public class RequestImpl extends AbstractRequestImpl {
             Multimap<String, String> queryParameters,
             Map<String, String> uriParameters,
             Map<String, Object> options,
-            Entity entity) {
-        super(method, headers, uri, entity);
+            Body body) {
+        super(method, headers, uri, body);
 
         this.queryParameters = queryParameters;
         this.options = options;

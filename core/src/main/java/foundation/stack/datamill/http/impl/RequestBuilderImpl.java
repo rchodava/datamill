@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class RequestBuilderImpl implements RequestBuilder {
-    private Entity entity;
+    private Body body;
     private final Multimap<String, String> headers = LinkedListMultimap.create();
     private String method;
     private final Map<String, Object> options = new HashMap<>();
@@ -22,7 +22,7 @@ public class RequestBuilderImpl implements RequestBuilder {
 
     @Override
     public Request build() {
-        return new RequestImpl(method, headers, uri, queryParameters, uriParameters, options, entity);
+        return new RequestImpl(method, headers, uri, queryParameters, uriParameters, options, body);
     }
 
     @Override
@@ -32,14 +32,14 @@ public class RequestBuilderImpl implements RequestBuilder {
     }
 
     @Override
-    public RequestBuilder entity(Entity entity) {
-        this.entity = entity;
+    public RequestBuilder entity(Body body) {
+        this.body = body;
         return this;
     }
 
     @Override
     public RequestBuilder entity(Value entity) {
-        this.entity = new ValueEntity(entity);
+        this.body = new ValueBody(entity);
         return this;
     }
 

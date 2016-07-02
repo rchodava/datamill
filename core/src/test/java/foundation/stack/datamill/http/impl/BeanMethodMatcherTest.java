@@ -117,7 +117,7 @@ public class BeanMethodMatcherTest {
     }
 
     private static String responseBodyAsString(Observable<Response> responseObservable) {
-        return responseObservable.toBlocking().last().entity().asString().toBlocking().last();
+        return responseObservable.toBlocking().last().body().get().asString().toBlocking().last();
     }
 
     @Test
