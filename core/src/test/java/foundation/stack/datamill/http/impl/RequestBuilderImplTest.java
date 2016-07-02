@@ -38,10 +38,10 @@ public class RequestBuilderImplTest {
                 .entity(new JsonObject().put("name", "value"))
                 .build();
 
-        assertEquals("value", request.entity().asJson().toBlocking().last().get("name").asString());
-        assertEquals("value", new JsonObject(request.entity().asString().toBlocking().last()).get("name").asString());
-        assertEquals("value", new JsonObject(new String(request.entity().asBytes().toBlocking().last())).get("name").asString());
-        assertEquals("value", new JsonObject(new String(request.entity().asChunks()
+        assertEquals("value", request.body().asJson().toBlocking().last().get("name").asString());
+        assertEquals("value", new JsonObject(request.body().asString().toBlocking().last()).get("name").asString());
+        assertEquals("value", new JsonObject(new String(request.body().asBytes().toBlocking().last())).get("name").asString());
+        assertEquals("value", new JsonObject(new String(request.body().asChunks()
                 .collect(
                         () -> new ByteArrayOutputStream(),
                         (stream, chunk) -> {

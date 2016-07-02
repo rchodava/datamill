@@ -1,7 +1,7 @@
 package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.Multimap;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.http.Route;
 import foundation.stack.datamill.http.ServerRequest;
@@ -18,7 +18,9 @@ import rx.Observable;
 import rx.Subscription;
 import rx.subjects.ReplaySubject;
 
+import java.nio.ByteBuffer;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.function.BiFunction;
 
@@ -34,7 +36,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     private volatile boolean channelClosed;
     private volatile Subscription entitySubscription;
 
-    private ReplaySubject<byte[]> entityStream;
+    private ReplaySubject<ByteBuffer> bodyStream;
     private ServerRequestImpl serverRequest;
 
     public ClientToServerChannelHandler(
@@ -76,13 +78,13 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 sendContinueResponse(context);
             }
 
-            entityStream = ReplaySubject.create();
-            serverRequest = ServerRequestBuilder.buildServerRequest(request, entityStream, threadPool);
+            bodyStream = ReplaySubject.create();
+            serverRequest = ServerRequestBuilder.buildServerRequest(request, bodyStream, threadPool);
 
             processRequest(context, request);
 
             if (request.decoderResult().isFailure()) {
-                entityStream.onError(request.decoderResult().cause());
+                bodyStream.onError(request.decoderResult().cause());
             }
         }
 
@@ -91,12 +93,10 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
 
             ByteBuf content = httpContent.content();
             if (content.isReadable()) {
-                byte[] chunk = new byte[content.readableBytes()];
-                content.readBytes(chunk);
-                entityStream.onNext(chunk);
+                bodyStream.onNext(content.nioBuffer());
 
                 if (httpContent.decoderResult().isFailure()) {
-                    entityStream.onError(httpContent.decoderResult().cause());
+                    bodyStream.onError(httpContent.decoderResult().cause());
                 }
             }
 
@@ -106,7 +106,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                     serverRequest.setTrailingHeaders(ServerRequestBuilder.buildHeadersMap(trailer.trailingHeaders()));
                 }
 
-                entityStream.onCompleted();
+                bodyStream.onCompleted();
             }
         }
     }
@@ -171,10 +171,10 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
         context.write(response);
     }
 
-    private void sendContent(ChannelHandlerContext context, byte[] responseBytes) {
-        HttpContent content = new DefaultHttpContent(responseBytes == null ?
+    private void sendContent(ChannelHandlerContext context, ByteBuffer contentBuffer) {
+        HttpContent content = new DefaultHttpContent(contentBuffer == null ?
                 Unpooled.EMPTY_BUFFER :
-                Unpooled.wrappedBuffer(responseBytes));
+                Unpooled.wrappedBuffer(contentBuffer));
 
         context.writeAndFlush(content);
     }
@@ -196,23 +196,22 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendResponse(ChannelHandlerContext context, HttpRequest originalRequest, Response serverResponse) {
-        Entity responseEntity = serverResponse.entity();
-        if (responseEntity != null) {
+        Optional<Body> responseBody = serverResponse.body();
+        if (responseBody != null && responseBody.isPresent()) {
             threadPool.execute(() -> {
                 if (!channelClosed) {
                     boolean[] first = {true};
-                    entitySubscription = responseEntity.asChunks()
-                            .doOnNext(bytes -> {
+                    entitySubscription = responseBody.get().asBufferChunks()
+                            .doOnNext(buffer -> {
                                 if (first[0]) {
                                     sendResponseStart(context, originalRequest,
                                             serverResponse.status().getCode(),
-                                            serverResponse.headers(),
-                                            bytes == null ? -1 : bytes.length);
-                                    sendContent(context, bytes);
+                                            serverResponse.headers(), -1);
+                                    sendContent(context, buffer);
 
                                     first[0] = false;
                                 } else {
-                                    sendContent(context, bytes);
+                                    sendContent(context, buffer);
                                 }
                             })
                             .finallyDo(() -> {

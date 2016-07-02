@@ -2,7 +2,7 @@ package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.http.ResponseBuilder;
 import foundation.stack.datamill.http.Status;
@@ -14,6 +14,7 @@ import rx.Subscription;
 import rx.functions.Func1;
 import rx.subjects.ReplaySubject;
 
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.concurrent.ExecutorService;
 
@@ -21,27 +22,27 @@ import java.util.concurrent.ExecutorService;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
-    private final ExecutorService streamingEntityThreadPool;
+    private final ExecutorService streamingBodyThreadPool;
     private final Multimap<String, String> headers = LinkedListMultimap.create();
-    private Entity entity;
+    private Body body;
 
     public ResponseBuilderImpl(ExecutorService threadPool) {
-        this.streamingEntityThreadPool = threadPool;
+        this.streamingBodyThreadPool = threadPool;
     }
 
     // Test hook
     ResponseBuilderImpl() {
-        this.streamingEntityThreadPool = null;
+        this.streamingBodyThreadPool = null;
     }
 
     @Override
     public Response badRequest() {
-        return new ResponseImpl(Status.BAD_REQUEST, headers, entity);
+        return new ResponseImpl(Status.BAD_REQUEST, headers, body);
     }
 
     @Override
     public Response badRequest(String content) {
-        return new ResponseImpl(Status.BAD_REQUEST, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.BAD_REQUEST, headers, new ValueBody(new StringValue(content)));
     }
 
     @Override
@@ -52,12 +53,12 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Response internalServerError() {
-        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, entity);
+        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, body);
     }
 
     @Override
     public Response internalServerError(String content) {
-        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.INTERNAL_SERVER_ERROR, headers, new ValueBody(new StringValue(content)));
     }
 
     @Override
@@ -67,55 +68,64 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Response notFound() {
-        return new ResponseImpl(Status.NOT_FOUND, headers, entity);
+        return new ResponseImpl(Status.NOT_FOUND, headers, body);
     }
 
     @Override
     public Response ok() {
-        return new ResponseImpl(Status.OK, headers, entity);
+        return new ResponseImpl(Status.OK, headers, body);
     }
 
     @Override
     public Response ok(String content) {
-        return new ResponseImpl(Status.OK, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.OK, headers, new ValueBody(new StringValue(content)));
     }
 
     @Override
     public Response ok(byte[] content) {
-        return new ResponseImpl(Status.OK, headers, new BytesEntity(content));
+        return new ResponseImpl(Status.OK, headers, new BytesBody(content));
     }
 
     @Override
-    public ResponseBuilder streamingEntity(Func1<Observer<byte[]>, Observable<byte[]>> entityStreamer) {
-        ReplaySubject<byte[]> entitySubject = ReplaySubject.create();
+    public ResponseBuilder streamingBodyAsBufferChunks(Func1<Observer<ByteBuffer>, Observable<ByteBuffer>> bodyStreamer) {
+        ReplaySubject<ByteBuffer> bodySubject = ReplaySubject.create();
 
-        Subscription[] entityStreamerSubscription = new Subscription[1];
+        Subscription[] bodyStreamerSubscription = new Subscription[1];
 
-        Observable<byte[]> disposingSubject = Observable.using(() -> null,
-                __ -> entitySubject,
+        Observable<ByteBuffer> disposingSubject = Observable.using(() -> null,
+                __ -> bodySubject,
                 __ -> {
-                    if (entityStreamerSubscription[0] != null && !entityStreamerSubscription[0].isUnsubscribed()) {
-                        entityStreamerSubscription[0].unsubscribe();
+                    if (bodyStreamerSubscription[0] != null && !bodyStreamerSubscription[0].isUnsubscribed()) {
+                        bodyStreamerSubscription[0].unsubscribe();
                     }
                 });
 
-        streamingEntityThreadPool.execute(() -> {
-            entityStreamerSubscription[0] = entityStreamer.call(entitySubject)
-                    .doOnNext(bytes -> entitySubject.onNext(bytes))
-                    .doOnCompleted(() -> entitySubject.onCompleted())
-                    .subscribe();
-        });
+        streamingBodyThreadPool.execute(() ->
+            bodyStreamerSubscription[0] = bodyStreamer.call(bodySubject)
+                    .doOnNext(buffer -> bodySubject.onNext(buffer))
+                    .doOnCompleted(() -> bodySubject.onCompleted())
+                    .subscribe());
 
-        this.entity = new StreamedChunksEntity(disposingSubject, Charset.defaultCharset());
+        this.body = new StreamedChunksBody(disposingSubject, Charset.defaultCharset());
         return this;
     }
 
     @Override
+    public ResponseBuilder streamingBody(Func1<Observer<byte[]>, Observable<byte[]>> bodyStreamer) {
+        return streamingBodyAsBufferChunks(body -> bodyStreamer.call(new DelegatingObserver<byte[], ByteBuffer>(body) {
+            @Override
+            protected ByteBuffer map(byte[] bytes) {
+                return ByteBuffer.wrap(bytes);
+            }
+        }).map(bytes -> ByteBuffer.wrap(bytes)));
+    }
+
+    @Override
     public ResponseBuilder streamingJson(Func1<Observer<Json>, Observable<Json>> jsonStreamer) {
-        return streamingEntity(entity -> Observable.concat(
+        return streamingBody(body -> Observable.concat(
                 Observable.just("[".getBytes()),
                 Observable.defer(() ->
-                        jsonStreamer.call(new DelegatingObserver<Json, byte[]>(entity) {
+                        jsonStreamer.call(new DelegatingObserver<Json, byte[]>(body) {
                             @Override
                             protected byte[] map(Json source) {
                                 return (source.toString() + ",").getBytes();
@@ -126,27 +136,27 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public Response unauthorized() {
-        return new ResponseImpl(Status.UNAUTHORIZED, headers, entity);
+        return new ResponseImpl(Status.UNAUTHORIZED, headers, body);
     }
 
     @Override
     public Response unauthorized(String content) {
-        return new ResponseImpl(Status.UNAUTHORIZED, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.UNAUTHORIZED, headers, new ValueBody(new StringValue(content)));
     }
 
     @Override
     public Response forbidden() {
-        return new ResponseImpl(Status.FORBIDDEN, headers, entity);
+        return new ResponseImpl(Status.FORBIDDEN, headers, body);
     }
 
     @Override
     public Response forbidden(String content) {
-        return new ResponseImpl(Status.FORBIDDEN, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.FORBIDDEN, headers, new ValueBody(new StringValue(content)));
     }
 
     @Override
     public Response conflict(String content) {
-        return new ResponseImpl(Status.CONFLICT, headers, new ValueEntity(new StringValue(content)));
+        return new ResponseImpl(Status.CONFLICT, headers, new ValueBody(new StringValue(content)));
     }
 
     private static abstract class DelegatingObserver<S, T> implements Observer<S> {

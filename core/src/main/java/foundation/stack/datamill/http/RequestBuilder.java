@@ -9,7 +9,7 @@ public interface RequestBuilder {
     Request build();
     RequestBuilder connectTimeout(int milliseconds);
     RequestBuilder entity(Value entity);
-    RequestBuilder entity(Entity entity);
+    RequestBuilder entity(Body body);
     RequestBuilder header(String name, String value);
     RequestBuilder header(RequestHeader header, String value);
     RequestBuilder method(Method method);

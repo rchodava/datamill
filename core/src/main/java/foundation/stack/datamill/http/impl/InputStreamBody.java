@@ -1,7 +1,7 @@
 package foundation.stack.datamill.http.impl;
 
 import foundation.stack.datamill.http.HttpException;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.json.JsonObject;
 import rx.Observable;
 import rx.functions.Action0;
@@ -10,19 +10,20 @@ import rx.observables.StringObservable;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class InputStreamEntity implements Entity {
+public class InputStreamBody implements Body {
     private final InputStream inputStream;
     private final Action0 completionHandler;
 
-    public InputStreamEntity(InputStream inputStream) {
+    public InputStreamBody(InputStream inputStream) {
         this(inputStream, null);
     }
 
-    public InputStreamEntity(InputStream inputStream, Action0 completionHandler) {
+    public InputStreamBody(InputStream inputStream, Action0 completionHandler) {
         this.inputStream = inputStream;
         this.completionHandler = completionHandler;
     }
@@ -43,6 +44,11 @@ public class InputStreamEntity implements Entity {
     @Override
     public Observable<JsonObject> asJson() {
         return asString().map(string -> new JsonObject(string));
+    }
+
+    @Override
+    public Observable<ByteBuffer> asBufferChunks() {
+        return asChunks().map(bytes -> ByteBuffer.wrap(bytes));
     }
 
     @Override

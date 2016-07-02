@@ -2,7 +2,7 @@ package foundation.stack.datamill.http;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
-import foundation.stack.datamill.http.impl.ValueEntity;
+import foundation.stack.datamill.http.impl.ValueBody;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -107,7 +107,7 @@ public class ClientTest {
                 new StringValue("test"))),
                 Method.PATCH, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.patch("http://sample.com",
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.PATCH, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.patch("http://sample.com",
                 ImmutableMap.of(
@@ -121,7 +121,7 @@ public class ClientTest {
                 ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"),
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.PATCH, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"), "test");
@@ -142,7 +142,7 @@ public class ClientTest {
                 new StringValue("test"))),
                 Method.POST, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.post("http://sample.com",
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.POST, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.post("http://sample.com",
                 ImmutableMap.of(
@@ -156,7 +156,7 @@ public class ClientTest {
                 ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"),
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.POST, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"), "test");
@@ -177,7 +177,7 @@ public class ClientTest {
                 new StringValue("test"))),
                 Method.PUT, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.put("http://sample.com",
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.PUT, "http://sample.com", null, "test");
         verifyConnectionSetup(createClientAndRequest(c -> c.put("http://sample.com",
                 ImmutableMap.of(
@@ -191,7 +191,7 @@ public class ClientTest {
                 ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"),
-                new ValueEntity(new StringValue("test")))),
+                new ValueBody(new StringValue("test")))),
                 Method.PUT, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
                         "Accept", "application/json"), "test");

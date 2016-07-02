@@ -180,7 +180,7 @@ public class HttpSteps {
     }
 
     private String getResponseBodyAsString(Response response) {
-        return response.entity().asString().toBlocking().lastOrDefault(null);
+        return response.body().map(body -> body.asString().toBlocking().lastOrDefault(null)).orElse(null);
     }
 
     private Map<String, String> getHeaders() {

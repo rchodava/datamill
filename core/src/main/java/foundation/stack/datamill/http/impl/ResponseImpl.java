@@ -2,11 +2,12 @@ package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import foundation.stack.datamill.http.Entity;
+import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.http.Status;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -14,7 +15,7 @@ import java.util.Map;
 public class ResponseImpl implements Response {
     private Multimap<String, String> headers;
     private Status status;
-    private Entity entity;
+    private Optional<Body> body;
 
     public ResponseImpl(Status status) {
         this(status, (Multimap<String, String>) null, null);
@@ -28,23 +29,24 @@ public class ResponseImpl implements Response {
         this(status, headers, null);
     }
 
-    public  ResponseImpl(Status status, Entity entity) {
-        this(status, (Multimap<String, String>) null, entity);
+    public  ResponseImpl(Status status, Body body) {
+        this(status, (Multimap<String, String>) null, body);
     }
 
-    public ResponseImpl(Status status, Map<String, String> headers, Entity entity) {
-        this(status, Multimaps.forMap(headers), entity);
+    public ResponseImpl(Status status, Map<String, String> headers, Body body) {
+        this(status, Multimaps.forMap(headers), body);
     }
 
-    public ResponseImpl(Status status, Multimap<String, String> headers, Entity entity) {
+    public ResponseImpl(Status status, Multimap<String, String> headers, Body body) {
         this.status = status;
         this.headers = headers;
-        this.entity = entity;
+
+        this.body = Optional.ofNullable(body);
     }
 
     @Override
-    public Entity entity() {
-        return entity;
+    public Optional<Body> body() {
+        return body;
     }
 
     @Override
