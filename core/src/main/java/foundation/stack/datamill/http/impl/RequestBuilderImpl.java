@@ -32,13 +32,13 @@ public class RequestBuilderImpl implements RequestBuilder {
     }
 
     @Override
-    public RequestBuilder entity(Body body) {
+    public RequestBuilder body(Body body) {
         this.body = body;
         return this;
     }
 
     @Override
-    public RequestBuilder entity(Value entity) {
+    public RequestBuilder body(Value entity) {
         this.body = new ValueBody(entity);
         return this;
     }

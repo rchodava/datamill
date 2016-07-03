@@ -9,7 +9,7 @@ import java.nio.ByteBuffer;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class BytesBody implements Body {
+public class BytesBody extends AbstractBody implements Body {
     private byte[] bytes;
 
     public BytesBody(byte[] bytes) {

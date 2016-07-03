@@ -8,8 +8,8 @@ import foundation.stack.datamill.values.Value;
 public interface RequestBuilder {
     Request build();
     RequestBuilder connectTimeout(int milliseconds);
-    RequestBuilder entity(Value entity);
-    RequestBuilder entity(Body body);
+    RequestBuilder body(Value entity);
+    RequestBuilder body(Body body);
     RequestBuilder header(String name, String value);
     RequestBuilder header(RequestHeader header, String value);
     RequestBuilder method(Method method);

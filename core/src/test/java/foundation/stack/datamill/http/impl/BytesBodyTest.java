@@ -29,5 +29,7 @@ public class BytesBodyTest {
                 .map(stream -> stream.toByteArray()).toBlocking().last()));
         Assert.assertEquals("value", new BytesBody("{\"name\":\"value\"}".getBytes())
                 .asJson().toBlocking().last().get("name").asString());
+        assertEquals("value", new BytesBody("[{\"name\":\"value\"}]".getBytes())
+                .asJsonArray().toBlocking().last().get("name").asString());
     }
 }

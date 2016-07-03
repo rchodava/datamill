@@ -1,5 +1,6 @@
 package foundation.stack.datamill.http;
 
+import foundation.stack.datamill.json.JsonArray;
 import foundation.stack.datamill.json.JsonObject;
 import rx.Observable;
 
@@ -17,6 +18,9 @@ public interface Body {
 
     /** Get an {@link Observable} that emits the whole body as a JSON object. */
     Observable<JsonObject> asJson();
+
+    /** Get an {@link Observable} that emits the items in a JSON array. */
+    Observable<JsonObject> asJsonArray();
 
     /** Get an {@link Observable} that emits the body as chunks of byte arrays. */
     Observable<byte[]> asChunks();

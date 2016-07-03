@@ -21,6 +21,11 @@ public class EmptyBody implements Body {
     }
 
     @Override
+    public Observable<JsonObject> asJsonArray() {
+        return Observable.empty();
+    }
+
+    @Override
     public Observable<byte[]> asChunks() {
         return Observable.empty();
     }
