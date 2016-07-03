@@ -33,6 +33,6 @@ public class InputStreamBodyTest {
         Assert.assertEquals("value", new InputStreamBody(new ByteArrayInputStream("{\"name\":\"value\"}".getBytes()))
                 .asJson().toBlocking().last().get("name").asString());
         assertEquals("value", new InputStreamBody(new ByteArrayInputStream("[{\"name\":\"value\"}]".getBytes()))
-                .asJsonFromArray().toBlocking().last().get("name").asString());
+                .asJsonArray().toBlocking().last().get("name").asString());
     }
 }

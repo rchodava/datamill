@@ -21,7 +21,7 @@ public class EmptyBody implements Body {
     }
 
     @Override
-    public Observable<JsonObject> asJsonFromArray() {
+    public Observable<JsonObject> asJsonArray() {
         return Observable.empty();
     }
 

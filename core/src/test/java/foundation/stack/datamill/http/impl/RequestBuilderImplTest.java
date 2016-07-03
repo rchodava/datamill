@@ -34,9 +34,9 @@ public class RequestBuilderImplTest {
     }
 
     @Test
-    public void entity() {
+    public void body() {
         Request request = new RequestBuilderImpl()
-                .entity(new JsonObject().put("name", "value"))
+                .body(new JsonObject().put("name", "value"))
                 .build();
 
         assertEquals("value", request.body().asJson().toBlocking().last().get("name").asString());
@@ -54,10 +54,10 @@ public class RequestBuilderImplTest {
                 .toBlocking().last())).get("name").asString());
 
         request = new RequestBuilderImpl()
-                .entity(new JsonArray("[{\"name\" : \"value\"}]"))
+                .body(new JsonArray("[{\"name\" : \"value\"}]"))
                 .build();
 
-        assertEquals("value", request.entity().asJsonFromArray().toBlocking().last().get("name").asString());
+        assertEquals("value", request.body().asJsonArray().toBlocking().last().get("name").asString());
     }
 
     @Test

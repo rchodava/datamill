@@ -129,7 +129,7 @@ public class ClientTest {
                 rb -> rb.uri("http://sample.com")
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .entity(new StringValue("test"))
+                        .body(new StringValue("test"))
                         .build())),
                 Method.PATCH, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
@@ -164,7 +164,7 @@ public class ClientTest {
                 rb -> rb.uri("http://sample.com")
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .entity(new StringValue("test"))
+                        .body(new StringValue("test"))
                         .build())),
                 Method.POST, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",
@@ -199,7 +199,7 @@ public class ClientTest {
                 rb -> rb.uri("http://sample.com")
                         .header("Content-Type", "application/json")
                         .header("Accept", "application/json")
-                        .entity(new StringValue("test"))
+                        .body(new StringValue("test"))
                         .build())),
                 Method.PUT, "http://sample.com", ImmutableMap.of(
                         "Content-Type", "application/json",

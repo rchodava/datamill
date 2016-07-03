@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class ValueBody implements Body {
+public class ValueBody extends AbstractBody implements Body {
     private Value value;
 
     public ValueBody(Value value) {

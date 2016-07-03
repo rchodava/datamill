@@ -13,7 +13,7 @@ import java.nio.charset.Charset;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class StreamedChunksBody implements Body {
+public class StreamedChunksBody extends AbstractBody implements Body {
     private final Observable<ByteBuffer> chunks;
     private final Charset charset;
 

@@ -30,6 +30,6 @@ public class BytesBodyTest {
         Assert.assertEquals("value", new BytesBody("{\"name\":\"value\"}".getBytes())
                 .asJson().toBlocking().last().get("name").asString());
         assertEquals("value", new BytesBody("[{\"name\":\"value\"}]".getBytes())
-                .asJsonFromArray().toBlocking().last().get("name").asString());
+                .asJsonArray().toBlocking().last().get("name").asString());
     }
 }
