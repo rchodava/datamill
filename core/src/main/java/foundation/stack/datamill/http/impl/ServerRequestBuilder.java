@@ -15,7 +15,7 @@ import java.util.concurrent.ExecutorService;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class ServerRequestBuilder {
+public final class ServerRequestBuilder {
     private ServerRequestBuilder() {
     }
 
