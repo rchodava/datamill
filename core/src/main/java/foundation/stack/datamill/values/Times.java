@@ -6,7 +6,7 @@ import java.time.temporal.Temporal;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class Times {
+public final class Times {
     private Times() {
     }
 

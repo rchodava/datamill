@@ -3,7 +3,7 @@ package foundation.stack.datamill.configuration;
 /**
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
-public class SystemPropertyRetriever {
+public final class SystemPropertyRetriever {
 
     private SystemPropertyRetriever() {
     }
