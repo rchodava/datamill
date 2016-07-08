@@ -9,7 +9,7 @@ public enum RequestHeader {
     ACCEPT_ENCODING("Accept-Encoding"),
     ACCEPT_DATETIME("Accept-Datetime"),
     AUTHORIZATION("Authorization"),
-    CACHE_CONTRO("Cache-Control"),
+    CACHE_CONTROL("Cache-Control"),
     CONNECTION("Connection"),
     COOKIE("Cookie"),
     CONTENT_LENGTH("Content-Length"),
