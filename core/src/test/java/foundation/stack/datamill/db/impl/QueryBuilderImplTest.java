@@ -9,6 +9,7 @@ import org.junit.Test;
 import rx.Observable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -204,7 +205,7 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 1, 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.select("column_name", "second_column").from("table_name").where().in("table_name", "int_column", Arrays.asList(1)).execute();
+        queryBuilder.select("column_name", "second_column").from("table_name").where().in("table_name", "int_column", Collections.singletonList(1)).execute();
         assertEquals("SELECT column_name, second_column FROM table_name WHERE table_name.int_column IN (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
@@ -270,7 +271,7 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 1, 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.deleteFrom("table_name").where().in("string_column", Arrays.asList(1)).execute();
+        queryBuilder.deleteFrom("table_name").where().in("string_column", Collections.singletonList(1)).execute();
         assertEquals("DELETE FROM table_name WHERE string_column IN (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
@@ -390,7 +391,7 @@ public class QueryBuilderImplTest {
         assertArrayEquals(new Object[] { 1, 2, 3 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
 
-        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().in("int_column", Arrays.asList(2)).execute();
+        queryBuilder.update("table_name").set(ImmutableMap.of("int_column", 1)).where().in("int_column", Collections.singletonList(2)).execute();
         assertEquals("UPDATE table_name SET int_column = ? WHERE int_column IN (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1, 2 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());

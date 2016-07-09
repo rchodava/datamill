@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -30,8 +31,8 @@ public class CommandLineStepsTest {
         File temporaryDirectory = (File) store.get(CommandLineSteps.TEMPORARY_DIRECTORY);
         Files.write("Hello", new File(temporaryDirectory, "test.txt"), Charset.defaultCharset());
 
-        steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("test.txt"));
-        steps.verifyTemporaryDirectoryHasFiles(Arrays.asList("{fileName}"));
+        steps.verifyTemporaryDirectoryHasFiles(Collections.singletonList("test.txt"));
+        steps.verifyTemporaryDirectoryHasFiles(Collections.singletonList("{fileName}"));
 
         Files.write("Hello", new File(temporaryDirectory, "test2.txt"), Charset.defaultCharset());
         steps.delete("test2.txt");
