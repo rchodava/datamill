@@ -2,7 +2,6 @@ package foundation.stack.datamill.http.impl;
 
 import foundation.stack.datamill.http.HttpException;
 import foundation.stack.datamill.http.Body;
-import foundation.stack.datamill.json.JsonArray;
 import foundation.stack.datamill.json.JsonObject;
 import rx.Observable;
 import rx.functions.Action0;

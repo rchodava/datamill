@@ -24,6 +24,7 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -513,7 +514,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
 
     @Override
     public SelectBuilder select(String column) {
-        return select(Arrays.asList(column));
+        return select(Collections.singletonList(column));
     }
 
     @Override
@@ -541,7 +542,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         return new SelectQuery(columns);
     }
 
-    private static final String qualifiedName(String table, String column) {
+    private static String qualifiedName(String table, String column) {
         return table + "." + column;
     }
 

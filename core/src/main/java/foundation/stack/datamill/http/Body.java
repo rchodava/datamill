@@ -1,6 +1,5 @@
 package foundation.stack.datamill.http;
 
-import foundation.stack.datamill.json.JsonArray;
 import foundation.stack.datamill.json.JsonObject;
 import rx.Observable;
 
