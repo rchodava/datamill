@@ -2,7 +2,6 @@ package foundation.stack.datamill.cucumber;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
