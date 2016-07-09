@@ -541,7 +541,7 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         return new SelectQuery(columns);
     }
 
-    private static final String qualifiedName(String table, String column) {
+    private static String qualifiedName(String table, String column) {
         return table + "." + column;
     }
 
