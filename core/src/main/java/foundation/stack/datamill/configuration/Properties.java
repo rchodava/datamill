@@ -45,7 +45,7 @@ public class Properties {
         withFile(path, consumer, false);
     }
 
-    public static Optional<Value> fromFile(String path, String name) {
+    public static Optional<String> fromFile(String path, String name) {
         try {
             return files.get(path).getOptional(name);
         } catch (ExecutionException e) {

@@ -1,6 +1,5 @@
 package foundation.stack.datamill.configuration;
 
-import foundation.stack.datamill.reflection.Bean;
 import foundation.stack.datamill.values.StringValue;
 import foundation.stack.datamill.values.Value;
 
@@ -34,13 +33,9 @@ public class PropertiesFile {
         }
     }
 
-    public Optional<Value> getOptional(String name) {
+    public Optional<String> getOptional(String name) {
         String value = getProperty(name, false);
-        if (value != null) {
-            return Optional.of(new StringValue(value));
-        } else {
-            return Optional.empty();
-        }
+        return Optional.ofNullable(value);
     }
 
     private String getProperty(String name, boolean required) {

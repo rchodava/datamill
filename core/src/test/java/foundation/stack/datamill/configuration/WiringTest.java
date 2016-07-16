@@ -30,6 +30,61 @@ public class WiringTest {
         }
     }
 
+    private static class Base {
+        protected String get() {
+            return "base";
+        }
+    }
+
+    private static class Derived extends Base {
+        @Override
+        protected String get() {
+            return "derived";
+        }
+    }
+
+    public interface Iface1 {
+        String iface1();
+    }
+
+    public interface Iface2 {
+        String iface2();
+    }
+
+    private static class Interfaces extends Base implements Iface1 {
+        @Override
+        public String iface1() {
+            return "iface1";
+        }
+    }
+
+    private static class DerivedInterfaces extends Interfaces implements Iface2 {
+        @Override
+        public String iface2() {
+            return "iface2";
+        }
+    }
+
+    private static class Test3 {
+        private final Base base;
+        private final String string;
+
+        public Test3(Base base, String string) {
+            this.base = base;
+            this.string = string;
+        }
+    }
+
+    private static class Test4 {
+        private final Iface1 iface1;
+        private final Iface2 iface2;
+
+        public Test4(Iface1 iface1, Iface2 iface2) {
+            this.iface1 = iface1;
+            this.iface2 = iface2;
+        }
+    }
+
     @Test
     public void named() {
         Test1 instance = new Wiring()
@@ -50,5 +105,25 @@ public class WiringTest {
 
         assertEquals("func0String", instance.func0String.call());
         assertEquals("func1StringS", instance.func1String.call("S"));
+    }
+
+    @Test
+    public void parents() {
+        Test3 instance = new Wiring()
+                .add(new Derived(), "testString")
+                .construct(Test3.class);
+
+        assertEquals("derived", instance.base.get());
+        assertEquals("testString", instance.string);
+    }
+
+    @Test
+    public void interfaces() {
+        Test4 instance = new Wiring()
+                .add(new DerivedInterfaces())
+                .construct(Test4.class);
+
+        assertEquals("iface1", instance.iface1.iface1());
+        assertEquals("iface2", instance.iface2.iface2());
     }
 }
