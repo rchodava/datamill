@@ -1,69 +1,48 @@
 package foundation.stack.datamill.configuration;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import foundation.stack.datamill.values.Value;
-import rx.functions.Action0;
-import rx.functions.Action1;
+import foundation.stack.datamill.configuration.impl.*;
+import rx.functions.Func1;
 
 import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /**
+ * Starting points for creating {@link PropertySourceChain}s.
+ *
+ * @see PropertySourceChain
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Properties {
-    private static LoadingCache<String, PropertiesFile> files = CacheBuilder.<String, PropertiesFile>newBuilder().build(
-            new CacheLoader<String, PropertiesFile>() {
-                @Override
-                public PropertiesFile load(String path) throws Exception {
-                    return loadFile(path);
-                }
-            });
-
-    private static PropertiesFile loadFile(String path) throws IOException {
-        return new PropertiesFile(path);
-    }
-
-    private static void withFile(String path, Action1<PropertiesFile> consumer, boolean required) {
+    /** @see PropertySourceChain#orFile(String) */
+    public static PropertySourceChain fromFile(String path) {
         try {
-            consumer.call(files.get(path));
-        } catch (ExecutionException e) {
-            if (required) {
-                throw new IllegalArgumentException("Failed to retrieve properties from file " + path, e);
-            }
+            return fromSource(new FileSource(path));
+        } catch (IOException e) {
+            return fromSource(new EmptySource());
         }
     }
 
-    public static void withRequiredFile(String path, Action1<PropertiesFile> consumer) {
-        withFile(path, consumer, true);
+    /** @see PropertySourceChain#orSource(PropertySource) */
+    public static PropertySourceChain fromSource(PropertySource source) {
+        return new PropertySourceChainImpl(source);
     }
 
-    public static void withOptionalFile(String path, Action1<PropertiesFile> consumer) {
-        withFile(path, consumer, false);
+    /** @see PropertySourceChain#orEnvironment() */
+    public static PropertySourceChain fromEnvironment() {
+        return fromSource(new EnvironmentPropertiesSource());
     }
 
-    public static Optional<String> fromFile(String path, String name) {
-        try {
-            return files.get(path).getOptional(name);
-        } catch (ExecutionException e) {
-            return Optional.empty();
-        }
+    /** @see PropertySourceChain#orEnvironment(Func1) */
+    public static PropertySourceChain fromEnvironment(Func1<String, String> transformer) {
+        return fromSource(new EnvironmentPropertiesSource(transformer));
     }
 
-    public static ElseBuilder ifFileExists(String path, Action1<PropertiesFile> consumer) {
-        try {
-            consumer.call(files.get(path));
-            return action -> {
-            };
-        } catch (ExecutionException e) {
-            return action -> action.call();
-        }
+    /** @see PropertySourceChain#orSystem() */
+    public static PropertySourceChain fromSystem() {
+        return fromSource(new SystemPropertiesSource());
     }
 
-    public interface ElseBuilder {
-        void orElse(Action0 action);
+    /** @see PropertySourceChain#orSystem(Func1) */
+    public static PropertySourceChain fromSystem(Func1<String, String> transformer) {
+        return fromSource(new SystemPropertiesSource(transformer));
     }
 }
