@@ -1,6 +1,7 @@
 package foundation.stack.datamill.db;
 
 import com.github.davidmoten.rx.jdbc.*;
+import foundation.stack.datamill.configuration.Named;
 import foundation.stack.datamill.db.impl.QueryBuilderImpl;
 import foundation.stack.datamill.db.impl.RowImpl;
 import org.flywaydb.core.Flyway;
@@ -37,7 +38,7 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         this(url, null, null);
     }
 
-    public DatabaseClient(String url, String username, String password) {
+    public DatabaseClient(@Named("url") String url, @Named("username") String username, @Named("password") String password) {
         this.dataSource = null;
 
         this.url = url;
