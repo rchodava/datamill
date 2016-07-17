@@ -17,7 +17,7 @@ public class Properties {
         try {
             return fromSource(new FileSource(path));
         } catch (IOException e) {
-            return fromSource(new EmptySource());
+            return fromSource(EmptySource.INSTANCE);
         }
     }
 
@@ -28,7 +28,7 @@ public class Properties {
 
     /** @see PropertySourceChain#orEnvironment() */
     public static PropertySourceChain fromEnvironment() {
-        return fromSource(new EnvironmentPropertiesSource());
+        return fromSource(EnvironmentPropertiesSource.IDENTITY);
     }
 
     /** @see PropertySourceChain#orEnvironment(Func1) */
@@ -38,7 +38,7 @@ public class Properties {
 
     /** @see PropertySourceChain#orSystem() */
     public static PropertySourceChain fromSystem() {
-        return fromSource(new SystemPropertiesSource());
+        return fromSource(SystemPropertiesSource.IDENTITY);
     }
 
     /** @see PropertySourceChain#orSystem(Func1) */

@@ -9,13 +9,15 @@ import java.util.Optional;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class SystemPropertiesSource extends AbstractSource {
+    public static final SystemPropertiesSource IDENTITY = new SystemPropertiesSource();
+
     private final Func1<String, String> transformer;
 
     public SystemPropertiesSource(Func1<String, String> transformer) {
         this.transformer = transformer != null ? transformer : Functions.identity();
     }
 
-    public SystemPropertiesSource() {
+    private SystemPropertiesSource() {
         this(null);
     }
 

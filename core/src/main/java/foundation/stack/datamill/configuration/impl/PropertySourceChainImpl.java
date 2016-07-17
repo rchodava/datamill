@@ -3,8 +3,6 @@ package foundation.stack.datamill.configuration.impl;
 import foundation.stack.datamill.configuration.Defaults;
 import foundation.stack.datamill.configuration.PropertySource;
 import foundation.stack.datamill.configuration.PropertySourceChain;
-import foundation.stack.datamill.values.StringValue;
-import foundation.stack.datamill.values.Value;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
@@ -50,7 +48,7 @@ public class PropertySourceChainImpl extends AbstractSource implements PropertyS
 
     @Override
     public PropertySourceChain orEnvironment() {
-        return orSource(new EnvironmentPropertiesSource());
+        return orSource(EnvironmentPropertiesSource.IDENTITY);
     }
 
     @Override
@@ -63,7 +61,7 @@ public class PropertySourceChainImpl extends AbstractSource implements PropertyS
         try {
             return orSource(new FileSource(path));
         } catch (IOException e) {
-            return orSource(new EmptySource());
+            return orSource(EmptySource.INSTANCE);
         }
     }
 
@@ -77,7 +75,7 @@ public class PropertySourceChainImpl extends AbstractSource implements PropertyS
 
     @Override
     public PropertySourceChain orSystem() {
-        return orSource(new SystemPropertiesSource());
+        return orSource(SystemPropertiesSource.IDENTITY);
     }
 
     @Override

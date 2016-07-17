@@ -9,13 +9,15 @@ import java.util.Optional;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class EnvironmentPropertiesSource extends AbstractSource {
+    public static final EnvironmentPropertiesSource IDENTITY = new EnvironmentPropertiesSource();
+
     private final Func1<String, String> transformer;
 
     public EnvironmentPropertiesSource(Func1<String, String> transformer) {
         this.transformer = transformer != null ? transformer : Functions.identity();
     }
 
-    public EnvironmentPropertiesSource() {
+    private EnvironmentPropertiesSource() {
         this(null);
     }
 
