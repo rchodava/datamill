@@ -143,6 +143,44 @@ public class WiringTest {
         }
     }
 
+    private static class Test6 {
+        private final boolean booleanProperty;
+        private final byte byteProperty;
+        private final char characterProperty;
+        private final short shortProperty;
+        private final int integerProperty;
+        private final long longProperty;
+        private final float floatProperty;
+        private final double doubleProperty;
+        private final LocalDateTime localDateTimeProperty;
+        private final byte[] byteArrayProperty;
+        private final String stringProperty;
+
+        public Test6(@Named("boolean") boolean booleanProperty,
+                     @Named("byte") byte byteProperty,
+                     @Named("char") char characterProperty,
+                     @Named("short") short shortProperty,
+                     @Named("int") int integerProperty,
+                     @Named("long") long longProperty,
+                     @Named("float") float floatProperty,
+                     @Named("double") double doubleProperty,
+                     @Named("LocalDateTime") LocalDateTime localDateTimeProperty,
+                     @Named("byteArray") byte[] byteArrayProperty,
+                     @Named("String") String stringProperty) {
+            this.booleanProperty = booleanProperty;
+            this.byteProperty = byteProperty;
+            this.characterProperty = characterProperty;
+            this.shortProperty = shortProperty;
+            this.integerProperty = integerProperty;
+            this.longProperty = longProperty;
+            this.floatProperty = floatProperty;
+            this.doubleProperty = doubleProperty;
+            this.localDateTimeProperty = localDateTimeProperty;
+            this.byteArrayProperty = byteArrayProperty;
+            this.stringProperty = stringProperty;
+        }
+    }
+
     @Test
     public void named() {
         Test1 instance = new Wiring()
@@ -185,8 +223,56 @@ public class WiringTest {
         assertEquals("iface2", instance.iface2.iface2());
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void noNullAdditions() {
+        new Wiring().add(null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void noNullNamedAdditions() {
+        new Wiring().addNamed("name", null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void noNamedDuplicates() {
+        new Wiring().addNamed("test", "value").addNamed("test", "value2");
+    }
+
     @Test
-    public void values() {
+    public void formattedValues() {
+        Test1 instance = new Wiring().addNamed("arg1", "value")
+                .addFormatted("arg2", "{0}:{1}", "value1", "value2")
+                .construct(Test1.class);
+
+        assertEquals("value1:value2", instance.arg2);
+    }
+
+    @Test
+    public void conveniences() {
+        Test1 instance = new Wiring().with(w -> w.addNamed("arg1", "value1").addNamed("arg2", "value2"))
+                .construct(Test1.class);
+
+        assertEquals("value1", instance.arg1);
+        assertEquals("value2", instance.arg2);
+
+        instance = new Wiring().ifCondition(true, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
+                .orElse(w -> w.addNamed("arg1", "false1").addNamed("arg2", "false2"))
+                .construct(Test1.class);
+
+        assertEquals("true1", instance.arg1);
+        assertEquals("true2", instance.arg2);
+
+        instance = new Wiring().ifCondition(false, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
+                .orElse(w -> w.addNamed("arg1", "false1").addNamed("arg2", "false2"))
+                .construct(Test1.class);
+
+        assertEquals("false1", instance.arg1);
+        assertEquals("false2", instance.arg2);
+
+    }
+
+    @Test
+    public void namedValues() {
         Test5 instance = new Wiring()
                 .addNamed("boolean", new StringValue("true"))
                 .addNamed("booleanWrapper", new StringValue("true"))
@@ -225,6 +311,35 @@ public class WiringTest {
         assertEquals(1.1f, instance.floatWrapperProperty, 0.1f);
         assertEquals(2.2d, instance.doubleProperty, 0.1d);
         assertEquals(2.2d, instance.doubleWrapperProperty, 0.1d);
+        assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
+        assertEquals("value", instance.stringProperty);
+        assertArrayEquals("array".getBytes(), instance.byteArrayProperty);
+    }
+
+    @Test
+    public void values() {
+        Test6 instance = new Wiring()
+                .addNamed("boolean", new StringValue("true"))
+                .addNamed("byte", new StringValue("1"))
+                .addNamed("char", new StringValue("a"))
+                .addNamed("short", new StringValue("2"))
+                .addNamed("int", new StringValue("3"))
+                .addNamed("long", new StringValue("4"))
+                .addNamed("float", new StringValue("1.1"))
+                .addNamed("double", new StringValue("2.2"))
+                .addNamed("LocalDateTime", new StringValue("2007-12-03T10:15:30"))
+                .addNamed("String", new StringValue("value"))
+                .addNamed("byteArray", new StringValue("array"))
+                .construct(Test6.class);
+
+        assertEquals(true, instance.booleanProperty);
+        assertEquals(1, instance.byteProperty);
+        assertEquals('a', instance.characterProperty);
+        assertEquals(2, instance.shortProperty);
+        assertEquals(3, instance.integerProperty);
+        assertEquals(4, instance.longProperty);
+        assertEquals(1.1f, instance.floatProperty, 0.1f);
+        assertEquals(2.2d, instance.doubleProperty, 0.1d);
         assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
         assertEquals("value", instance.stringProperty);
         assertArrayEquals("array".getBytes(), instance.byteArrayProperty);

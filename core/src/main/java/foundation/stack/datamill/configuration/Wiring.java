@@ -131,10 +131,6 @@ public class Wiring {
     private final Map<String, Object> named = new HashMap<>();
 
     private void add(Class<?> clazz, Object addition) {
-        if (addition == null) {
-            throw new IllegalArgumentException("Cannot add null to graph");
-        }
-
         members.put(clazz, addition);
 
         registerUnderParentClass(clazz, addition);
@@ -164,7 +160,15 @@ public class Wiring {
      * @param additions Objects to add.
      */
     public Wiring add(Object... additions) {
+        if (additions == null) {
+            throw new IllegalArgumentException("Cannot add null to graph");
+        }
+
         for (Object addition : additions) {
+            if (addition == null) {
+                throw new IllegalArgumentException("Cannot add null to graph");
+            }
+
             add(addition.getClass(), addition);
         }
 
@@ -179,6 +183,10 @@ public class Wiring {
      * @param addition Object to add.
      */
     public Wiring addNamed(String name, Object addition) {
+        if (addition == null) {
+            throw new IllegalArgumentException("Cannot add null to graph");
+        }
+
         if (named.containsKey(name)) {
             throw new IllegalArgumentException("Set already contains an object with name " + name);
         }
