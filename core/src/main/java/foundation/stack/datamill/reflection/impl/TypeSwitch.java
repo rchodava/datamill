@@ -31,6 +31,7 @@ public abstract class TypeSwitch<T1, T2, R> {
         cases.put(Double.class, (v1, v2) -> caseDoubleWrapper(v1, v2));
         cases.put(LocalDateTime.class, (v1, v2) -> caseLocalDateTime(v1, v2));
         cases.put(byte[].class, (v1, v2) -> caseByteArray(v1, v2));
+        cases.put(String.class, (v1, v2) -> caseString(v1, v2));
     }
 
     protected abstract R caseBoolean(T1 value1, T2 value2);
@@ -75,6 +76,8 @@ public abstract class TypeSwitch<T1, T2, R> {
 
     protected abstract R caseLocalDateTime(T1 value1, T2 value2);
     protected abstract R caseByteArray(T1 value1, T2 value2);
+
+    protected abstract R caseString(T1 value1, T2 value2);
 
     protected abstract R defaultCase(T1 value1, T2 value2);
 

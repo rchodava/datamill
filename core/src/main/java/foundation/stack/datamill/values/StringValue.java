@@ -63,6 +63,11 @@ public class StringValue implements ReflectableValue {
                 }
 
                 @Override
+                protected Object caseString(StringValue value1, String value2) {
+                    return value2 != null ? value1.asString() : null;
+                }
+
+                @Override
                 protected Object defaultCase(StringValue value1, String value2) {
                     return value1.asString();
                 }

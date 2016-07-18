@@ -1,9 +1,6 @@
 package foundation.stack.datamill.configuration.impl;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Optional;
 import java.util.Properties;
 
@@ -23,7 +20,11 @@ public class FileSource extends AbstractSource {
             }
         } else {
             try (InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(propertiesLocation)) {
-                properties.load(resourceStream);
+                if (resourceStream != null) {
+                    properties.load(resourceStream);
+                } else {
+                    throw new FileNotFoundException("Resource " + propertiesLocation + " does not exist!");
+                }
             }
         }
     }
