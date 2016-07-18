@@ -64,6 +64,11 @@ public class TypeSwitchTest {
             }
 
             @Override
+            protected String caseString(String value1, String value2) {
+                return "str" + value1 + value2;
+            }
+
+            @Override
             protected String defaultCase(String value1, String value2) {
                 return "def" + value1 + value2;
             }
@@ -87,7 +92,8 @@ public class TypeSwitchTest {
         assertEquals("dv1v2", s.doSwitch(Double.class, "v1", "v2"));
         assertEquals("ldtv1v2", s.doSwitch(LocalDateTime.class, "v1", "v2"));
         assertEquals("bav1v2", s.doSwitch(byte[].class, "v1", "v2"));
-        assertEquals("defv1v2", s.doSwitch(String.class, "v1", "v2"));
+        assertEquals("strv1v2", s.doSwitch(String.class, "v1", "v2"));
+        assertEquals("defv1v2", s.doSwitch(Object.class, "v1", "v2"));
     }
 
     @Test
@@ -184,6 +190,11 @@ public class TypeSwitchTest {
             }
 
             @Override
+            protected String caseString(String value1, String value2) {
+                return "str" + value1 + value2;
+            }
+
+            @Override
             protected String defaultCase(String value1, String value2) {
                 return "def" + value1 + value2;
             }
@@ -207,6 +218,7 @@ public class TypeSwitchTest {
         assertEquals("dwv1v2", s.doSwitch(Double.class, "v1", "v2"));
         assertEquals("ldtv1v2", s.doSwitch(LocalDateTime.class, "v1", "v2"));
         assertEquals("bav1v2", s.doSwitch(byte[].class, "v1", "v2"));
-        assertEquals("defv1v2", s.doSwitch(String.class, "v1", "v2"));
+        assertEquals("strv1v2", s.doSwitch(String.class, "v1", "v2"));
+        assertEquals("defv1v2", s.doSwitch(Object.class, "v1", "v2"));
     }
 }
