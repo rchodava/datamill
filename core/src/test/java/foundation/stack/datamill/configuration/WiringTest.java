@@ -6,6 +6,7 @@ import rx.functions.Func0;
 import rx.functions.Func1;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -181,11 +182,23 @@ public class WiringTest {
         }
     }
 
+    private static class Test7 {
+        private final String string;
+
+        public Test7() {
+            string = "default";
+        }
+
+        public Test7(String string) {
+            this.string = string;
+        }
+    }
+
     @Test
     public void named() {
         Test1 instance = new Wiring()
                 .addNamed("arg1", "value1")
-                .addNamed("arg2", "value2")
+                .addNamed("arg2", Optional.of("value2"))
                 .construct(Test1.class);
 
         assertEquals("value1", instance.arg1);
@@ -229,8 +242,18 @@ public class WiringTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
+    public void noNullOptionals() {
+        new Wiring().add(Optional.empty());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void noNullNamedAdditions() {
         new Wiring().addNamed("name", null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void noNullNamedOptionals() {
+        new Wiring().addNamed("name", Optional.empty());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -320,7 +343,7 @@ public class WiringTest {
     public void values() {
         Test6 instance = new Wiring()
                 .addNamed("boolean", new StringValue("true"))
-                .addNamed("byte", new StringValue("1"))
+                .addNamed("byte", Optional.of(new StringValue("1")))
                 .addNamed("char", new StringValue("a"))
                 .addNamed("short", new StringValue("2"))
                 .addNamed("int", new StringValue("3"))
@@ -343,5 +366,18 @@ public class WiringTest {
         assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
         assertEquals("value", instance.stringProperty);
         assertArrayEquals("array".getBytes(), instance.byteArrayProperty);
+    }
+
+    @Test
+    public void constructWith() {
+        Test7 instance = new Wiring()
+                .add("value")
+                .constructWith(Test7.class);
+        assertEquals("default", instance.string);
+
+        instance = new Wiring()
+                .add("value")
+                .constructWith(Test7.class, String.class);
+        assertEquals("value", instance.string);
     }
 }
