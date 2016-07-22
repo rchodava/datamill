@@ -11,10 +11,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Parameter;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Wirings form the basis of a lightweight dependency injection (DI) mechanism. Wirings support DI through public
@@ -59,8 +56,8 @@ import java.util.Map;
  * This constructs a new DatabaseClient using the constructor shown, injecting the provided named Strings as parameters.
  * <p/>
  * Wirings are very light-weight containers for objects and properties that are meant to be wired together. Each
- * separate Wiring instance is self-contained, and when the {@link #construct(Class)} method is called, only the objects
- * (including named objects) added to the Wiring are considered as candidates when injecting.
+ * separate Wiring instance is self-contained, and when the {@link #construct(Class)} method is called, only
+ * the objects (including named objects) added to the Wiring are considered as candidates when injecting.
  *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
@@ -169,7 +166,11 @@ public class Wiring {
                 throw new IllegalArgumentException("Cannot add null to graph");
             }
 
-            add(addition.getClass(), addition);
+            if (addition instanceof Optional) {
+                add(((Optional) addition).orElse(null));
+            } else {
+                add(addition.getClass(), addition);
+            }
         }
 
         return this;
@@ -185,6 +186,11 @@ public class Wiring {
     public Wiring addNamed(String name, Object addition) {
         if (addition == null) {
             throw new IllegalArgumentException("Cannot add null to graph");
+        }
+
+        if (addition instanceof Optional) {
+            addition = ((Optional) addition).orElse(null);
+            return addNamed(name, addition);
         }
 
         if (named.containsKey(name)) {
@@ -225,8 +231,8 @@ public class Wiring {
      * of the objects it knows about for injection into other constructors. Note that unlike other dependency injection
      * frameworks, the order of construct calls is important.
      *
-     * @param clazz Class we want to create an instance of.
-     * @param <T>   Type of instance.
+     * @param clazz          Class we want to create an instance of.
+     * @param <T>            Type of instance.
      * @return Instance that was constructed.
      * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
      * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
@@ -235,25 +241,47 @@ public class Wiring {
         Constructor<?>[] constructors = getPublicConstructors(clazz);
 
         for (Constructor<?> constructor : constructors) {
-            Parameter[] parameters = constructor.getParameters();
-            Object[] values = new Object[parameters.length];
-
-            boolean unsatisfied = false;
-            for (int i = 0; i < parameters.length; i++) {
-                values[i] = getValueForParameter(parameters[i]);
-                if (values[i] == null) {
-                    unsatisfied = true;
-                }
+            T values = constructWithConstructor(clazz, constructor);
+            if (values != null) {
+                return values;
             }
-
-            if (unsatisfied) {
-                continue; // Skip constructor that we can't satisfy all dependencies for
-            }
-
-            return instantiate(clazz, constructor, values);
         }
 
         throw new IllegalStateException("Unable to satisfy all dependencies needed to construct instance of " + clazz.getName());
+    }
+
+    /**
+     * Construct an instance of the specified class using a public constructors that has parameters of the specified
+     * types.
+     *
+     * @see #construct(Class)
+     */
+    public <T> T constructWith(Class<T> clazz, Class<?>... parameterTypes) {
+        try {
+            Constructor<T> constructor = clazz.getConstructor(parameterTypes);
+            return constructWithConstructor(clazz, constructor);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new IllegalStateException("Unable to find a constructor with specified parameters on " + clazz.getName());
+        }
+    }
+
+    private <T> T constructWithConstructor(Class<T> clazz, Constructor<?> constructor) {
+        Parameter[] parameters = constructor.getParameters();
+        Object[] values = new Object[parameters.length];
+
+        boolean unsatisfied = false;
+        for (int i = 0; i < parameters.length; i++) {
+            values[i] = getValueForParameter(parameters[i]);
+            if (values[i] == null) {
+                unsatisfied = true;
+            }
+        }
+
+        if (unsatisfied) {
+            return null;
+        }
+
+        return instantiate(clazz, constructor, values);
     }
 
     public <T> T instantiate(Class<T> clazz, Constructor<?> constructor, Object[] arguments) {
@@ -389,7 +417,7 @@ public class Wiring {
     /**
      * Similar convenience mechanism to {@link #with(Action1)} but the action is invoked if condition is true. If it is
      * not true, an else clause can be chained, as in:
-     *
+     * <p>
      * <pre>
      * new Wiring().add(...)
      *     .ifCondition(..., w -> {
