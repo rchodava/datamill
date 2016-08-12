@@ -4,8 +4,8 @@ import foundation.stack.datamill.http.Method;
 import foundation.stack.datamill.http.Request;
 import foundation.stack.datamill.http.RequestHeader;
 import foundation.stack.datamill.json.JsonArray;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import foundation.stack.datamill.json.JsonObject;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -69,5 +69,30 @@ public class RequestBuilderImplTest {
         assertEquals(Method.DELETE, new RequestBuilderImpl().method("DELETE").build().method());
         assertEquals(Method.TRACE, new RequestBuilderImpl().method("TRACE").build().method());
         assertEquals(Method.PATCH, new RequestBuilderImpl().method("PATCH").build().method());
+    }
+
+    @Test
+    public void requestHeaderBuildingIsCaseInsensitive() {
+        Request request = new RequestBuilderImpl()
+                .method(Method.GET)
+                .header("HEADER1", "valueh1v1")
+                .header("HEADER1", "valueh1v2")
+                .header("HEADER2", "valueh2v1").build();
+
+        assertEquals(Method.GET, request.method());
+        assertEquals("GET", request.rawMethod());
+        assertEquals("valueh1v1", request.firstHeader("header1").asString());
+        assertEquals("valueh2v1", request.firstHeader("header2").asString());
+
+        request = new RequestBuilderImpl()
+                .method(Method.GET)
+                .header("header1", "valueh1v1")
+                .header("header1", "valueh1v2")
+                .header("header2", "valueh2v1").build();
+
+        assertEquals(Method.GET, request.method());
+        assertEquals("GET", request.rawMethod());
+        assertEquals("valueh1v1", request.firstHeader("header1").asString());
+        assertEquals("valueh2v1", request.firstHeader("header2").asString());
     }
 }

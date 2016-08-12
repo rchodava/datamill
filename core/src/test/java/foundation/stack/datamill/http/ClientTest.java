@@ -37,7 +37,7 @@ public class ClientTest {
 
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entrySet()) {
-                verify(request, times(1)).addHeader(header.getKey(), header.getValue());
+                verify(request, times(1)).addHeader(header.getKey().toLowerCase(), header.getValue());
             }
         }
 

@@ -22,7 +22,7 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
     private QueryStringDecoder queryStringDecoder;
     private Multimap<String, String> trailingHeaders;
 
-    public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body,
+    ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body,
                              ExecutorService threadPool) {
         super(method, headers, uri, body);
 

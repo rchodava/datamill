@@ -42,7 +42,7 @@ public final class ServerRequestBuilder {
                 String value = header.getValue();
 
                 if (key != null && value != null) {
-                    builder.put(key, value);
+                    builder.put(key.toLowerCase(), value);
                 }
             }
 
