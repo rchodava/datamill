@@ -13,7 +13,7 @@ public class RequestImpl extends AbstractRequestImpl {
     private final Multimap<String, String> queryParameters;
     private final Map<String, String> uriParameters;
 
-    public RequestImpl(
+    RequestImpl(
             String method,
             Multimap<String, String> headers,
             String uri,

@@ -184,7 +184,7 @@ public class Client {
     private void setRequestHeaders(HttpUriRequest request, Multimap<String, String> headers) {
         if (headers != null) {
             for (Map.Entry<String, String> header : headers.entries()) {
-                request.addHeader(header.getKey(), header.getValue());
+                request.addHeader(header.getKey().toLowerCase(), header.getValue());
             }
         }
     }

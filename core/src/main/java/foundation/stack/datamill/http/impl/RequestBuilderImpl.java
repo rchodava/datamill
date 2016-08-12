@@ -50,7 +50,7 @@ public class RequestBuilderImpl implements RequestBuilder {
 
     @Override
     public RequestBuilder header(String name, String value) {
-        headers.put(name, value);
+        headers.put(name.toLowerCase(), value);
         return this;
     }
 
