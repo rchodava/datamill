@@ -325,6 +325,14 @@ public class Wiring {
             return value;
         }
 
+        if (type.isPrimitive()) {
+            Class<?> wrapper = Classes.primitiveToWrapper(type);
+            value = getObjectOfType(wrapper);
+            if (value != null) {
+                return value;
+            }
+        }
+
         value = getValueOfType(type);
         if (value != null) {
             return value;
@@ -394,6 +402,13 @@ public class Wiring {
             Class<?> type = parameter.getType();
             if (type.isInstance(value)) {
                 return value;
+            }
+
+            if (type.isPrimitive()) {
+                Class<?> wrapper = Classes.primitiveToWrapper(type);
+                if (wrapper.isInstance(value)) {
+                    return value;
+                }
             }
 
             if (Value.class.isAssignableFrom(value.getClass())) {

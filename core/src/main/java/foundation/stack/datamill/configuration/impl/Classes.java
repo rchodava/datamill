@@ -53,7 +53,7 @@ public class Classes {
         }
     }
 
-    private static Class<?> primitiveToWrapper(final Class<?> clazz) {
+    public static Class<?> primitiveToWrapper(final Class<?> clazz) {
         Class<?> convertedClass = clazz;
         if (clazz != null && clazz.isPrimitive()) {
             convertedClass = primitiveWrapperMap.get(clazz);
