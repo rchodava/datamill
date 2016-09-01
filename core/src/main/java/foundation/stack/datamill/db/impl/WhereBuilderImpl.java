@@ -13,7 +13,8 @@ import java.util.List;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder, ConjunctionBuilder, JoinBuilder<R> {
+abstract class WhereBuilderImpl<R> implements SelectWhereBuilder<R>, ConditionBuilder, ConjunctionBuilder,
+        JoinBuilder<R>, SelectLimitBuilder<R> {
     protected final StringBuilder query;
     protected final List<Object> parameters;
 
@@ -58,6 +59,11 @@ abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder,
 
             parameters.addAll(values);
         }
+    }
+
+    @Override
+    public R all() {
+        return execute();
     }
 
     @Override
@@ -117,6 +123,8 @@ abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder,
         return eq(SqlSyntax.qualifiedName(table, column), value);
     }
 
+    protected abstract R execute();
+
     @Override
     public <T> ConjunctionBuilder gt(String column, T value) {
         return addBinaryClause(SqlSyntax.SQL_GREATER_THAN, column, value);
@@ -164,6 +172,38 @@ abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder,
     }
 
     @Override
+    public JoinBuilder<R> leftJoin(String table) {
+        query.append(SqlSyntax.SQL_LEFT_JOIN);
+        query.append(table);
+
+        return this;
+    }
+
+    @Override
+    public R limit(int count) {
+        query.append(SqlSyntax.SQL_LIMIT);
+        query.append(count);
+
+        return execute();
+    }
+
+    @Override
+    public R limit(int offset, int count) {
+        query.append(SqlSyntax.SQL_LIMIT);
+        query.append(offset);
+        query.append(SqlSyntax.COMMA);
+        query.append(' ');
+        query.append(count);
+
+        return execute();
+    }
+
+    @Override
+    public JoinBuilder<R> leftJoin(Outline<?> outline) {
+        return leftJoin(outline.pluralName());
+    }
+
+    @Override
     public <T> ConjunctionBuilder lt(String column, T value) {
         return addBinaryClause(SqlSyntax.SQL_LESS_THAN, column, value);
     }
@@ -178,30 +218,8 @@ abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder,
         return lt(SqlSyntax.qualifiedName(table, column), value);
     }
 
-    protected abstract R execute();
-
     @Override
-    public R where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder) {
-        query.append(SqlSyntax.SQL_WHERE);
-        conditionBuilder.call(this);
-        return execute();
-    }
-
-    @Override
-    public JoinBuilder<R> leftJoin(String table) {
-        query.append(SqlSyntax.SQL_LEFT_JOIN);
-        query.append(table);
-
-        return this;
-    }
-
-    @Override
-    public JoinBuilder<R> leftJoin(Outline<?> outline) {
-        return leftJoin(outline.pluralName());
-    }
-
-    @Override
-    public WhereBuilder<R> onEq(String column1, String column2) {
+    public SelectWhereBuilder<R> onEq(String column1, String column2) {
         query.append(SqlSyntax.SQL_ON);
         query.append(column1);
         query.append(SqlSyntax.SQL_EQ);
@@ -211,18 +229,26 @@ abstract class WhereBuilderImpl<R> implements WhereBuilder<R>, ConditionBuilder,
     }
 
     @Override
-    public WhereBuilder<R> onEq(String table1, String column1, String table2, String column2) {
+    public SelectWhereBuilder<R> onEq(String table1, String column1, String table2, String column2) {
         return onEq(SqlSyntax.qualifiedName(table1, column1), SqlSyntax.qualifiedName(table2, column2));
     }
 
     @Override
-    public WhereBuilder<R> onEq(Member member1, Member member2) {
+    public SelectWhereBuilder<R> onEq(Member member1, Member member2) {
         return onEq(member1.outline().pluralName(), member1.name(),
                 member2.outline().pluralName(), member2.name());
     }
 
     @Override
-    public WhereBuilder<R> onEq(String table1, String column1, Member member2) {
+    public SelectWhereBuilder<R> onEq(String table1, String column1, Member member2) {
         return onEq(table1, column1, member2.outline().pluralName(), member2.name());
+    }
+
+    @Override
+    public SelectLimitBuilder<R> where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder) {
+        query.append(SqlSyntax.SQL_WHERE);
+        conditionBuilder.call(this);
+
+        return this;
     }
 }

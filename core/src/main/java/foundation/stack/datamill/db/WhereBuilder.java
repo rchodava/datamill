@@ -1,14 +1,13 @@
 package foundation.stack.datamill.db;
 
-import foundation.stack.datamill.reflection.Outline;
+import foundation.stack.datamill.LimitBuilder;
 import rx.functions.Func1;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface WhereBuilder<R> {
+public interface WhereBuilder<R, L extends LimitBuilder<R>> {
     R all();
-    R where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder);
-    JoinBuilder<R> leftJoin(String table);
-    JoinBuilder<R> leftJoin(Outline<?> outline);
+    R limit(int count);
+    L where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder);
 }

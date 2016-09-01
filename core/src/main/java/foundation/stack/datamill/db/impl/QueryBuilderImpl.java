@@ -1,6 +1,7 @@
 package foundation.stack.datamill.db.impl;
 
 import com.google.common.base.Joiner;
+import foundation.stack.datamill.LimitBuilder;
 import foundation.stack.datamill.db.*;
 import foundation.stack.datamill.reflection.Member;
 import foundation.stack.datamill.reflection.Outline;
@@ -27,6 +28,7 @@ import java.util.stream.StreamSupport;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public abstract class QueryBuilderImpl implements QueryBuilder {
+    private static final Object[] EMPTY_PARAMETERS = new Object[0];
     private static final InsertSuffixBuilder EMPTY_UPDATE_BUILDER = new EmptyUpdateSuffixBuilder();
 
     private static void appendUpdateAssignments(StringBuilder query, List<Object> parameters, Map<String, ?> values) {
@@ -61,7 +63,8 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder<UpdateQueryExecution> set(Map<String, ?> values) {
+        public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> set(
+                Map<String, ?> values) {
             if (values.size() < 1) {
                 return new UpdateWhereClause(query, parameters);
             }
@@ -72,7 +75,8 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder<UpdateQueryExecution> set(Function<RowBuilder, Map<String, ?>> rowConstructor) {
+        public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> set(
+                Function<RowBuilder, Map<String, ?>> rowConstructor) {
             return set(rowConstructor.apply(new RowBuilderImpl()));
         }
     }
@@ -206,13 +210,12 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public UpdateQueryExecution all() {
-            return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
-        }
-
-        @Override
         public UpdateQueryExecution execute() {
-            return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
+            if (!parameters.isEmpty()) {
+                return QueryBuilderImpl.this.update(query.toString(), parameters.toArray(new Object[parameters.size()]));
+            } else {
+                return QueryBuilderImpl.this.update(query.toString(), EMPTY_PARAMETERS);
+            }
         }
     }
 
@@ -222,17 +225,12 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public Observable<Row> all() {
+        public Observable<Row> execute() {
             if (!parameters.isEmpty()) {
                 return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
             } else {
                 return QueryBuilderImpl.this.query(query.toString());
             }
-        }
-
-        @Override
-        public Observable<Row> execute() {
-            return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
         }
     }
 
@@ -250,35 +248,40 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public WhereBuilder<Observable<Row>> from(String table) {
+        public SelectWhereBuilder<Observable<Row>> from(String table) {
             query.append(SqlSyntax.SQL_FROM);
             query.append(table);
             return new SelectWhereClause(query);
         }
 
         @Override
-        public WhereBuilder<Observable<Row>> from(Outline<?> outline) {
+        public SelectWhereBuilder<Observable<Row>> from(Outline<?> outline) {
             return from(outline.pluralName());
         }
     }
 
     @Override
-    public WhereBuilder<UpdateQueryExecution> deleteFrom(String table) {
+    public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> deleteFrom(
+            String table) {
         return new UpdateWhereClause(new StringBuilder(SqlSyntax.SQL_DELETE_FROM).append(table));
     }
 
     @Override
-    public WhereBuilder<UpdateQueryExecution> deleteFrom(Outline<?> outline) {
+    public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> deleteFrom(
+            Outline<?> outline) {
         return deleteFrom(outline.pluralName());
     }
 
     @Override
-    public WhereBuilder<UpdateQueryExecution> deleteFromNamed(String table) {
-        return new UpdateWhereClause(new StringBuilder(SqlSyntax.SQL_DELETE).append(table).append(SqlSyntax.SQL_FROM).append(table));
+    public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> deleteFromNamed(
+            String table) {
+        return new UpdateWhereClause(new StringBuilder(SqlSyntax.SQL_DELETE).append(table).append(SqlSyntax.SQL_FROM)
+                .append(table));
     }
 
     @Override
-    public WhereBuilder<UpdateQueryExecution> deleteFromNamed(Outline<?> outline) {
+    public WhereBuilder<UpdateQueryExecution, ? extends LimitBuilder<? extends UpdateQueryExecution>> deleteFromNamed(
+            Outline<?> outline) {
         return deleteFromNamed(outline.pluralName());
     }
 

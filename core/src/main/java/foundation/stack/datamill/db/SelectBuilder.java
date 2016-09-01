@@ -7,6 +7,6 @@ import rx.Observable;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface SelectBuilder {
-    WhereBuilder<Observable<Row>> from(String table);
-    WhereBuilder<Observable<Row>> from(Outline<?> outline);
+    SelectWhereBuilder<Observable<Row>> from(String table);
+    SelectWhereBuilder<Observable<Row>> from(Outline<?> outline);
 }

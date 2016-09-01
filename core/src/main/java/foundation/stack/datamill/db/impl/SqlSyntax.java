@@ -13,6 +13,7 @@ public interface SqlSyntax {
     String SQL_INSERT_INTO = "INSERT INTO ";
     String SQL_LEFT_JOIN = " LEFT JOIN ";
     String SQL_LESS_THAN = " < ";
+    String SQL_LIMIT = " LIMIT ";
     String SQL_NULL = "NULL";
     String SQL_ON = " ON ";
     String SQL_ON_DUPLICATE_KEY_UPDATE = " ON DUPLICATE KEY UPDATE ";
