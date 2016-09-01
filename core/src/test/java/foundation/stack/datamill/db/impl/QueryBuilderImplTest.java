@@ -352,6 +352,14 @@ public class QueryBuilderImplTest {
         assertEquals("DELETE FROM table_name WHERE string_column IN (?)", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 1 }, queryBuilder.getLastParameters());
         assertTrue(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.deleteFrom("table_name")
+                .leftJoin("second_table").onEq("second_column", "third_column")
+                .where(c -> c.eq("string_column", "value")).all();
+        assertEquals("DELETE FROM table_name LEFT JOIN second_table ON second_column = third_column WHERE string_column = ?",
+                queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { "value" }, queryBuilder.getLastParameters());
+        assertTrue(queryBuilder.getLastWasUpdate());
     }
 
     @Test
