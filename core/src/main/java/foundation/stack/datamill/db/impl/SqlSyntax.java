@@ -4,9 +4,11 @@ package foundation.stack.datamill.db.impl;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface SqlSyntax {
+    String SQL_ASC = " ASC";
     String SQL_ASSIGNMENT = " = ";
     String SQL_DELETE_FROM = "DELETE FROM ";
     String SQL_DELETE = "DELETE ";
+    String SQL_DESC = " DESC";
     String SQL_EQ = " = ";
     String SQL_FROM = " FROM ";
     String SQL_GREATER_THAN = " > ";
@@ -26,6 +28,7 @@ public interface SqlSyntax {
     String SQL_AND = " AND ";
     String SQL_IN = " IN ";
     String SQL_OR = " OR ";
+    String SQL_ORDER_BY = " ORDER BY ";
     String OPEN_PARENTHESIS = "(";
     String CLOSE_PARENTHESIS = ")";
     String COMMA = ",";

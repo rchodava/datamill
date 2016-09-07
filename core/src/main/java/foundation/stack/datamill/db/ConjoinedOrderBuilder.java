@@ -5,8 +5,10 @@ import foundation.stack.datamill.reflection.Member;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public interface SelectWhereBuilder<R> extends WhereBuilder<R, SelectLimitBuilder<R>> {
+public interface ConjoinedOrderBuilder<R> {
+    R all();
+    R limit(int count);
     R limit(int offset, int count);
-    OrderBuilder<R> orderBy(String fragment);
-    OrderBuilder<R> orderBy(Member member);
+    OrderBuilder<R> andOrderBy(String fragment);
+    OrderBuilder<R> andOrderBy(Member member);
 }

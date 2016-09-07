@@ -118,12 +118,25 @@ public class QueryBuilderImplTest {
         assertEquals("SELECT * FROM table_name LIMIT 10, 20", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
+        queryBuilder.selectAll().from("table_name").orderBy("column").asc().limit(1);
+        assertEquals("SELECT * FROM table_name ORDER BY column ASC LIMIT 1", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.selectAll().from("table_name").orderBy("column").asc().andOrderBy("column2").desc().limit(1);
+        assertEquals("SELECT * FROM table_name ORDER BY column ASC, column2 DESC LIMIT 1", queryBuilder.getLastQuery());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
         queryBuilder.selectAll().from(outline).all();
         assertEquals("SELECT * FROM query_test_beans", queryBuilder.getLastQuery());
         assertFalse(queryBuilder.getLastWasUpdate());
 
         queryBuilder.selectAll().from("table_name").where(c -> c.eq("int_column", 2)).all();
         assertEquals("SELECT * FROM table_name WHERE int_column = ?", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.selectAll().from("table_name").where(c -> c.eq("int_column", 2)).orderBy("int_column").asc().all();
+        assertEquals("SELECT * FROM table_name WHERE int_column = ? ORDER BY int_column ASC", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 
@@ -134,6 +147,11 @@ public class QueryBuilderImplTest {
 
         queryBuilder.selectAll().from("table_name").where(c -> c.eq("int_column", 2)).limit(10, 20);
         assertEquals("SELECT * FROM table_name WHERE int_column = ? LIMIT 10, 20", queryBuilder.getLastQuery());
+        assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
+        assertFalse(queryBuilder.getLastWasUpdate());
+
+        queryBuilder.selectAll().from("table_name").where(c -> c.eq("int_column", 2)).orderBy("int_column").desc().limit(10, 20);
+        assertEquals("SELECT * FROM table_name WHERE int_column = ? ORDER BY int_column DESC LIMIT 10, 20", queryBuilder.getLastQuery());
         assertArrayEquals(new Object[] { 2 }, queryBuilder.getLastParameters());
         assertFalse(queryBuilder.getLastWasUpdate());
 

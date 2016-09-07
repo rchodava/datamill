@@ -14,7 +14,7 @@ import java.util.List;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 abstract class WhereBuilderImpl<R> implements SelectWhereBuilder<R>, ConditionBuilder, ConjunctionBuilder,
-        JoinBuilder<R>, SelectLimitBuilder<R> {
+        JoinBuilder<R>, SelectLimitBuilder<R>, OrderBuilder<R>, ConjoinedOrderBuilder<R> {
     protected final StringBuilder query;
     protected final List<Object> parameters;
 
@@ -84,6 +84,31 @@ abstract class WhereBuilderImpl<R> implements SelectWhereBuilder<R>, ConditionBu
     @Override
     public ConditionBuilder and() {
         query.append(SqlSyntax.SQL_AND);
+        return this;
+    }
+
+    @Override
+    public OrderBuilder<R> andOrderBy(String fragment) {
+        query.append(SqlSyntax.COMMA);
+        query.append(' ');
+        query.append(fragment);
+        return this;
+    }
+
+    @Override
+    public OrderBuilder<R> andOrderBy(Member member) {
+        return andOrderBy(SqlSyntax.qualifiedName(member.outline().pluralName(), member.name()));
+    }
+
+    @Override
+    public ConjoinedOrderBuilder<R> asc() {
+        query.append(SqlSyntax.SQL_ASC);
+        return this;
+    }
+
+    @Override
+    public ConjoinedOrderBuilder<R> desc() {
+        query.append(SqlSyntax.SQL_DESC);
         return this;
     }
 
@@ -242,6 +267,18 @@ abstract class WhereBuilderImpl<R> implements SelectWhereBuilder<R>, ConditionBu
     @Override
     public SelectWhereBuilder<R> onEq(String table1, String column1, Member member2) {
         return onEq(table1, column1, member2.outline().pluralName(), member2.name());
+    }
+
+    @Override
+    public OrderBuilder<R> orderBy(String fragment) {
+        query.append(SqlSyntax.SQL_ORDER_BY);
+        query.append(fragment);
+        return this;
+    }
+
+    @Override
+    public OrderBuilder<R> orderBy(Member member) {
+        return orderBy(SqlSyntax.qualifiedName(member.outline().pluralName(), member.name()));
     }
 
     @Override
