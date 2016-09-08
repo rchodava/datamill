@@ -10,7 +10,7 @@ import rx.functions.Func1;
 public interface WhereBuilder<R, L extends LimitBuilder<R>> {
     R all();
     R limit(int count);
-    L where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder);
     JoinBuilder<R> leftJoin(String table);
     JoinBuilder<R> leftJoin(Outline<?> outline);
+    L where(Func1<ConditionBuilder, TerminalCondition> conditionBuilder);
 }
