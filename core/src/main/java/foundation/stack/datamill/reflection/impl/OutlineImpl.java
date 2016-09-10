@@ -41,7 +41,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseBooleanWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Boolean) value3.asObject(Boolean.class));
+                    value1.set(value2, value3 != null ? (Boolean) value3.asObject(Boolean.class) : null);
                     return null;
                 }
 
@@ -53,7 +53,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseByteWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Byte) value3.asObject(Byte.class));
+                    value1.set(value2, value3 != null ? (Byte) value3.asObject(Byte.class) : null);
                     return null;
                 }
 
@@ -65,7 +65,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseCharacterWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Character) value3.asObject(Character.class));
+                    value1.set(value2, value3 != null ? (Character) value3.asObject(Character.class) : null);
                     return null;
                 }
 
@@ -77,7 +77,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseShortWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Short) value3.asObject(Short.class));
+                    value1.set(value2, value3 != null ? (Short) value3.asObject(Short.class) : null);
                     return null;
                 }
 
@@ -89,7 +89,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseIntegerWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Integer) value3.asObject(Integer.class));
+                    value1.set(value2, value3 != null ? (Integer) value3.asObject(Integer.class) : null);
                     return null;
                 }
 
@@ -101,7 +101,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseLongWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Long) value3.asObject(Long.class));
+                    value1.set(value2, value3 != null ? (Long) value3.asObject(Long.class) : null);
                     return null;
                 }
 
@@ -113,7 +113,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseFloatWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Float) value3.asObject(Float.class));
+                    value1.set(value2, value3 != null ? (Float) value3.asObject(Float.class) : null);
                     return null;
                 }
 
@@ -125,25 +125,25 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 @Override
                 protected Void caseDoubleWrapper(Property value1, T value2, Value value3) {
-                    value1.set(value2, (Double) value3.asObject(Double.class));
+                    value1.set(value2, value3 != null ? (Double) value3.asObject(Double.class) : null);
                     return null;
                 }
 
                 @Override
                 protected Void caseLocalDateTime(Property value1, T value2, Value value3) {
-                    value1.set(value2, value3.asLocalDateTime());
+                    value1.set(value2, value3 != null ? value3.asLocalDateTime() : null);
                     return null;
                 }
 
                 @Override
                 protected Void caseByteArray(Property value1, T value2, Value value3) {
-                    value1.set(value2, value3.asByteArray());
+                    value1.set(value2, value3 != null ? value3.asByteArray() : null);
                     return null;
                 }
 
                 @Override
                 protected Void defaultCase(Property value1, T value2, Value value3) {
-                    value1.set(value2, value3.asString());
+                    value1.set(value2, value3 != null ? value3.asString() : null);
                     return null;
                 }
             };

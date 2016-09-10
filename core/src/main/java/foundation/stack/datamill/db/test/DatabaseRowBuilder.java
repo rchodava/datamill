@@ -75,7 +75,12 @@ public class DatabaseRowBuilder<T> {
 
         @Override
         public Value column(String name) {
-            return new StringValue(values.get(name).toString());
+            Object value = values.get(name);
+            if (value != null) {
+                return new StringValue(value.toString());
+            }
+
+            return null;
         }
 
         @Override
