@@ -320,22 +320,30 @@ public class Wiring {
 
     private Object getValueForParameterByType(Parameter parameter) {
         Class<?> type = parameter.getType();
+        return get(type);
+    }
+
+    /**
+     * Get an object of the specified type that was previously added to or constructed by this wiring, or null if no
+     * value of the specified type was added or constructed.
+     */
+    public <T> T get(Class<T> type) {
         Object value = getObjectOfType(type);
         if (value != null) {
-            return value;
+            return (T) value;
         }
 
         if (type.isPrimitive()) {
             Class<?> wrapper = Classes.primitiveToWrapper(type);
             value = getObjectOfType(wrapper);
             if (value != null) {
-                return value;
+                return (T) value;
             }
         }
 
         value = getValueOfType(type);
         if (value != null) {
-            return value;
+            return (T) value;
         }
 
         return null;
