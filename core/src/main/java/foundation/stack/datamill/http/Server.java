@@ -14,6 +14,7 @@ import io.netty.handler.ssl.util.SelfSignedCertificate;
 import foundation.stack.datamill.http.builder.RouteBuilder;
 import foundation.stack.datamill.http.impl.ClientToServerChannelInitializer;
 import foundation.stack.datamill.http.impl.RouteBuilderImpl;
+import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
@@ -36,16 +37,29 @@ public class Server {
     private final Function<RouteBuilder, Route> routeConstructor;
     private Channel serverChannel;
     private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final boolean daemon;
 
     public Server(Function<RouteBuilder, Route> routeConstructor) {
         this(routeConstructor, null);
     }
 
+    public Server(Function<RouteBuilder, Route> routeConstructor, boolean daemon) {
+        this(routeConstructor, null, daemon);
+    }
+
     public Server(
             Function<RouteBuilder, Route> routeConstructor,
             BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor) {
+        this(routeConstructor, errorResponseConstructor, false);
+    }
+
+    public Server(
+            Function<RouteBuilder, Route> routeConstructor,
+            BiFunction<ServerRequest, Throwable, Observable<Response>> errorResponseConstructor,
+            boolean daemon) {
         this.routeConstructor = routeConstructor;
         this.errorResponseConstructor = errorResponseConstructor;
+        this.daemon = daemon;
     }
 
     public Server listen(String host, int port, boolean secure) {
@@ -61,7 +75,9 @@ public class Server {
 
         Route route = routeConstructor.apply(new RouteBuilderImpl());
 
-        eventLoopGroup = new NioEventLoopGroup();
+        eventLoopGroup = daemon ?
+                new NioEventLoopGroup(0, new DefaultThreadFactory(NioEventLoopGroup.class, true)) :
+                new NioEventLoopGroup();
 
         ServerBootstrap bootstrap = new ServerBootstrap()
                 .group(eventLoopGroup)
