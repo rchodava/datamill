@@ -23,6 +23,7 @@ import javax.net.ssl.SSLException;
 import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -36,7 +37,7 @@ public class Server {
     private EventLoopGroup eventLoopGroup;
     private final Function<RouteBuilder, Route> routeConstructor;
     private Channel serverChannel;
-    private final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private final ExecutorService threadPool;
     private final boolean daemon;
 
     public Server(Function<RouteBuilder, Route> routeConstructor) {
@@ -60,6 +61,10 @@ public class Server {
         this.routeConstructor = routeConstructor;
         this.errorResponseConstructor = errorResponseConstructor;
         this.daemon = daemon;
+
+        this.threadPool = Executors.newCachedThreadPool(daemon ?
+            new DaemonThreadFactory(Executors.defaultThreadFactory()) :
+            Executors.defaultThreadFactory());
     }
 
     public Server listen(String host, int port, boolean secure) {
@@ -124,6 +129,24 @@ public class Server {
         } finally {
             eventLoopGroup.shutdownGracefully();
             logger.debug("HTTP server was shut down");
+        }
+    }
+
+    private static class DaemonThreadFactory implements ThreadFactory {
+        private final ThreadFactory threadFactory;
+
+        public DaemonThreadFactory(ThreadFactory threadFactory) {
+            this.threadFactory = threadFactory;
+        }
+
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread thread = threadFactory.newThread(r);
+            if (thread != null) {
+                thread.setDaemon(true);
+            }
+
+            return thread;
         }
     }
 }
