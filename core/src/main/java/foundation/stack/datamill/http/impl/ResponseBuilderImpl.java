@@ -130,7 +130,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
                             protected byte[] map(Json source) {
                                 return (source.toString() + ",").getBytes();
                             }
-                        }).map(json -> (json.toString() + ",").getBytes())),
+                        }).map(json -> (json.toString()).getBytes())),
                 Observable.just("]".getBytes())));
     }
 
