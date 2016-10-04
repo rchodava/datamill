@@ -122,16 +122,12 @@ public class ResponseBuilderImpl implements ResponseBuilder {
 
     @Override
     public ResponseBuilder streamingJson(Func1<Observer<Json>, Observable<Json>> jsonStreamer) {
-        return streamingBody(body -> Observable.concat(
-                Observable.just("[".getBytes()),
-                Observable.defer(() ->
-                        jsonStreamer.call(new DelegatingObserver<Json, byte[]>(body) {
-                            @Override
-                            protected byte[] map(Json source) {
-                                return (source.toString() + ",").getBytes();
-                            }
-                        }).map(json -> (json.toString() + ",").getBytes())),
-                Observable.just("]".getBytes())));
+        return streamingBody(body -> {
+            JsonStreamer streamer = new JsonStreamer(body);
+            jsonStreamer.call(streamer).subscribe(streamer);
+
+            return Observable.empty();
+        });
     }
 
     @Override
@@ -181,6 +177,35 @@ public class ResponseBuilderImpl implements ResponseBuilder {
         @Override
         public void onCompleted() {
             target.onCompleted();
+        }
+    }
+
+    private static class JsonStreamer implements Observer<Json> {
+        private final Observer<byte[]> body;
+
+        private boolean first = true;
+
+        JsonStreamer(Observer<byte[]> body) {
+            this.body = body;
+        }
+
+        @Override
+        public void onNext(Json json) {
+            String out = first ? "[" : ",";;
+            first = false;
+
+            body.onNext((out + json.toString()).getBytes());
+        }
+
+        @Override
+        public void onError(Throwable e) {
+            body.onError(e);
+        }
+
+        @Override
+        public void onCompleted() {
+            body.onNext("]".getBytes());
+            body.onCompleted();
         }
     }
 }

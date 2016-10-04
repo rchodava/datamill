@@ -54,6 +54,13 @@ public class ResponseBuilderTest {
             return Observable.empty();
         });
         assertEquals("Test Content More Content", builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
+    }
+
+    @Test
+    public void streamingJson() {
+        ExecutorService threadPool = Executors.newSingleThreadExecutor();
+
+        ResponseBuilderImpl builder = new ResponseBuilderImpl(threadPool);
 
         builder.streamingJson(observer -> {
             observer.onNext(new JsonObject().put("test", "value"));
@@ -62,9 +69,43 @@ public class ResponseBuilderTest {
             return Observable.empty();
         });
 
-        JSONArray array = new JSONArray(builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
-        assertEquals("value", array.getJSONObject(0).get("test"));
-        assertEquals("test1", array.getJSONArray(1).get(0));
-        assertEquals("test2", array.getJSONArray(1).get(1));
+        JSONArray streamingJsonArray = new JSONArray(builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
+        assertEquals("value", streamingJsonArray.getJSONObject(0).get("test"));
+        assertEquals("test1", streamingJsonArray.getJSONArray(1).get(0));
+        assertEquals("test2", streamingJsonArray.getJSONArray(1).get(1));
+
+        builder.streamingJson(observer -> {
+            observer.onNext(new JsonObject().put("test", "value"));
+            observer.onNext(new JsonArray(new String[] { "test1", "test2" }));
+
+            return Observable.concat(
+                    Observable.just(new JsonObject().put("response1", "response1value")),
+                    Observable.just(new JsonObject().put("response2", "response2value")));
+        });
+
+        streamingJsonArray = new JSONArray(builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
+        assertEquals("value", streamingJsonArray.getJSONObject(0).get("test"));
+        assertEquals("test1", streamingJsonArray.getJSONArray(1).get(0));
+        assertEquals("test2", streamingJsonArray.getJSONArray(1).get(1));
+        assertEquals("response1value", streamingJsonArray.getJSONObject(2).get("response1"));
+        assertEquals("response2value", streamingJsonArray.getJSONObject(3).get("response2"));
+
+        builder.streamingJson(observer -> Observable.concat(
+                    Observable.just(new JsonObject().put("response1", "response1value")),
+                    Observable.just(new JsonObject().put("response2", "response2value"))));
+
+        streamingJsonArray = new JSONArray(builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
+        assertEquals("response1value", streamingJsonArray.getJSONObject(0).get("response1"));
+        assertEquals("response2value", streamingJsonArray.getJSONObject(1).get("response2"));
+
+        builder.streamingJson(observer -> {
+            observer.onNext(new JsonObject().put("test", "value"));
+
+            return Observable.just(new JsonObject().put("response2", "response2value"));
+        });
+
+        streamingJsonArray = new JSONArray(builder.ok().body().get().asString().toBlocking().lastOrDefault(null));
+        assertEquals("value", streamingJsonArray.getJSONObject(0).get("test"));
+        assertEquals("response2value", streamingJsonArray.getJSONObject(1).get("response2"));
     }
 }
