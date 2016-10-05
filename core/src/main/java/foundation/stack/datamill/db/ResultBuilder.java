@@ -10,6 +10,6 @@ import java.util.List;
  */
 public interface ResultBuilder {
     <T> Observable<List<T>> getAs(Func1<Row, T> transformer);
-    <T> Observable<T> getFirstAs(Func1<Row, T> transformer);
+    <T> Observable<T> firstAs(Func1<Row, T> transformer);
     Observable<Row> stream();
 }

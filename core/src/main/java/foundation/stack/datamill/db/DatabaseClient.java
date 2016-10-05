@@ -4,6 +4,7 @@ import com.github.davidmoten.rx.jdbc.*;
 import foundation.stack.datamill.configuration.Named;
 import foundation.stack.datamill.db.impl.QueryBuilderImpl;
 import foundation.stack.datamill.db.impl.RowImpl;
+import foundation.stack.datamill.db.impl.UnsubscribeOnCompletedOperator;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,8 +203,8 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         }
 
         @Override
-        public <T> Observable<T> getFirstAs(Func1<Row, T> transformer) {
-            return stream().map(transformer).first();
+        public <T> Observable<T> firstAs(Func1<Row, T> transformer) {
+            return stream().map(transformer).take(1).lift(new UnsubscribeOnCompletedOperator<>());
         }
 
         @Override

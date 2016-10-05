@@ -2,7 +2,6 @@ package foundation.stack.datamill.db.impl;
 
 import com.google.common.collect.ImmutableMap;
 import foundation.stack.datamill.db.ResultBuilder;
-import foundation.stack.datamill.db.Row;
 import foundation.stack.datamill.db.UpdateQueryExecution;
 import foundation.stack.datamill.reflection.Outline;
 import foundation.stack.datamill.reflection.OutlineBuilder;

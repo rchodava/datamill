@@ -90,7 +90,7 @@ public class TestDatabaseClientTest {
         client.select(testModelOutline.member(m -> m.getProperty()))
                 .from(testModelOutline)
                 .all()
-                .getFirstAs(row -> testModelOutline.wrap(new TestModel())
+                .firstAs(row -> testModelOutline.wrap(new TestModel())
                         .set(m -> m.getProperty(), row.column(testModelOutline.member(m -> m.getProperty())))
                         .set(m -> m.getStringProperty(), row.column(testModelOutline.member(m -> m.getStringProperty())))
                         .unwrap())
