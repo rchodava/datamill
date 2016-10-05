@@ -1,7 +1,7 @@
 package foundation.stack.datamill.db.impl;
 
 import com.google.common.base.Joiner;
-import foundation.stack.datamill.LimitBuilder;
+import foundation.stack.datamill.db.LimitBuilder;
 import foundation.stack.datamill.db.*;
 import foundation.stack.datamill.reflection.Member;
 import foundation.stack.datamill.reflection.Outline;
@@ -219,13 +219,13 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
     }
 
-    private class SelectWhereClause extends WhereBuilderImpl<Observable<Row>> {
+    private class SelectWhereClause extends WhereBuilderImpl<ResultBuilder> {
         public SelectWhereClause(StringBuilder query) {
             super(query);
         }
 
         @Override
-        public Observable<Row> execute() {
+        public ResultBuilder execute() {
             if (!parameters.isEmpty()) {
                 return QueryBuilderImpl.this.query(query.toString(), parameters.toArray(new Object[parameters.size()]));
             } else {
@@ -248,14 +248,14 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         }
 
         @Override
-        public SelectWhereBuilder<Observable<Row>> from(String table) {
+        public SelectWhereBuilder<ResultBuilder> from(String table) {
             query.append(SqlSyntax.SQL_FROM);
             query.append(table);
             return new SelectWhereClause(query);
         }
 
         @Override
-        public SelectWhereBuilder<Observable<Row>> from(Outline<?> outline) {
+        public SelectWhereBuilder<ResultBuilder> from(Outline<?> outline) {
             return from(outline.pluralName());
         }
     }
@@ -295,8 +295,8 @@ public abstract class QueryBuilderImpl implements QueryBuilder {
         return insertInto(outline.pluralName());
     }
 
-    protected abstract Observable<Row> query(String query);
-    protected abstract Observable<Row> query(String query, Object... parameters);
+    protected abstract ResultBuilder query(String query);
+    protected abstract ResultBuilder query(String query, Object... parameters);
     protected abstract UpdateQueryExecution update(String query, Object... parameters);
 
     @Override

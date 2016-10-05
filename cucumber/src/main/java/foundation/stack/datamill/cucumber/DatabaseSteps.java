@@ -69,7 +69,7 @@ public class DatabaseSteps {
     }
 
     private Observable<Row> executeSelect(String resolvedUrl, String sql, Object... parameters) {
-        return new DatabaseClient(resolvedUrl).query(sql, parameters);
+        return new DatabaseClient(resolvedUrl).query(sql, parameters).stream();
     }
 
     protected String buildQuery(String tableName, String testFragment, String criteriaFragment) {

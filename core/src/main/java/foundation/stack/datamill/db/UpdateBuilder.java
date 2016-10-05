@@ -1,7 +1,5 @@
 package foundation.stack.datamill.db;
 
-import foundation.stack.datamill.LimitBuilder;
-
 import java.util.Map;
 import java.util.function.Function;
 
