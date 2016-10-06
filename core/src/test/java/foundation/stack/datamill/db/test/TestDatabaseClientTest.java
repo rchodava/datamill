@@ -64,7 +64,7 @@ public class TestDatabaseClientTest {
         client.changeCatalog("catalog");
         verify(database).changeCatalog("catalog");
 
-        client.query("SELECT * FROM table");
+        client.query("SELECT * FROM table").stream();
         verify(database).query("SELECT * FROM table", new Object[0]);
 
         client.update("UPDATE table SET column = NULL", new Object[0]).count();
@@ -90,7 +90,7 @@ public class TestDatabaseClientTest {
         client.select(testModelOutline.member(m -> m.getProperty()))
                 .from(testModelOutline)
                 .all()
-                .map(row -> testModelOutline.wrap(new TestModel())
+                .firstAs(row -> testModelOutline.wrap(new TestModel())
                         .set(m -> m.getProperty(), row.column(testModelOutline.member(m -> m.getProperty())))
                         .set(m -> m.getStringProperty(), row.column(testModelOutline.member(m -> m.getStringProperty())))
                         .unwrap())

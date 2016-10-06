@@ -1,10 +1,7 @@
 package foundation.stack.datamill.http.impl;
 
 import com.google.common.collect.Multimap;
-import foundation.stack.datamill.http.Body;
-import foundation.stack.datamill.http.Response;
-import foundation.stack.datamill.http.Route;
-import foundation.stack.datamill.http.ServerRequest;
+import foundation.stack.datamill.http.*;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
@@ -118,14 +115,19 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 if (responseObservable != null) {
                     threadPool.execute(() -> {
                         Response response = responseObservable.onErrorResumeNext(throwable -> {
-                            Observable<Response> errorResponse = errorResponseConstructor.apply(serverRequest, throwable);
-                            if (errorResponse != null) {
-                                logger.debug("Error occurred handling request, invoking application error handler");
-                                return errorResponse.onErrorResumeNext(Observable.just(null));
+                            if (errorResponseConstructor != null) {
+                                Observable<Response> errorResponse =
+                                        errorResponseConstructor.apply(serverRequest, throwable);
+                                if (errorResponse != null) {
+                                    logger.debug("Error occurred handling request, invoking application error handler");
+                                    return errorResponse.onErrorResumeNext(Observable.just(null));
+                                }
+                            } else {
+                                logger.debug("Error occurred handling request - no application error handler was available to handle it - {}", throwable);
                             }
 
-                            return Observable.just(null);
-                        }).toBlocking().lastOrDefault(null);
+                            return Observable.just(new ResponseImpl(Status.INTERNAL_SERVER_ERROR));
+                        }).toBlocking().lastOrDefault(new ResponseImpl(Status.NOT_FOUND));
 
                         sendResponse(context, originalRequest, response);
                     });

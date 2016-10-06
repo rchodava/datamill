@@ -1,14 +1,21 @@
 package foundation.stack.datamill.db.test;
 
 import foundation.stack.datamill.db.DatabaseClient;
+import foundation.stack.datamill.db.ResultBuilder;
 import foundation.stack.datamill.db.Row;
 import foundation.stack.datamill.db.UpdateQueryExecution;
+import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
 import rx.Observable;
+import rx.functions.Func1;
+
+import java.util.List;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class TestDatabaseClient extends DatabaseClient {
+    private static final Object[] EMPTY_ARRAY = new Object[0];
+
     private final Database database;
 
     public TestDatabaseClient(Database database) {
@@ -38,13 +45,28 @@ public class TestDatabaseClient extends DatabaseClient {
     }
 
     @Override
-    public Observable<Row> query(String sql) {
-        return database.query(sql);
+    public ResultBuilder query(String sql) {
+        return this.query(sql, EMPTY_ARRAY);
     }
 
     @Override
-    public Observable<Row> query(String sql, Object... parameters) {
-        return database.query(sql, parameters);
+    public ResultBuilder query(String sql, Object... parameters) {
+        return new ResultBuilder() {
+            @Override
+            public <T> Observable<List<T>> getAs(Func1<Row, T> transformer) {
+                return stream().map(transformer).toList();
+            }
+
+            @Override
+            public <T> Observable<T> firstAs(Func1<Row, T> transformer) {
+                return stream().map(transformer).take(1).lift(new UnsubscribeOnNextOperator<>());
+            }
+
+            @Override
+            public Observable<Row> stream() {
+                return database.query(sql, parameters);
+            }
+        };
     }
 
     @Override

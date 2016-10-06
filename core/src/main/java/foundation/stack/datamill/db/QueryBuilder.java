@@ -1,6 +1,5 @@
 package foundation.stack.datamill.db;
 
-import foundation.stack.datamill.LimitBuilder;
 import foundation.stack.datamill.reflection.Outline;
 
 /**

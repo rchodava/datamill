@@ -4,14 +4,17 @@ import com.github.davidmoten.rx.jdbc.*;
 import foundation.stack.datamill.configuration.Named;
 import foundation.stack.datamill.db.impl.QueryBuilderImpl;
 import foundation.stack.datamill.db.impl.RowImpl;
+import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.functions.Func1;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -113,13 +116,13 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     }
 
     @Override
-    public Observable<Row> query(String sql) {
-        return getDatabase().select(sql).get(resultSet -> new RowImpl(resultSet));
+    public ResultBuilder query(String sql) {
+        return new Results(getDatabase().select(sql).get(resultSet -> new RowImpl(resultSet)));
     }
 
     @Override
-    public Observable<Row> query(String sql, Object... parameters) {
-        return getDatabase().select(sql).parameters(parameters).get(resultSet -> new RowImpl(resultSet));
+    public ResultBuilder query(String sql, Object... parameters) {
+        return new Results(getDatabase().select(sql).parameters(parameters).get(resultSet -> new RowImpl(resultSet)));
     }
 
     @Override
@@ -184,6 +187,29 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         @Override
         public void close() {
             wrapped.close();
+        }
+    }
+
+    private static class Results implements ResultBuilder {
+        private final Observable<Row> results;
+
+        public Results(Observable<Row> results) {
+            this.results = results;
+        }
+
+        @Override
+        public <T> Observable<List<T>> getAs(Func1<Row, T> transformer) {
+            return stream().map(transformer).toList();
+        }
+
+        @Override
+        public <T> Observable<T> firstAs(Func1<Row, T> transformer) {
+            return stream().map(transformer).take(1).lift(new UnsubscribeOnNextOperator<>());
+        }
+
+        @Override
+        public Observable<Row> stream() {
+            return results;
         }
     }
 }

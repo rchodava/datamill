@@ -1,7 +1,7 @@
 package foundation.stack.datamill.db.impl;
 
 import com.google.common.collect.ImmutableMap;
-import foundation.stack.datamill.db.Row;
+import foundation.stack.datamill.db.ResultBuilder;
 import foundation.stack.datamill.db.UpdateQueryExecution;
 import foundation.stack.datamill.reflection.Outline;
 import foundation.stack.datamill.reflection.OutlineBuilder;
@@ -77,7 +77,7 @@ public class QueryBuilderImplTest {
         }
 
         @Override
-        protected Observable<Row> query(String query) {
+        protected ResultBuilder query(String query) {
             lastQuery = query;
             lastWasUpdate = false;
             lastParameters = new Object[0];
@@ -85,7 +85,7 @@ public class QueryBuilderImplTest {
         }
 
         @Override
-        protected Observable<Row> query(String query, Object... parameters) {
+        protected ResultBuilder query(String query, Object... parameters) {
             lastQuery = query;
             lastParameters = parameters;
             lastWasUpdate = false;
