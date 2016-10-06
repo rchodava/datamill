@@ -350,7 +350,7 @@ public class Wiring {
     }
 
     /**
-     * Get the object added by using {@link Named} and identified by the provided name.
+     * Get the object added by using {@link Wiring#addNamed(String, Object)}, identified by the provided name.
      */
     public <T> T getNamed(String name) {
         return (T) named.get(name);
