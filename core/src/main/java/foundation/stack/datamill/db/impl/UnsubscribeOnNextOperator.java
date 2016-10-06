@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class UnsubscribeOnCompletedOperator<T> implements Observable.Operator<T, T> {
+public class UnsubscribeOnNextOperator<T> implements Observable.Operator<T, T> {
     private final AtomicBoolean completed = new AtomicBoolean();
 
     @Override

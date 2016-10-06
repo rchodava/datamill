@@ -4,7 +4,7 @@ import foundation.stack.datamill.db.DatabaseClient;
 import foundation.stack.datamill.db.ResultBuilder;
 import foundation.stack.datamill.db.Row;
 import foundation.stack.datamill.db.UpdateQueryExecution;
-import foundation.stack.datamill.db.impl.UnsubscribeOnCompletedOperator;
+import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
 import rx.Observable;
 import rx.functions.Func1;
 
@@ -59,7 +59,7 @@ public class TestDatabaseClient extends DatabaseClient {
 
             @Override
             public <T> Observable<T> firstAs(Func1<Row, T> transformer) {
-                return stream().map(transformer).take(1).lift(new UnsubscribeOnCompletedOperator<>());
+                return stream().map(transformer).take(1).lift(new UnsubscribeOnNextOperator<>());
             }
 
             @Override
