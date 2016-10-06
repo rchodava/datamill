@@ -349,6 +349,13 @@ public class Wiring {
         return null;
     }
 
+    /**
+     * Get the object added by using {@link Named} and identified by the provided name.
+     */
+    public <T> T getNamed(String name) {
+        return (T) named.get(name);
+    }
+
     private Object getObjectOfType(Class<?> type) {
         Collection<?> values = members.get(type);
         if (values != null) {
