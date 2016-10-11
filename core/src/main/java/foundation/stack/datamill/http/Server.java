@@ -1,5 +1,8 @@
 package foundation.stack.datamill.http;
 
+import foundation.stack.datamill.http.builder.RouteBuilder;
+import foundation.stack.datamill.http.impl.ClientToServerChannelInitializer;
+import foundation.stack.datamill.http.impl.RouteBuilderImpl;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
@@ -11,15 +14,13 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import foundation.stack.datamill.http.builder.RouteBuilder;
-import foundation.stack.datamill.http.impl.ClientToServerChannelInitializer;
-import foundation.stack.datamill.http.impl.RouteBuilderImpl;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import javax.net.ssl.SSLException;
+import java.io.File;
 import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,6 +40,8 @@ public class Server {
     private Channel serverChannel;
     private final ExecutorService threadPool;
     private final boolean daemon;
+
+    private final static Certificate defaultCertificate = new DefaultCertificate();
 
     public Server(Function<RouteBuilder, Route> routeConstructor) {
         this(routeConstructor, null);
@@ -67,15 +70,15 @@ public class Server {
             Executors.defaultThreadFactory());
     }
 
-    public Server listen(String host, int port, boolean secure) {
+    public Server listen(String host, int port, Certificate certificate) {
         SslContext sslContext = null;
-        try {
-            if (secure) {
-                SelfSignedCertificate certificate = new SelfSignedCertificate();
-                sslContext = SslContextBuilder.forServer(certificate.certificate(), certificate.privateKey()).build();
+
+        if (certificate != null) {
+            try {
+                sslContext = createSslContext(certificate);
+            } catch (SSLException e) {
+                logger.error("Could not create sslContext", e);
             }
-        } catch (SSLException | CertificateException e) {
-            logger.error("Could not create sslContext", e);
         }
 
         Route route = routeConstructor.apply(new RouteBuilderImpl());
@@ -108,12 +111,16 @@ public class Server {
         return this;
     }
 
+    public Server listen(String host, int port, boolean secure) {
+        return secure ? listen(host, port, defaultCertificate) : listen(host, port, null);
+    }
+
     public Server listen(String host, int port) {
-        return listen(host, port, false);
+        return listen(host, port, null);
     }
 
     public Server listen(int port) {
-        return listen("localhost", port);
+        return listen("localhost", port, null);
     }
 
     public Server listen(int port, boolean secure) {
@@ -129,6 +136,33 @@ public class Server {
         } finally {
             eventLoopGroup.shutdownGracefully();
             logger.debug("HTTP server was shut down");
+        }
+    }
+
+    private SslContext createSslContext(Certificate certificate) throws SSLException {
+        return SslContextBuilder.forServer(certificate.getCertificate(), certificate.getPrivateKey()).build();
+    }
+
+    private static class DefaultCertificate implements Certificate {
+
+        private SelfSignedCertificate certificate;
+
+        public DefaultCertificate() {
+            try {
+                certificate = new SelfSignedCertificate();
+            } catch (CertificateException e) {
+                logger.error("Could not create default certificate", e);
+            }
+        }
+
+        @Override
+        public File getCertificate() {
+            return certificate.certificate();
+        }
+
+        @Override
+        public File getPrivateKey() {
+            return certificate.privateKey();
         }
     }
 
