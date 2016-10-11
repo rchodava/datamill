@@ -76,7 +76,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
             }
 
             bodyStream = ReplaySubject.create();
-            serverRequest = ServerRequestBuilder.buildServerRequest(request, bodyStream, threadPool);
+            serverRequest = ServerRequestBuilder.buildServerRequest(request, bodyStream);
 
             processRequest(context, request);
 

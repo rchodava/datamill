@@ -9,25 +9,20 @@ import rx.Observable;
 
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequest {
-    private final ExecutorService entityStreamingThreadPool;
-
     private Multimap<String, String> queryParameters;
     private QueryStringDecoder queryStringDecoder;
     private Multimap<String, String> trailingHeaders;
 
-    ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body,
-                             ExecutorService threadPool) {
+    ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body) {
         super(method, headers, uri, body);
 
         this.queryStringDecoder = new QueryStringDecoder(uri, charset);
-        this.entityStreamingThreadPool = threadPool;
     }
 
     private Multimap<String, String> extractQueryParameters() {
@@ -81,7 +76,7 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
 
     @Override
     public rx.Observable<Response> respond(Function<ResponseBuilder, Response> responseBuilder) {
-        return Observable.just(responseBuilder.apply(new ResponseBuilderImpl(entityStreamingThreadPool)));
+        return Observable.just(responseBuilder.apply(new ResponseBuilderImpl()));
     }
 
     public void setTrailingHeaders(Multimap<String, String> trailingHeaders) {

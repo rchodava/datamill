@@ -21,7 +21,7 @@ public class ServerRequestImplTest {
     public void basicRequestProperties() {
         ServerRequestImpl request = new ServerRequestImpl(
                 "GET", ImmutableMultimap.of("header1", "valueh1v1", "header1", "valueh1v2", "header2", "valueh2v1"),
-                "http://localhost:8080?param1=value1&param2=value2&param2=value3", Charset.defaultCharset(), null, null);
+                "http://localhost:8080?param1=value1&param2=value2&param2=value3", Charset.defaultCharset(), null);
         assertEquals(Method.GET, request.method());
         assertEquals("GET", request.rawMethod());
         assertEquals("valueh1v1", request.firstHeader("header1").asString());
@@ -40,7 +40,7 @@ public class ServerRequestImplTest {
         defaultFullHttpRequest.headers().add("HEADER2", "valueh2v1");
 
         ServerRequestImpl request = ServerRequestBuilder.buildServerRequest(defaultFullHttpRequest,
-                Observable.empty(), null);
+                Observable.empty());
         assertEquals(Method.GET, request.method());
         assertEquals("GET", request.rawMethod());
         assertEquals("valueh1v1", request.firstHeader("header1").asString());
@@ -52,7 +52,7 @@ public class ServerRequestImplTest {
         defaultFullHttpRequest.headers().add("header1", "valueh1v2");
         defaultFullHttpRequest.headers().add("header2", "valueh2v1");
 
-        request = ServerRequestBuilder.buildServerRequest(defaultFullHttpRequest, Observable.empty(), null);
+        request = ServerRequestBuilder.buildServerRequest(defaultFullHttpRequest, Observable.empty());
         assertEquals("valueh1v1", request.firstHeader("header1").asString());
         assertEquals("valueh2v1", request.firstHeader("header2").asString());
     }

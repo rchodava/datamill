@@ -10,7 +10,6 @@ import rx.Observable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -19,15 +18,14 @@ public final class ServerRequestBuilder {
     private ServerRequestBuilder() {
     }
 
-    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<ByteBuffer> bodyStream, ExecutorService threadPool) {
+    public static ServerRequestImpl buildServerRequest(HttpRequest request, Observable<ByteBuffer> bodyStream) {
         Charset messageCharset = HttpUtil.getCharset(request);
         return new ServerRequestImpl(
                 request.method().name(),
                 buildHeadersMap(request.headers()),
                 request.uri(),
                 messageCharset,
-                new StreamedChunksBody(bodyStream, messageCharset),
-                threadPool);
+                new StreamedChunksBody(bodyStream, messageCharset));
     }
 
     public static Multimap<String, String> buildHeadersMap(HttpHeaders headers) {
