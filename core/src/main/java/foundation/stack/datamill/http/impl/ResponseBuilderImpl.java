@@ -13,27 +13,17 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ResponseBuilderImpl implements ResponseBuilder {
-    private final ExecutorService streamingBodyThreadPool;
     private final Multimap<String, String> headers = LinkedListMultimap.create();
     private Body body;
-
-    public ResponseBuilderImpl(ExecutorService threadPool) {
-        this.streamingBodyThreadPool = threadPool;
-    }
-
-    // Test hook
-    ResponseBuilderImpl() {
-        this.streamingBodyThreadPool = null;
-    }
 
     @Override
     public Response badRequest() {
@@ -89,21 +79,14 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     @Override
     public ResponseBuilder streamingBodyAsBufferChunks(Func1<Observer<ByteBuffer>, Observable<ByteBuffer>> bodyStreamer) {
         Observable<ByteBuffer> chunkStream = Observable.fromEmitter(emitter -> {
-            Subscription[] subscription = new Subscription[1];
-
-            streamingBodyThreadPool.execute(() -> {
-                subscription[0] = bodyStreamer.call(new PassthroughObserver<>(emitter))
+            Subscription subscription = bodyStreamer.call(new PassthroughObserver<>(emitter))
                         .doOnNext(buffer -> emitter.onNext(buffer))
                         .doOnCompleted(() -> emitter.onCompleted())
                         .doOnError(e -> emitter.onError(e))
+                        .subscribeOn(Schedulers.io())
                         .subscribe();
-            });
 
-            emitter.setCancellation(() -> {
-                if (subscription[0] != null) {
-                    subscription[0].unsubscribe();
-                }
-            });
+            emitter.setCancellation(subscription::unsubscribe);
         }, Emitter.BackpressureMode.BUFFER);
 
         this.body = new StreamedChunksBody(chunkStream, Charset.defaultCharset());
@@ -133,6 +116,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
                                 emitter.onCompleted();
                             })
                             .doOnError(e -> streamer.onError(e))
+                            .subscribeOn(Schedulers.io())
                             .subscribe();
 
                     emitter.setCancellation(subscription::unsubscribe);

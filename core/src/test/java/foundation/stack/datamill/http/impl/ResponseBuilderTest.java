@@ -43,9 +43,7 @@ public class ResponseBuilderTest {
 
     @Test
     public void streamingEntites() {
-        ExecutorService threadPool = Executors.newSingleThreadExecutor();
-
-        ResponseBuilderImpl builder = new ResponseBuilderImpl(threadPool);
+        ResponseBuilderImpl builder = new ResponseBuilderImpl();
 
         builder.streamingBody(observer -> {
             observer.onNext("Test Content ".getBytes());
@@ -58,9 +56,7 @@ public class ResponseBuilderTest {
 
     @Test
     public void streamingJson() {
-        ExecutorService threadPool = Executors.newSingleThreadExecutor();
-
-        ResponseBuilderImpl builder = new ResponseBuilderImpl(threadPool);
+        ResponseBuilderImpl builder = new ResponseBuilderImpl();
 
         builder.streamingJson(observer -> {
             observer.onNext(new JsonObject().put("test", "value"));
