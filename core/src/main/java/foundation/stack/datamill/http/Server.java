@@ -75,7 +75,7 @@ public class Server {
                 sslContext = SslContextBuilder.forServer(certificate.certificate(), certificate.privateKey()).build();
             }
         } catch (SSLException | CertificateException e) {
-
+            logger.error("Could not create sslContext", e);
         }
 
         Route route = routeConstructor.apply(new RouteBuilderImpl());
@@ -92,7 +92,7 @@ public class Server {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15000)
                 .handler(new LoggingHandler())
-                .childHandler(new ClientToServerChannelInitializer(null, threadPool, route, errorResponseConstructor))
+                .childHandler(new ClientToServerChannelInitializer(sslContext, threadPool, route, errorResponseConstructor))
                 .childOption(ChannelOption.TCP_NODELAY, true)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
