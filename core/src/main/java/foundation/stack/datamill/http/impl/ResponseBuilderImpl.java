@@ -11,6 +11,7 @@ import foundation.stack.datamill.values.StringValue;
 import rx.Emitter;
 import rx.Observable;
 import rx.Observer;
+import rx.Subscription;
 import rx.functions.Func1;
 
 import java.nio.ByteBuffer;
@@ -88,12 +89,20 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     @Override
     public ResponseBuilder streamingBodyAsBufferChunks(Func1<Observer<ByteBuffer>, Observable<ByteBuffer>> bodyStreamer) {
         Observable<ByteBuffer> chunkStream = Observable.fromEmitter(emitter -> {
+            Subscription[] subscription = new Subscription[1];
+
             streamingBodyThreadPool.execute(() -> {
-                bodyStreamer.call(new PassthroughObserver<>(emitter))
+                subscription[0] = bodyStreamer.call(new PassthroughObserver<>(emitter))
                         .doOnNext(buffer -> emitter.onNext(buffer))
-                        .doOnError(e -> emitter.onError(e))
                         .doOnCompleted(() -> emitter.onCompleted())
+                        .doOnError(e -> emitter.onError(e))
                         .subscribe();
+            });
+
+            emitter.setCancellation(() -> {
+                if (subscription[0] != null) {
+                    subscription[0].unsubscribe();
+                }
             });
         }, Emitter.BackpressureMode.BUFFER);
 
@@ -117,7 +126,7 @@ public class ResponseBuilderImpl implements ResponseBuilder {
         return streamingBody(body ->
                 Observable.fromEmitter(emitter -> {
                     JsonStreamer streamer = new JsonStreamer(emitter);
-                    jsonStreamer.call(streamer)
+                    Subscription subscription = jsonStreamer.call(streamer)
                             .doOnNext(json -> streamer.onNext(json))
                             .doOnCompleted(() -> {
                                 emitter.onNext("]".getBytes());
@@ -125,6 +134,8 @@ public class ResponseBuilderImpl implements ResponseBuilder {
                             })
                             .doOnError(e -> streamer.onError(e))
                             .subscribe();
+
+                    emitter.setCancellation(subscription::unsubscribe);
                 }, Emitter.BackpressureMode.BUFFER));
     }
 
