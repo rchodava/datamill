@@ -1,11 +1,11 @@
 package foundation.stack.datamill.http;
 
-import java.io.File;
+import java.io.InputStream;
 
 /**
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
 public interface Certificate {
-    File getCertificate();
-    File getPrivateKey();
+    InputStream getCertificate();
+    InputStream getPrivateKey();
 }
