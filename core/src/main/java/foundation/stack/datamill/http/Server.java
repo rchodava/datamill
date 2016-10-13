@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import javax.net.ssl.SSLException;
-import java.io.File;
+import java.io.*;
 import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -156,13 +156,21 @@ public class Server {
         }
 
         @Override
-        public File getCertificate() {
-            return certificate.certificate();
+        public InputStream getCertificate() {
+            try {
+                return new FileInputStream(certificate.certificate());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
-        public File getPrivateKey() {
-            return certificate.privateKey();
+        public InputStream getPrivateKey() {
+            try {
+                return new FileInputStream(certificate.privateKey());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
