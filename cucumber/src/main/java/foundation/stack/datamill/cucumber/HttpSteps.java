@@ -9,6 +9,8 @@ import cucumber.api.java.en.Then;
 import foundation.stack.datamill.http.Method;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.http.Status;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -25,6 +27,8 @@ import static org.junit.Assert.fail;
  * @author Israel Colomer (israelcolomer@gmail.com)
  */
 public class HttpSteps {
+    private final static Logger logger = LoggerFactory.getLogger(HttpSteps.class);
+
     final static String RESPONSE_KEY = "$$response";
     final static String LAST_RESPONSE_BODY_KEY = "$$lastResponseBody";
     final static String HEADER_KEY = "$$header";
@@ -75,7 +79,11 @@ public class HttpSteps {
         String actualJsonBody = (String) propertyStore.get(LAST_RESPONSE_BODY_KEY);
         if (actualJsonBody != null && !actualJsonBody.isEmpty()) {
             String resolvedExpectedJson = placeholderResolver.resolve(expectedJson);
-            assertTrue(FuzzyJsonTester.isJsonSimilarEnough(resolvedExpectedJson, actualJsonBody));
+            boolean similarEnough = FuzzyJsonTester.isJsonSimilarEnough(resolvedExpectedJson, actualJsonBody);
+            if (!similarEnough) {
+                logger.debug("Not similar enough expected [{}] actual [{}]", resolvedExpectedJson, actualJsonBody);
+            }
+            assertTrue(similarEnough);
         } else {
             fail("Response was empty when expecting a non-empty JSON body!");
         }

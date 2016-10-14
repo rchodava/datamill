@@ -1,6 +1,7 @@
 package foundation.stack.datamill.cucumber;
 
 import com.jayway.jsonpath.JsonPath;
+import foundation.stack.datamill.configuration.Properties;
 import foundation.stack.datamill.values.Value;
 import foundation.stack.datamill.security.impl.BCrypt;
 import org.slf4j.Logger;
@@ -24,6 +25,7 @@ public class PlaceholderResolver {
     private static final String HASHED_PLACEHOLDER_PREFIX = "blowfish:";
     private static final String BASE64_PLACEHOLDER_PREFIX = "base64:";
     private static final String DATE_FORMATTER_PLACEHOLDER_PREFIX = "currentTime:";
+    private static final String SYSTEM_PLACEHOLDER_PREFIX = "system:";
 
     private final PropertyStore propertyStore;
 
@@ -124,6 +126,15 @@ public class PlaceholderResolver {
         return null;
     }
 
+    private String resolveSystemPlaceholder(String key) {
+        if (key.startsWith(SYSTEM_PLACEHOLDER_PREFIX)) {
+            key = key.substring(SYSTEM_PLACEHOLDER_PREFIX.length());
+            return Properties.fromSystem().get(key).orElse(null);
+        }
+
+        return null;
+    }
+
     private String resolvePlaceholder(String key) {
         String value = findPropertyInStore(key);
         if (value != null) {
@@ -146,6 +157,11 @@ public class PlaceholderResolver {
         }
 
         value = resolveDateFormatterPlaceholder(key);
+        if (value != null) {
+            return value;
+        }
+
+        value = resolveSystemPlaceholder(key);
         if (value != null) {
             return value;
         }

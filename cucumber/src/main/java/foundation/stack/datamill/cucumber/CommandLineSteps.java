@@ -100,13 +100,21 @@ public class CommandLineSteps {
 
     @When("^" + Phrases.SUBJECT + " creates \"(.+)\" in (?:a|the) temporary directory with content:$")
     public void createFile(String file, String content) throws IOException {
+        doCreateFile(file, content);
+    }
+
+    @When("^" + Phrases.SUBJECT + " creates \"(.+)\" in (?:a|the) temporary directory with content as provided:$")
+    public void createFileWithResolvedContent(String file, String content) throws IOException {
+        doCreateFile(file, placeholderResolver.resolve(content));
+    }
+
+    public void doCreateFile(String file, String content) throws IOException {
         File temporaryDirectory = getOrCreateTemporaryDirectory();
 
         String resolvedFile = placeholderResolver.resolve(file);
-        String resolvedContent = placeholderResolver.resolve(content);
 
         File fileWithinDirectory = new File(temporaryDirectory, resolvedFile);
-        Files.write(resolvedContent, fileWithinDirectory, Charset.defaultCharset());
+        Files.write(content, fileWithinDirectory, Charset.defaultCharset());
     }
 
     @When("^" + Phrases.SUBJECT + " appends \"(.+)\" in the temporary directory with content:$")
