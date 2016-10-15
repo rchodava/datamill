@@ -10,11 +10,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class UnsubscribeOnNextOperator<T> implements Observable.Operator<T, T> {
-    private final AtomicBoolean completed = new AtomicBoolean();
-
     @Override
     public Subscriber<? super T> call(Subscriber<? super T> subscriber) {
         return new Subscriber<T>() {
+            private final AtomicBoolean completed = new AtomicBoolean();
+
             @Override
             public void onCompleted() {
                 this.unsubscribe();
