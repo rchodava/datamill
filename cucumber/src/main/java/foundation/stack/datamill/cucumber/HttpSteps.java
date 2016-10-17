@@ -65,6 +65,8 @@ public class HttpSteps {
         final String resolvedUri = placeholderResolver.resolve(uri);
         final String resolvedPayload = placeholderResolver.resolve(payload);
 
+        addValueToHeader("Origin", uri);
+
         httpClient.request(method, resolvedUri, getHeaders(), resolvedPayload)
                 .doOnNext(response -> {
                     propertyStore.put(RESPONSE_KEY, response);
