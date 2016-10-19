@@ -115,6 +115,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 if (responseObservable != null) {
                     threadPool.execute(() -> {
                         Response response = responseObservable.onErrorResumeNext(throwable -> {
+                            logger.debug("Error occurred handling request", throwable);
                             if (errorResponseConstructor != null) {
                                 Observable<Response> errorResponse =
                                         errorResponseConstructor.apply(serverRequest, throwable);
