@@ -13,14 +13,15 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.SelfSignedCertificate;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 
 import javax.net.ssl.SSLException;
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.security.cert.CertificateException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +42,7 @@ public class Server {
     private final ExecutorService threadPool;
     private final boolean daemon;
 
-    private final static Certificate defaultCertificate = new DefaultCertificate();
+    private final static Certificate defaultCertificate = new SelfSignedCertificate();
 
     public Server(Function<RouteBuilder, Route> routeConstructor) {
         this(routeConstructor, null);
@@ -143,13 +144,21 @@ public class Server {
         return SslContextBuilder.forServer(certificate.getCertificate(), certificate.getPrivateKey()).build();
     }
 
-    private static class DefaultCertificate implements Certificate {
+    public static class SelfSignedCertificate implements Certificate {
 
-        private SelfSignedCertificate certificate;
+        private io.netty.handler.ssl.util.SelfSignedCertificate certificate;
 
-        public DefaultCertificate() {
+        public SelfSignedCertificate() {
             try {
-                certificate = new SelfSignedCertificate();
+                certificate = new io.netty.handler.ssl.util.SelfSignedCertificate();
+            } catch (CertificateException e) {
+                logger.error("Could not create default certificate", e);
+            }
+        }
+
+        public SelfSignedCertificate(String fqdn) {
+            try {
+                certificate = new io.netty.handler.ssl.util.SelfSignedCertificate(fqdn);
             } catch (CertificateException e) {
                 logger.error("Could not create default certificate", e);
             }

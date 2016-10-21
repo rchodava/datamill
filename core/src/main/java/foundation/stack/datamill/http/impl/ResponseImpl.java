@@ -58,4 +58,13 @@ public class ResponseImpl implements Response {
     public Status status() {
         return status;
     }
+
+    @Override
+    public String toString() {
+        return "ResponseImpl{" +
+                "headers=" + headers +
+                ", status=" + status +
+                ", body=" + body +
+                '}';
+    }
 }

@@ -60,7 +60,7 @@ public class CommandLineSteps {
         executeCommandExpectingFailureFromRelativeLocation(command, null);
     }
 
-    @When("^" + Phrases.SUBJECT + " executes \"([^\"]+)\" from \"(.+)\", it should fail$")
+    @When("^" + Phrases.SUBJECT + "( \"(.+)\")* executes \"([^\"]+)\" from \"(.+)\", it should fail$")
     public void executeCommandExpectingFailureFromRelativeLocation(String command, String relativePath) {
         String resolvedCommand = placeholderResolver.resolve(command);
         String resolvedRelativePath = placeholderResolver.resolve(relativePath);
@@ -100,13 +100,21 @@ public class CommandLineSteps {
 
     @When("^" + Phrases.SUBJECT + " creates \"(.+)\" in (?:a|the) temporary directory with content:$")
     public void createFile(String file, String content) throws IOException {
+        doCreateFile(file, placeholderResolver.resolve(content));
+    }
+
+    @When("^" + Phrases.SUBJECT + " creates \"(.+)\" in (?:a|the) temporary directory with content as is:$")
+    public void createFileWithResolvedContent(String file, String content) throws IOException {
+        doCreateFile(file, content);
+    }
+
+    public void doCreateFile(String file, String content) throws IOException {
         File temporaryDirectory = getOrCreateTemporaryDirectory();
 
         String resolvedFile = placeholderResolver.resolve(file);
-        String resolvedContent = placeholderResolver.resolve(content);
 
         File fileWithinDirectory = new File(temporaryDirectory, resolvedFile);
-        Files.write(resolvedContent, fileWithinDirectory, Charset.defaultCharset());
+        Files.write(content, fileWithinDirectory, Charset.defaultCharset());
     }
 
     @When("^" + Phrases.SUBJECT + " appends \"(.+)\" in the temporary directory with content:$")
@@ -145,7 +153,7 @@ public class CommandLineSteps {
         }
     }
 
-    @When("^" + Phrases.SUBJECT + " executes \"(.+)\" from \"(.+)\" relative to (?:a|the) temporary directory$")
+    @When("^" + Phrases.SUBJECT + "( \"(.+)\")* executes \"(.+)\" from \"(.+)\" relative to (?:a|the) temporary directory$")
     public void executeCommandFromRelativeLocation(String command, String relativePath) {
         String resolvedCommand = placeholderResolver.resolve(command);
         String resolvedRelativePath = placeholderResolver.resolve(relativePath);
@@ -177,6 +185,16 @@ public class CommandLineSteps {
     @Then("^the temporary directory should have the files:$")
     public void verifyTemporaryDirectoryHasFiles(List<String> names) throws Exception {
         File temporaryDirectory = (File) propertyStore.get(TEMPORARY_DIRECTORY);
+        doVerifyDirectoryHasFiles(temporaryDirectory, names);
+    }
+
+    @Then("^the temporary directory for \"(.+)\" should have the files:$")
+    public void verifySpecificTemporaryDirectoryHasFiles(String subDirectory, List<String> names) throws Exception {
+        File temporaryDirectory = Paths.get(((File) propertyStore.get(TEMPORARY_DIRECTORY)).getAbsolutePath(), subDirectory).toFile();
+        doVerifyDirectoryHasFiles(temporaryDirectory, names);
+    }
+
+    private void doVerifyDirectoryHasFiles(File temporaryDirectory, List<String> names) {
         if (temporaryDirectory != null && temporaryDirectory.isDirectory()) {
             for (String name : names) {
                 String resolved = placeholderResolver.resolve(name);
