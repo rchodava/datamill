@@ -60,7 +60,7 @@ public class CommandLineSteps {
         executeCommandExpectingFailureFromRelativeLocation(command, null);
     }
 
-    @When("^" + Phrases.SUBJECT + "( \"(.+)\")* executes \"([^\"]+)\" from \"(.+)\", it should fail$")
+    @When("^" + Phrases.SUBJECT + " executes \"([^\"]+)\" from \"(.+)\", it should fail$")
     public void executeCommandExpectingFailureFromRelativeLocation(String command, String relativePath) {
         String resolvedCommand = placeholderResolver.resolve(command);
         String resolvedRelativePath = placeholderResolver.resolve(relativePath);
@@ -153,7 +153,7 @@ public class CommandLineSteps {
         }
     }
 
-    @When("^" + Phrases.SUBJECT + "( \"(.+)\")* executes \"(.+)\" from \"(.+)\" relative to (?:a|the) temporary directory$")
+    @When("^" + Phrases.SUBJECT + " executes \"(.+)\" from \"(.+)\" relative to (?:a|the) temporary directory$")
     public void executeCommandFromRelativeLocation(String command, String relativePath) {
         String resolvedCommand = placeholderResolver.resolve(command);
         String resolvedRelativePath = placeholderResolver.resolve(relativePath);
@@ -267,24 +267,19 @@ public class CommandLineSteps {
         BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
         List<String> output = new CopyOnWriteArrayList<>();
 
-        Thread processOutputThread = new Thread(() -> {
+        String line = null;
+        do {
             try {
-                String line;
-                do {
-                    line = processOutput.readLine();
-                    if (line != null) {
-                        output.add(line);
-                        logger.debug("{}", line);
-                    }
-                } while (line != null && !Thread.interrupted());
-            } catch (IOException e) {}
-        });
+                line = processOutput.readLine();
+                if (line != null) {
+                    output.add(line);
+                    logger.debug("{}", line);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } while (line != null);
 
-        processOutputThread.start();
-
-        if (processOutputThread != null) {
-            processOutputThread.join(500);
-        }
         return output;
     }
 

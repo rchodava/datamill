@@ -9,5 +9,5 @@ public interface Phrases {
     String HTTP_REQUEST = "(?:request|call)";
     String OPTIONAL_PLURAL = "(?:s)?";
     String PROPERTY_KEY = "(\\w+)";
-    String SUBJECT = "(?:we|he|she|the user|a user)";
+    String SUBJECT = "(?:we|he|she|the user|a user|another user|the other user)";
 }
