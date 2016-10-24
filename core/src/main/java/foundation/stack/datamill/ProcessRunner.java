@@ -102,43 +102,6 @@ public class ProcessRunner {
         });
     }
 
-    public static int runProcessAndGetResult(File workingDirectory, String... command) throws IOException, InterruptedException {
-        return runProcessAndGetResult(null, workingDirectory, command);
-    }
-
-    public static int runProcessAndGetResult(Marker marker, File workingDirectory, String... command) throws IOException, InterruptedException {
-        logger.debug(marker, "{}", Joiner.on(' ').join(command));
-
-        Process process = new ProcessBuilder().directory(workingDirectory).command(command).redirectErrorStream(true).start();
-
-        BufferedReader processOutput = new BufferedReader(new
-                InputStreamReader(process.getInputStream()));
-
-        Thread processOutputThread = null;
-        if (logger.isDebugEnabled()) {
-            processOutputThread = new Thread(() -> {
-                try {
-                    String line;
-                    do {
-                        line = processOutput.readLine();
-                        logger.debug(marker, "{}", line);
-                    } while (line != null && !Thread.interrupted());
-                } catch (IOException e) {
-                }
-            });
-
-            processOutputThread.start();
-        }
-
-        int result = process.waitFor();
-
-        if (processOutputThread != null) {
-            processOutputThread.join(500);
-        }
-
-        return result;
-    }
-
     public static class ExecutionResult {
         private final int exitCode;
         private final List<String> standardOutput;
