@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.Marker;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -44,46 +43,47 @@ public class ProcessRunner {
             }));
 
     public static void runProcess(File workingDirectory, String... command) throws IOException {
-        runProcess(null, workingDirectory, command);
-    }
-
-    public static void runProcess(Marker marker, File workingDirectory, String... command) throws IOException {
-        logger.debug(marker, "{}", Joiner.on(' ').join(command));
+        logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            readLinesFromStream(marker, process.getInputStream());
-            readLinesFromStream(marker, process.getErrorStream());
+            readLinesFromStream(process.getInputStream());
+            readLinesFromStream(process.getErrorStream());
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
     }
 
     public static ExecutionResult runProcessAndWait(File workingDirectory, String... command) throws IOException {
-        return runProcessAndWait(null, workingDirectory, command);
+        return runProcessAndWait(workingDirectory, true, command);
     }
 
-    public static ExecutionResult runProcessAndWait(Marker marker, File workingDirectory, String... command) throws IOException {
-        logger.debug(marker, "{}", Joiner.on(' ').join(command));
+    public static ExecutionResult runProcessAndWait(File workingDirectory, boolean returnOutput, String... command) throws IOException {
+        logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            ListenableFuture<List<String>> standardOutputFuture = readLinesFromStream(marker, process.getInputStream());
-            ListenableFuture<List<String>> standardErrorFuture = readLinesFromStream(marker, process.getErrorStream());
+            ListenableFuture<List<String>> standardOutputFuture = null, standardErrorFuture = null;
+            if (returnOutput) {
+                standardOutputFuture = readLinesFromStream(process.getInputStream());
+                standardErrorFuture = readLinesFromStream(process.getErrorStream());
+            }
 
             int exitCode = process.waitFor();
 
-            List<List<String>> results = Futures.allAsList(standardOutputFuture, standardErrorFuture).get(1, TimeUnit.SECONDS);
-
-            return new ExecutionResult(exitCode, results.size() > 0 ? results.get(0) : null, results.size() > 1 ? results.get(1) : null);
+            if (returnOutput) {
+                List<List<String>> results = Futures.allAsList(standardOutputFuture, standardErrorFuture).get(1, TimeUnit.SECONDS);
+                return new ExecutionResult(exitCode, results.size() > 0 ? results.get(0) : null, results.size() > 1 ? results.get(1) : null);
+            }
+            return new ExecutionResult(exitCode);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new IOException(e);
         }
     }
 
-    private static ListenableFuture<List<String>> readLinesFromStream(Marker marker, InputStream inputStream) throws InterruptedException {
+    private static ListenableFuture<List<String>> readLinesFromStream(InputStream inputStream) throws InterruptedException {
         BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
         List<String> output = new CopyOnWriteArrayList<>();
         return processStreamProcessors.submit(() -> {
@@ -93,7 +93,7 @@ public class ProcessRunner {
                     line = processOutput.readLine();
                     if (line != null) {
                         output.add(line);
-                        logger.debug(marker, line);
+                        logger.debug(line);
                     }
                 } while (line != null && !Thread.interrupted());
             } catch (IOException e) {
@@ -111,6 +111,12 @@ public class ProcessRunner {
             this.exitCode = exitCode;
             this.standardOutput = standardOutput;
             this.errorOutput = errorOutput;
+        }
+
+        public ExecutionResult(int exitCode) {
+            this.exitCode = exitCode;
+            this.standardOutput = null;
+            this.errorOutput = null;
         }
 
         public int getExitCode() {
