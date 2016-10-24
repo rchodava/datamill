@@ -5,15 +5,12 @@ import com.google.common.io.Files;
 import cucumber.api.java.After;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
-import foundation.stack.datamill.Pair;
+import foundation.stack.datamill.ProcessRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -21,7 +18,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -160,19 +156,18 @@ public class CommandLineSteps {
 
         try {
             File temporaryDirectory = getOrCreateTemporaryDirectory();
-            File workingDirectory = resolvedRelativePath != null ?
-                    new File(temporaryDirectory, resolvedRelativePath) : temporaryDirectory;
-            Process process = Runtime.getRuntime().exec(resolvedCommand, null, workingDirectory);
-            Pair<Integer, List<String>> executionResult = doRunProcess(process);
-            if (executionResult.getFirst() != 0) {
-                fail("Received result code " + executionResult.getFirst() + " after executing " + resolvedCommand);
+            File workingDirectory = resolvedRelativePath != null ? new File(temporaryDirectory, resolvedRelativePath) : temporaryDirectory;
+            ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(workingDirectory, resolvedCommand.split(" "));
+            if (executionResult.getExitCode() != 0) {
+                fail("Received result code " + executionResult.getExitCode() + " after executing " + resolvedCommand);
             }
-            if (executionResult.getSecond() != null && !executionResult.getSecond().isEmpty()) {
-                String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getSecond());
+            if (executionResult.getStandardOutput() != null && !executionResult.getStandardOutput().isEmpty()) {
+                String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getStandardOutput());
                 logger.debug("Command execution of [{}] returned following results: {}", resolvedCommand, commandResult);
                 propertyStore.put(COMMAND_RESULT, commandResult);
             }
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
+            logger.error("Error while executing {}", resolvedCommand, e);
             fail("Error while executing " + resolvedCommand);
         }
     }
@@ -255,32 +250,4 @@ public class CommandLineSteps {
             delete(temporaryDirectory);
         }
     }
-
-    private Pair<Integer, List<String>> doRunProcess(Process process) throws IOException, InterruptedException {
-        List<String> output = readLinesFromStream(process.getInputStream());
-        int result = process.waitFor();
-
-        return new Pair<>(result, output);
-    }
-
-    private List<String> readLinesFromStream(InputStream inputStream) throws InterruptedException {
-        BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
-        List<String> output = new CopyOnWriteArrayList<>();
-
-        String line = null;
-        do {
-            try {
-                line = processOutput.readLine();
-                if (line != null) {
-                    output.add(line);
-                    logger.debug("{}", line);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } while (line != null);
-
-        return output;
-    }
-
 }
