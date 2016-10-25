@@ -39,7 +39,7 @@ public class ProcessRunnerTest {
 
     @Test
     public void runProcessAndWait_ReturnsExpectedResults_OnFailingCommandExecution() throws IOException {
-        Path userHome = Paths.get(System.getProperty("user.home"));
+        Path userHome = Paths.get(System.getProperty("java.io.tmpdir"));
         Path doesNotExist = Paths.get(userHome.toString(), "doesNotExist");
         boolean runningOnWindows = runningOnWindows();
         String[] command = runningOnWindows ? new String[] {"dir", "/x", doesNotExist.toString()} : new String[] {"ls", "-la", doesNotExist.toString()};
