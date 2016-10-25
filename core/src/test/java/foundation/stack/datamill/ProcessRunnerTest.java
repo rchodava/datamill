@@ -39,20 +39,12 @@ public class ProcessRunnerTest {
 
     @Test
     public void runProcessAndWait_ReturnsExpectedResults_OnFailingCommandExecution() throws IOException {
-        Path userHome = Paths.get(System.getProperty("java.io.tmpdir"));
-        Path doesNotExist = Paths.get(userHome.toString(), "doesNotExist");
-        boolean runningOnWindows = runningOnWindows();
-        String[] command = runningOnWindows ? new String[] {"dir", "/x", doesNotExist.toString()} : new String[] {"ls", "-la", doesNotExist.toString()};
-        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
+        Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
+        String[] command = new String[] {"git", "status"};
+        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(tmpDir.toFile(), command);
         assertTrue(executionResult.getExitCode() != 0);
         assertTrue(executionResult.getStandardOutput().isEmpty());
-        if (runningOnWindows) {
-            assertTrue(executionResult.getStandardError().contains("File Not Found"));
-
-        }
-        else {
-            assertEquals(executionResult.getStandardError().get(0), "ls: " + doesNotExist.toString() + ": No such file or directory");
-        }
+        assertEquals("fatal: Not a git repository (or any of the parent directories): .git", executionResult.getStandardError().get(0));
     }
 
     @Test
@@ -70,7 +62,7 @@ public class ProcessRunnerTest {
             assertTrue(executionResult.getStandardOutput().contains("0 File(s)"));
         }
         else {
-            assertEquals(executionResult.getStandardOutput().get(0), "total 0");
+            assertEquals("total 0", executionResult.getStandardOutput().get(0));
         }
     }
 
