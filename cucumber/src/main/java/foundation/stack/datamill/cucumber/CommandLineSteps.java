@@ -159,6 +159,7 @@ public class CommandLineSteps {
             File workingDirectory = resolvedRelativePath != null ? new File(temporaryDirectory, resolvedRelativePath) : temporaryDirectory;
             ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(workingDirectory, resolvedCommand.split(" "));
             if (executionResult.getExitCode() != 0) {
+                logger.error("Error while executing {} with message {}", resolvedCommand, executionResult.getStandardError());
                 fail("Received result code " + executionResult.getExitCode() + " after executing " + resolvedCommand);
             }
             if (executionResult.getStandardOutput() != null && !executionResult.getStandardOutput().isEmpty()) {

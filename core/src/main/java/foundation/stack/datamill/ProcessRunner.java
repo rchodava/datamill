@@ -105,18 +105,18 @@ public class ProcessRunner {
     public static class ExecutionResult {
         private final int exitCode;
         private final List<String> standardOutput;
-        private final List<String> errorOutput;
+        private final List<String> standardError;
 
-        public ExecutionResult(int exitCode, List<String> standardOutput, List<String> errorOutput) {
+        public ExecutionResult(int exitCode, List<String> standardOutput, List<String> standardError) {
             this.exitCode = exitCode;
             this.standardOutput = standardOutput;
-            this.errorOutput = errorOutput;
+            this.standardError = standardError;
         }
 
         public ExecutionResult(int exitCode) {
             this.exitCode = exitCode;
             this.standardOutput = null;
-            this.errorOutput = null;
+            this.standardError = null;
         }
 
         public int getExitCode() {
@@ -127,8 +127,8 @@ public class ProcessRunner {
             return standardOutput;
         }
 
-        public List<String> getErrorOutput() {
-            return errorOutput;
+        public List<String> getStandardError() {
+            return standardError;
         }
     }
 }

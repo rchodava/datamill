@@ -19,28 +19,21 @@ public class ProcessRunnerTest {
 
     @Test
     public void runProcessAndWait_ReturnsExpectedResults_OnSuccessfulCommandExecution() throws IOException {
-        boolean runningOnWindows = runningOnWindows();
-        String[] command = runningOnWindows ? new String[] {"ping", "localhost"} : new String[] {"ping", "-c", "1", "localhost"};
-
+        String[] command = new String[] {"java", "-version"};
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
         assertEquals(executionResult.getExitCode(), 0);
-        assertTrue(executionResult.getErrorOutput().isEmpty());
-        if (runningOnWindows) {
-            assertTrue(executionResult.getStandardOutput().contains("Reply from"));
-        }
-        else {
-            assertEquals(executionResult.getStandardOutput().get(0), "PING localhost (127.0.0.1): 56 data bytes");
-        }
+        // It is counter intuitive, but jdk uses standard error instead of standard output for showing version
+        assertEquals(3, executionResult.getStandardError().size());
+        assertTrue(executionResult.getStandardError().get(0).startsWith("java version "));
+        assertTrue(executionResult.getStandardOutput().isEmpty());
     }
 
     @Test
     public void runProcessAndWait_NoOutput_OnSuccessfulCommandExecution() throws IOException {
-        boolean runningOnWindows = runningOnWindows();
-        String[] command = runningOnWindows ? new String[] {"ping", "localhost"} : new String[] {"ping", "-c", "1", "localhost"};
-
+        String[] command = new String[] {"java", "-version"};
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, false, command);
         assertEquals(executionResult.getExitCode(), 0);
-        assertNull(executionResult.getErrorOutput());
+        assertNull(executionResult.getStandardError());
         assertNull(executionResult.getStandardOutput());
     }
 
@@ -54,11 +47,11 @@ public class ProcessRunnerTest {
         assertEquals(executionResult.getExitCode(), 1);
         assertTrue(executionResult.getStandardOutput().isEmpty());
         if (runningOnWindows) {
-            assertTrue(executionResult.getErrorOutput().contains("File Not Found"));
+            assertTrue(executionResult.getStandardError().contains("File Not Found"));
 
         }
         else {
-            assertEquals(executionResult.getErrorOutput().get(0), "ls: " + doesNotExist.toString() + ": No such file or directory");
+            assertEquals(executionResult.getStandardError().get(0), "ls: " + doesNotExist.toString() + ": No such file or directory");
         }
     }
 
@@ -72,7 +65,7 @@ public class ProcessRunnerTest {
 
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
         assertEquals(executionResult.getExitCode(), 0);
-        assertTrue(executionResult.getErrorOutput().isEmpty());
+        assertTrue(executionResult.getStandardError().isEmpty());
         if (runningOnWindows) {
             assertTrue(executionResult.getStandardOutput().contains("0 File(s)"));
         }
