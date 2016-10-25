@@ -44,7 +44,7 @@ public class ProcessRunnerTest {
         boolean runningOnWindows = runningOnWindows();
         String[] command = runningOnWindows ? new String[] {"dir", "/x", doesNotExist.toString()} : new String[] {"ls", "-la", doesNotExist.toString()};
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
-        assertEquals(executionResult.getExitCode(), 1);
+        assertTrue(executionResult.getExitCode() != 0);
         assertTrue(executionResult.getStandardOutput().isEmpty());
         if (runningOnWindows) {
             assertTrue(executionResult.getStandardError().contains("File Not Found"));
