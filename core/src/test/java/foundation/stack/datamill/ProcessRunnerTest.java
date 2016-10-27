@@ -53,13 +53,13 @@ public class ProcessRunnerTest {
         ProcessRunner.runProcess(null, "mkdir", tempDir.toString());
 
         boolean runningOnWindows = runningOnWindows();
-        String[] command = runningOnWindows ? new String[] {"dir", "/x", tempDir.toString()} : new String[] {"ls", "-la", tempDir.toString()};
+        String[] command = runningOnWindows ? new String[] {"dir", tempDir.toString()} : new String[] {"ls", "-la", tempDir.toString()};
 
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
         assertEquals(executionResult.getExitCode(), 0);
         assertTrue(executionResult.getStandardError().isEmpty());
         if (runningOnWindows) {
-            assertTrue(executionResult.getStandardOutput().contains("0 File(s)"));
+            assertTrue(executionResult.getStandardOutput().isEmpty());
         }
         else {
             assertEquals("total 0", executionResult.getStandardOutput().get(0));
