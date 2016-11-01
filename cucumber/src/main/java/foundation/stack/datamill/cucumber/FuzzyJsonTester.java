@@ -61,12 +61,24 @@ public class FuzzyJsonTester {
 
     private static boolean isSimilar(Object expected, Object actual) {
         logger.debug("Comparing expected {} and actual {}", expected, actual);
+        if (expected instanceof String && expected.equals(ANY_VALUE)) {
+            return true;
+        }
         if (expected instanceof String && actual instanceof String) {
             return expected.equals(ANY_VALUE) || expected.equals(actual);
         } else if (expected instanceof Number && actual instanceof Number) {
             return expected.getClass() == actual.getClass() && expected.equals(actual);
         } else if (expected instanceof JSONObject && actual instanceof JSONObject) {
             return areJsonObjectsSimilarEnough((JSONObject) expected, (JSONObject) actual);
+        } else if (expected instanceof JSONArray && actual instanceof JSONArray) {
+            JSONArray expectedArray = (JSONArray) expected;
+            JSONArray actualArray = (JSONArray) expected;
+            for(int i = 0; i < expectedArray.length(); i++) {
+                if(!isSimilar(expectedArray.get(i), actualArray.get(i))) {
+                    return false;
+                }
+            }
+            return true;
         }
 
         return false;
