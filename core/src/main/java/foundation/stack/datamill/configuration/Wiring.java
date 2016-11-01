@@ -293,7 +293,7 @@ public class Wiring {
      * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
      * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
      */
-    public <T> T constructIfMissing(Class<T> clazz, Class<?>... parameterTypes) {
+    public <T> T constructWithIfMissing(Class<T> clazz, Class<?>... parameterTypes) {
         T target = get(clazz);
         if (target != null) {
             return target;
