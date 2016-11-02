@@ -203,7 +203,7 @@ public class HttpSteps {
         return (Map<String, String>) propertyStore.get(HEADER_KEY);
     }
 
-    public Observable<JsonObject> makeStreamingCall(Method method, String uri, Map<String, String> headers) {
+    public Observable<JsonObject> makeStreamingJsonCall(Method method, String uri, Map<String, String> headers) {
         final String resolvedUri = placeholderResolver.resolve(uri);
 
         addValueToHeader("Origin", uri);
