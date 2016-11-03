@@ -159,11 +159,11 @@ public class CommandLineSteps {
             File workingDirectory = resolvedRelativePath != null ? new File(temporaryDirectory, resolvedRelativePath) : temporaryDirectory;
             ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(workingDirectory, resolvedCommand.split(" "));
             if (executionResult.getExitCode() != 0) {
-                logger.error("Error while executing {} with message {}", resolvedCommand, executionResult.getStandardError());
+                logger.error("Error while executing {} with message {}", resolvedCommand, executionResult.getBufferedStandardError());
                 fail("Received result code " + executionResult.getExitCode() + " after executing " + resolvedCommand);
             }
-            if (executionResult.getStandardOutput() != null && !executionResult.getStandardOutput().isEmpty()) {
-                String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getStandardOutput());
+            if (executionResult.getBufferedStandardOutput() != null && !executionResult.getBufferedStandardOutput().isEmpty()) {
+                String commandResult = Joiner.on(System.getProperty("line.separator")).join(executionResult.getBufferedStandardOutput());
                 logger.debug("Command execution of [{}] returned following results: {}", resolvedCommand, commandResult);
                 propertyStore.put(COMMAND_RESULT, commandResult);
             }
