@@ -46,14 +46,14 @@ public class ProcessRunner {
         runProcess(workingDirectory, false, command);
     }
 
-    public static void runProcess(File workingDirectory, boolean returnOutput, String... command) throws IOException {
+    public static void runProcess(File workingDirectory, boolean bufferOutput, String... command) throws IOException {
         logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            readLinesFromStream(process.getInputStream(), returnOutput);
-            readLinesFromStream(process.getErrorStream(), returnOutput);
+            readLinesFromStream(process.getInputStream(), bufferOutput);
+            readLinesFromStream(process.getErrorStream(), bufferOutput);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
