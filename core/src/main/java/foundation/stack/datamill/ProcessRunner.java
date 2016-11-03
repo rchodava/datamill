@@ -52,8 +52,8 @@ public class ProcessRunner {
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            readLinesFromStream(process.getInputStream(), bufferOutput);
-            readLinesFromStream(process.getErrorStream(), bufferOutput);
+            readLinesFromStream(process.getInputStream(), bufferOutput, null);
+            readLinesFromStream(process.getErrorStream(), bufferOutput, null);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
@@ -65,6 +65,11 @@ public class ProcessRunner {
 
     public static ExecutionResult runProcessAndWait(File workingDirectory, boolean bufferOutput, String... command)
             throws IOException {
+        return runProcessAndWait(workingDirectory, bufferOutput, null, command);
+    }
+
+    public static ExecutionResult runProcessAndWait(File workingDirectory, boolean bufferOutput, ProcessRunnerListener listener, String... command)
+            throws IOException {
         logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
@@ -72,13 +77,16 @@ public class ProcessRunner {
         try {
             ListenableFuture<List<String>> standardOutputFuture, standardErrorFuture;
 
-            standardOutputFuture = readLinesFromStream(process.getInputStream(), bufferOutput);
-            standardErrorFuture = readLinesFromStream(process.getErrorStream(), bufferOutput);
+            standardOutputFuture = readLinesFromStream(process.getInputStream(), bufferOutput, listener);
+            standardErrorFuture = readLinesFromStream(process.getErrorStream(), bufferOutput, listener);
 
             int exitCode = process.waitFor();
 
             if (bufferOutput) {
                 List<List<String>> results = Futures.allAsList(standardOutputFuture, standardErrorFuture).get(1, TimeUnit.SECONDS);
+                if (exitCode != 0 && results.size() == 2) {
+                    logger.debug("Exit code was {} with standard error: {}", exitCode, results.get(1));
+                }
                 return new ExecutionResult(exitCode, results.size() > 0 ? results.get(0) : null, results.size() > 1 ? results.get(1) : null);
             }
             return new ExecutionResult(exitCode);
@@ -87,7 +95,7 @@ public class ProcessRunner {
         }
     }
 
-    private static ListenableFuture<List<String>> readLinesFromStream(InputStream inputStream, boolean bufferOutput)
+    private static ListenableFuture<List<String>> readLinesFromStream(InputStream inputStream, boolean bufferOutput, ProcessRunnerListener listener)
             throws InterruptedException {
         BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
         List<String> output = new CopyOnWriteArrayList<>();
@@ -100,7 +108,9 @@ public class ProcessRunner {
                         if (bufferOutput) {
                             output.add(line);
                         }
-
+                        if (listener != null) {
+                            listener.notify(line);
+                        }
                         logger.debug(line);
                     }
                 } while (line != null && !Thread.interrupted());
