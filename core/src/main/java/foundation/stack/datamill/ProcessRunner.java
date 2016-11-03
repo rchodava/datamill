@@ -43,37 +43,41 @@ public class ProcessRunner {
             }));
 
     public static void runProcess(File workingDirectory, String... command) throws IOException {
+        runProcess(workingDirectory, false, command);
+    }
+
+    public static void runProcess(File workingDirectory, boolean bufferOutput, String... command) throws IOException {
         logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            readLinesFromStream(process.getInputStream());
-            readLinesFromStream(process.getErrorStream());
+            readLinesFromStream(process.getInputStream(), bufferOutput);
+            readLinesFromStream(process.getErrorStream(), bufferOutput);
         } catch (InterruptedException e) {
             throw new IOException(e);
         }
     }
 
     public static ExecutionResult runProcessAndWait(File workingDirectory, String... command) throws IOException {
-        return runProcessAndWait(workingDirectory, true, command);
+        return runProcessAndWait(workingDirectory, false, command);
     }
 
-    public static ExecutionResult runProcessAndWait(File workingDirectory, boolean returnOutput, String... command) throws IOException {
+    public static ExecutionResult runProcessAndWait(File workingDirectory, boolean bufferOutput, String... command)
+            throws IOException {
         logger.debug("{}", Joiner.on(' ').join(command));
 
         Process process = new ProcessBuilder().directory(workingDirectory).command(command).start();
 
         try {
-            ListenableFuture<List<String>> standardOutputFuture = null, standardErrorFuture = null;
-            if (returnOutput) {
-                standardOutputFuture = readLinesFromStream(process.getInputStream());
-                standardErrorFuture = readLinesFromStream(process.getErrorStream());
-            }
+            ListenableFuture<List<String>> standardOutputFuture, standardErrorFuture;
+
+            standardOutputFuture = readLinesFromStream(process.getInputStream(), bufferOutput);
+            standardErrorFuture = readLinesFromStream(process.getErrorStream(), bufferOutput);
 
             int exitCode = process.waitFor();
 
-            if (returnOutput) {
+            if (bufferOutput) {
                 List<List<String>> results = Futures.allAsList(standardOutputFuture, standardErrorFuture).get(1, TimeUnit.SECONDS);
                 return new ExecutionResult(exitCode, results.size() > 0 ? results.get(0) : null, results.size() > 1 ? results.get(1) : null);
             }
@@ -83,7 +87,8 @@ public class ProcessRunner {
         }
     }
 
-    private static ListenableFuture<List<String>> readLinesFromStream(InputStream inputStream) throws InterruptedException {
+    private static ListenableFuture<List<String>> readLinesFromStream(InputStream inputStream, boolean bufferOutput)
+            throws InterruptedException {
         BufferedReader processOutput = new BufferedReader(new InputStreamReader(inputStream));
         List<String> output = new CopyOnWriteArrayList<>();
         return processStreamProcessors.submit(() -> {
@@ -92,7 +97,10 @@ public class ProcessRunner {
                 do {
                     line = processOutput.readLine();
                     if (line != null) {
-                        output.add(line);
+                        if (bufferOutput) {
+                            output.add(line);
+                        }
+
                         logger.debug(line);
                     }
                 } while (line != null && !Thread.interrupted());
@@ -104,32 +112,31 @@ public class ProcessRunner {
 
     public static class ExecutionResult {
         private final int exitCode;
-        private final List<String> standardOutput;
-        private final List<String> standardError;
+        private final List<String> bufferedStandardOutput;
+        private final List<String> bufferedStandardError;
 
-        public ExecutionResult(int exitCode, List<String> standardOutput, List<String> standardError) {
+        public ExecutionResult(int exitCode, List<String> bufferedStandardOutput, List<String> bufferedStandardError) {
             this.exitCode = exitCode;
-            this.standardOutput = standardOutput;
-            this.standardError = standardError;
+            this.bufferedStandardOutput = bufferedStandardOutput;
+            this.bufferedStandardError = bufferedStandardError;
         }
 
         public ExecutionResult(int exitCode) {
             this.exitCode = exitCode;
-            this.standardOutput = null;
-            this.standardError = null;
+            this.bufferedStandardOutput = null;
+            this.bufferedStandardError = null;
         }
 
         public int getExitCode() {
             return exitCode;
         }
 
-        public List<String> getStandardOutput() {
-            return standardOutput;
+        public List<String> getBufferedStandardOutput() {
+            return bufferedStandardOutput;
         }
 
-        public List<String> getStandardError() {
-            return standardError;
+        public List<String> getBufferedStandardError() {
+            return bufferedStandardError;
         }
     }
 }
-

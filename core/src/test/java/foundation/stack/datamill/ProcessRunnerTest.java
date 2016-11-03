@@ -20,12 +20,12 @@ public class ProcessRunnerTest {
     @Test
     public void runProcessAndWait_ReturnsExpectedResults_OnSuccessfulCommandExecution() throws IOException {
         String[] command = new String[] {"java", "-version"};
-        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
+        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, true, command);
         assertEquals(executionResult.getExitCode(), 0);
         // It is counter intuitive, but jdk uses standard error instead of standard output for showing version
-        assertEquals(3, executionResult.getStandardError().size());
-        assertTrue(executionResult.getStandardError().get(0).startsWith("java version "));
-        assertTrue(executionResult.getStandardOutput().isEmpty());
+        assertEquals(3, executionResult.getBufferedStandardError().size());
+        assertTrue(executionResult.getBufferedStandardError().get(0).startsWith("java version "));
+        assertTrue(executionResult.getBufferedStandardOutput().isEmpty());
     }
 
     @Test
@@ -33,18 +33,18 @@ public class ProcessRunnerTest {
         String[] command = new String[] {"java", "-version"};
         ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, false, command);
         assertEquals(executionResult.getExitCode(), 0);
-        assertNull(executionResult.getStandardError());
-        assertNull(executionResult.getStandardOutput());
+        assertNull(executionResult.getBufferedStandardError());
+        assertNull(executionResult.getBufferedStandardOutput());
     }
 
     @Test
     public void runProcessAndWait_ReturnsExpectedResults_OnFailingCommandExecution() throws IOException {
         Path tmpDir = Paths.get(System.getProperty("java.io.tmpdir"));
         String[] command = new String[] {"git", "status"};
-        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(tmpDir.toFile(), command);
+        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(tmpDir.toFile(), true, command);
         assertTrue(executionResult.getExitCode() != 0);
-        assertTrue(executionResult.getStandardOutput().isEmpty());
-        assertEquals("fatal: Not a git repository (or any of the parent directories): .git", executionResult.getStandardError().get(0));
+        assertTrue(executionResult.getBufferedStandardOutput().isEmpty());
+        assertEquals("fatal: Not a git repository (or any of the parent directories): .git", executionResult.getBufferedStandardError().get(0));
     }
 
     @Test
@@ -55,14 +55,14 @@ public class ProcessRunnerTest {
         boolean runningOnWindows = runningOnWindows();
         String[] command = runningOnWindows ? new String[] {"dir", tempDir.toString()} : new String[] {"ls", "-la", tempDir.toString()};
 
-        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, command);
+        ProcessRunner.ExecutionResult executionResult = ProcessRunner.runProcessAndWait(null, true, command);
         assertEquals(executionResult.getExitCode(), 0);
-        assertTrue(executionResult.getStandardError().isEmpty());
+        assertTrue(executionResult.getBufferedStandardError().isEmpty());
         if (runningOnWindows) {
-            assertTrue(executionResult.getStandardOutput().isEmpty());
+            assertTrue(executionResult.getBufferedStandardOutput().isEmpty());
         }
         else {
-            assertEquals("total 0", executionResult.getStandardOutput().get(0));
+            assertEquals("total 0", executionResult.getBufferedStandardOutput().get(0));
         }
     }
 
