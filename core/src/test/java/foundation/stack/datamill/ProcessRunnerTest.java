@@ -67,6 +67,16 @@ public class ProcessRunnerTest {
         }
     }
 
+    @Test
+    public void runProcess_NotifiesListenerOfOutput() throws IOException {
+        String[] command = new String[] {"java", "-version"};
+        StringBuilder output = new StringBuilder();
+        ProcessOutputListener listener = (message, error) -> output.append(message);
+        ProcessRunner.ExecutionResult executionResult = ProcessRunner.run(command).outputListener(listener).runAndWait();
+        assertEquals(executionResult.getExitCode(), 0);
+        assertTrue(output.toString().startsWith("java version "));
+    }
+
     private static boolean runningOnWindows() {
         return System.getProperty("os.name", "generic").toLowerCase(Locale.ENGLISH).contains("win");
     }
