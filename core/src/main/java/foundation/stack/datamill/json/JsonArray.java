@@ -111,6 +111,18 @@ public class JsonArray implements Json, ReflectableValue {
         return this;
     }
 
+    public List<JsonObject> asJsonObjects() {
+        int length = array.length();
+        ArrayList<JsonObject> objects = new ArrayList<>(length);
+
+        for (int i = 0; i < length; i++) {
+            JSONObject object = array.getJSONObject(i);
+            objects.add(new JsonObject(object));
+        }
+
+        return objects;
+    }
+
     @Override
     public boolean isBoolean() {
         return false;

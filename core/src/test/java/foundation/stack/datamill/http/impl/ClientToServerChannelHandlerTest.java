@@ -142,7 +142,7 @@ public class ClientToServerChannelHandlerTest {
     }
 
     @Test
-    public void multipeResponseChunksSent() throws Exception {
+    public void multipleResponseChunksSent() throws Exception {
         ExecutorService service = Executors.newSingleThreadExecutor();
         ClientToServerChannelHandler handler = new ClientToServerChannelHandler(service, route, null);
 

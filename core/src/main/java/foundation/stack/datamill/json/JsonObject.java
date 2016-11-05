@@ -77,7 +77,7 @@ public class JsonObject implements Json, ReflectableValue {
 
     final JSONObject object;
 
-    private JsonObject(JSONObject object) {
+    JsonObject(JSONObject object) {
         this.object = object;
     }
 
