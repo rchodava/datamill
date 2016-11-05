@@ -216,8 +216,14 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                                     sendContent(context, buffer);
                                 }
                             })
-                            .finallyDo(() -> {
-                                sendResponseEnd(context, originalRequest);
+                            .doAfterTerminate(() -> {
+                                if (first[0]) {
+                                    sendFullResponse(context, originalRequest,
+                                            serverResponse.status().getCode(),
+                                            serverResponse.headers());
+                                } else {
+                                    sendResponseEnd(context, originalRequest);
+                                }
                             }).subscribe();
                 }
             });
