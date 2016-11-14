@@ -11,11 +11,14 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import rx.Emitter;
 import rx.Observable;
+import rx.Observer;
 import rx.Subscription;
-import rx.subjects.ReplaySubject;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -33,7 +36,8 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     private volatile boolean channelClosed;
     private volatile Subscription entitySubscription;
 
-    private ReplaySubject<ByteBuffer> bodyStream;
+    private Observable<ByteBuffer> bodyStream;
+    private BufferingEmitter bodyStreamBuffer;
     private ServerRequestImpl serverRequest;
 
     public ClientToServerChannelHandler(
@@ -75,13 +79,17 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                 sendContinueResponse(context);
             }
 
-            bodyStream = ReplaySubject.create();
+            bodyStreamBuffer = new BufferingEmitter();
+            bodyStream = Observable.fromEmitter(
+                    emitter -> bodyStreamBuffer.connect(emitter),
+                    Emitter.BackpressureMode.BUFFER);
+
             serverRequest = ServerRequestBuilder.buildServerRequest(request, bodyStream);
 
             processRequest(context, request);
 
             if (request.decoderResult().isFailure()) {
-                bodyStream.onError(request.decoderResult().cause());
+                bodyStreamBuffer.onError(request.decoderResult().cause());
             }
         }
 
@@ -90,10 +98,10 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
 
             ByteBuf content = httpContent.content();
             if (content.isReadable()) {
-                bodyStream.onNext(content.nioBuffer());
+                bodyStreamBuffer.onNext(content.nioBuffer());
 
                 if (httpContent.decoderResult().isFailure()) {
-                    bodyStream.onError(httpContent.decoderResult().cause());
+                    bodyStreamBuffer.onError(httpContent.decoderResult().cause());
                 }
             }
 
@@ -103,7 +111,7 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                     serverRequest.setTrailingHeaders(ServerRequestBuilder.buildHeadersMap(trailer.trailingHeaders()));
                 }
 
-                bodyStream.onCompleted();
+                bodyStreamBuffer.onCompleted();
             }
         }
     }
@@ -249,5 +257,51 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext context, Throwable cause) {
         cause.printStackTrace();
         context.close();
+    }
+
+    private static class BufferingEmitter<T> implements Observer<T> {
+        private final List<T> buffer = new ArrayList<>();
+        private Emitter<T> emitter;
+        private Throwable error;
+        private boolean completed;
+
+        @Override
+        public synchronized void onNext(T emission) {
+            if (emitter == null && error == null && !completed) {
+                this.buffer.add(emission);
+            } else {
+                emitter.onNext(emission);
+            }
+        }
+
+        @Override
+        public synchronized void onCompleted() {
+            if (emitter != null && error == null) {
+                emitter.onCompleted();
+            } else {
+                completed = true;
+            }
+        }
+
+        @Override
+        public synchronized void onError(Throwable e) {
+            if (!completed) {
+                this.error = e;
+            }
+        }
+
+        public synchronized void connect(Emitter<T> emitter) {
+            for (T emission : buffer) {
+                emitter.onNext(emission);
+            }
+
+            if (error != null) {
+                emitter.onError(error);
+            } else if (completed) {
+                emitter.onCompleted();
+            } else {
+                this.emitter = emitter;
+            }
+        }
     }
 }
