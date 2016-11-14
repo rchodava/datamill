@@ -91,8 +91,8 @@ public class TestDatabaseClientTest {
                 .from(testModelOutline)
                 .all()
                 .firstAs(row -> testModelOutline.wrap(new TestModel())
-                        .set(m -> m.getProperty(), row.column(testModelOutline.member(m -> m.getProperty())))
-                        .set(m -> m.getStringProperty(), row.column(testModelOutline.member(m -> m.getStringProperty())))
+                        .set(m -> m.getProperty(), row.get(testModelOutline.member(m -> m.getProperty())))
+                        .set(m -> m.getStringProperty(), row.get(testModelOutline.member(m -> m.getStringProperty())))
                         .unwrap())
                 .subscribe(testSubscriber);
 

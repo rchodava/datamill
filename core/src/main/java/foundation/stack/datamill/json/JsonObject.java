@@ -1,6 +1,7 @@
 package foundation.stack.datamill.json;
 
 import foundation.stack.datamill.reflection.Member;
+import foundation.stack.datamill.values.MutableStructuredValue;
 import foundation.stack.datamill.values.ReflectableValue;
 import foundation.stack.datamill.reflection.impl.TripleArgumentTypeSwitch;
 import foundation.stack.datamill.values.Value;
@@ -16,7 +17,7 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class JsonObject implements Json, ReflectableValue {
+public class JsonObject implements Json, ReflectableValue, MutableStructuredValue {
     private static final TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object> propertyAsObjectSwitch =
             new TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object>() {
                 @Override
@@ -36,17 +37,29 @@ public class JsonObject implements Json, ReflectableValue {
 
                 @Override
                 protected Object caseShort(JSONObject value1, String value2, JsonProperty value3) {
+                    try {
                     return value1.has(value2) ? value3.asShort() : null;
+                    } catch (JSONException __) {
+                        return null;
+                    }
                 }
 
                 @Override
                 protected Object caseInteger(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asInteger() : null;
+                    try {
+                        return value1.has(value2) ? value3.asInteger() : null;
+                    } catch (JSONException __) {
+                        return null;
+                    }
                 }
 
                 @Override
                 protected Object caseLong(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asLong() : null;
+                    try {
+                        return value1.has(value2) ? value3.asLong() : null;
+                    } catch (JSONException __) {
+                        return null;
+                    }
                 }
 
                 @Override
@@ -157,11 +170,13 @@ public class JsonObject implements Json, ReflectableValue {
         return object.toString();
     }
 
-    public JsonProperty get(String property) {
+    @Override
+    public Value get(String property) {
         return new JsonProperty(property);
     }
 
-    public JsonProperty get(Member member) {
+    @Override
+    public Value get(Member member) {
         return get(member.name());
     }
 

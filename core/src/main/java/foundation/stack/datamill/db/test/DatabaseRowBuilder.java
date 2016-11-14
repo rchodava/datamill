@@ -64,17 +64,17 @@ public class DatabaseRowBuilder<T> {
         }
 
         @Override
-        public Value column(int index) {
-            return column(columnNamesByIndex.get(index));
+        public Value get(int index) {
+            return get(columnNamesByIndex.get(index));
         }
 
         @Override
-        public Value column(Member member) {
-            return column(member.outline().pluralName(), member.name());
+        public Value get(Member member) {
+            return get(member.outline().pluralName(), member.name());
         }
 
         @Override
-        public Value column(String name) {
+        public Value get(String name) {
             Object value = values.get(name);
             if (value != null) {
                 return new StringValue(value.toString());
@@ -84,8 +84,8 @@ public class DatabaseRowBuilder<T> {
         }
 
         @Override
-        public Value column(String table, String name) {
-            return column(SqlSyntax.qualifiedName(table, name));
+        public Value get(String table, String name) {
+            return get(SqlSyntax.qualifiedName(table, name));
         }
 
         @Override

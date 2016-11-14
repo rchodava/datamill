@@ -55,8 +55,8 @@ public class DatabaseClientTest {
                 .last();
 
         List<Quark> quarks = client.selectAll().from(outline).all().getAs(r -> outline.wrap(new Quark())
-                .set(p -> p.getName(), r.column(outline.member(m -> m.getName())))
-                .set(p -> p.getSpin(), r.column(outline.member(m -> m.getSpin())))
+                .set(p -> p.getName(), r.get(outline.member(m -> m.getName())))
+                .set(p -> p.getSpin(), r.get(outline.member(m -> m.getSpin())))
                 .unwrap())
                 .toBlocking().last();
 
@@ -65,8 +65,8 @@ public class DatabaseClientTest {
         assertEquals(1, quarks.get(0).getSpin());
 
         Quark quark = client.selectAll().from(outline).all().firstAs(r -> outline.wrap(new Quark())
-                .set(p -> p.getName(), r.column(outline.member(m -> m.getName())))
-                .set(p -> p.getSpin(), r.column(outline.member(m -> m.getSpin())))
+                .set(p -> p.getName(), r.get(outline.member(m -> m.getName())))
+                .set(p -> p.getSpin(), r.get(outline.member(m -> m.getSpin())))
                 .unwrap())
                 .toBlocking().last();
 
