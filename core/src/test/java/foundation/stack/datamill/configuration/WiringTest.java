@@ -302,7 +302,53 @@ public class WiringTest {
     }
 
     @Test
-    public void namedValues() {
+    public void namedValuesFromPropertySource() {
+        Test5 instance = new Wiring()
+                .setNamedPropertySource(Properties.fromSystem().orDefaults(d -> d
+                .put("boolean", "true")
+                .put("booleanWrapper", "true")
+                .put("byte", "1")
+                .put("byteWrapper", "1")
+                .put("char", "a")
+                .put("charWrapper", "a")
+                .put("short", "2")
+                .put("shortWrapper", "2")
+                .put("int", "3")
+                .put("intWrapper", "3")
+                .put("long", "4")
+                .put("longWrapper", "4")
+                .put("float", "1.1")
+                .put("floatWrapper", "1.1")
+                .put("double", "2.2")
+                .put("doubleWrapper", "2.2")
+                .put("LocalDateTime", "2007-12-03T10:15:30")
+                .put("String", "value")
+                .put("byteArray", "array")))
+                .construct(Test5.class);
+
+        assertEquals(true, instance.booleanProperty);
+        assertEquals(true, instance.booleanWrapperProperty);
+        assertEquals(1, instance.byteProperty);
+        assertEquals(1, (byte) instance.byteWrapperProperty);
+        assertEquals('a', instance.characterProperty);
+        assertEquals('a', (char) instance.characterWrapperProperty);
+        assertEquals(2, instance.shortProperty);
+        assertEquals(2, (short) instance.shortWrapperProperty);
+        assertEquals(3, instance.integerProperty);
+        assertEquals(3, (int) instance.integerWrapperProperty);
+        assertEquals(4, instance.longProperty);
+        assertEquals(4, (long) instance.longWrapperProperty);
+        assertEquals(1.1f, instance.floatProperty, 0.1f);
+        assertEquals(1.1f, instance.floatWrapperProperty, 0.1f);
+        assertEquals(2.2d, instance.doubleProperty, 0.1d);
+        assertEquals(2.2d, instance.doubleWrapperProperty, 0.1d);
+        assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
+        assertEquals("value", instance.stringProperty);
+        assertArrayEquals("array".getBytes(), instance.byteArrayProperty);
+    }
+
+    @Test
+    public void typedNamedValues() {
         Test5 instance = new Wiring()
                 .addNamed("boolean", new StringValue("true"))
                 .addNamed("booleanWrapper", new StringValue("true"))

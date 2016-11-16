@@ -27,7 +27,12 @@ public class PropertySourceChainImpl extends AbstractSource implements PropertyS
     }
 
     @Override
-    public Optional<String> get(String name) {
+    public PropertySourceChain alias(String alias, String original) {
+        return (PropertySourceChain) super.alias(alias, original);
+    }
+
+    @Override
+    public Optional<String> getOptional(String name) {
         for (PropertySource source : chain) {
             Optional<String> value = source.get(name);
             if (value.isPresent()) {

@@ -9,7 +9,7 @@ public class EmptySource extends AbstractSource {
     public static final EmptySource INSTANCE = new EmptySource();
 
     @Override
-    public Optional<String> get(String name) {
+    public Optional<String> getOptional(String name) {
         return Optional.empty();
     }
 }

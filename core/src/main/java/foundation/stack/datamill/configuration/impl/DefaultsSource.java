@@ -13,7 +13,7 @@ public class DefaultsSource extends AbstractSource implements Defaults {
     private final Map<String, String> defaults = new HashMap<>();
 
     @Override
-    public Optional<String> get(String name) {
+    public Optional<String> getOptional(String name) {
         return Optional.ofNullable(defaults.get(name));
     }
 

@@ -10,6 +10,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -235,6 +236,7 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
         return mapper.apply(this);
     }
 
+    @Override
     public <T> JsonObject put(String key, T value) {
         object.put(key, value);
         return this;
@@ -245,13 +247,22 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
         return this;
     }
 
+
     public JsonObject put(String key, JsonArray array) {
         object.put(key, array.array);
         return this;
     }
 
-    public <T> JsonObject put(Member member, T value) {
-        return put(member.name(), value);
+    @Override
+    public MutableStructuredValue put(String name, Object[] value) {
+        object.put(name, Arrays.asList(value));
+        return this;
+    }
+
+    @Override
+    public MutableStructuredValue put(String name, Map<String, ?> value) {
+        object.put(name, value);
+        return this;
     }
 
     public Set<String> propertyNames() {

@@ -4,9 +4,8 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import foundation.stack.datamill.configuration.impl.Classes;
 import foundation.stack.datamill.reflection.impl.TypeSwitch;
+import foundation.stack.datamill.values.StringValue;
 import foundation.stack.datamill.values.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import rx.functions.Action1;
 
 import java.lang.reflect.Constructor;
@@ -16,9 +15,11 @@ import java.text.MessageFormat;
 import java.util.*;
 
 /**
+ * <p>
  * Wirings form the basis of a lightweight dependency injection (DI) mechanism. Wirings support DI through public
- * constructor injection.
- * <p/>
+ * constructor injection - they are in fact a version of the factory pattern.
+ * </p>
+ * <p>
  * For example, consider:
  * <pre>
  * public class UserRepository {
@@ -26,17 +27,20 @@ import java.util.*;
  *     }
  * }
  * </pre>
- * <p/>
+ * </p>
+ * <p>
  * You can use a Wiring to construct a UserRepository:
  * <pre>
  * UserRepository repository = new Wiring()
  *     .add(new OutlineBuilder(), new DatabaseClient(...))
  *     .construct(UserRepository.class);
  * </pre>
- * <p/>
+ * </p>
+ * <p>
  * This constructs a new UserRepository using the public constructor, injecting the provided instances of DatabaseClient
  * and OutlineBuilder. Note that the wiring does not care about the ordering of the constructor parameters.
- * <p/>
+ * </p>
+ * <p>
  * When dealing with a constructor which has multiple parameters of the same type, Wirings support using a name as a
  * qualifier for constructor injection. For example, consider:
  * <pre>
@@ -45,7 +49,8 @@ import java.util.*;
  *     }
  * }
  * </pre>
- * <p/>
+ * </p>
+ * <p>
  * You can use a Wiring to construct a DatabaseClient using the named parameters:
  * <pre>
  * DatabaseClient client = new Wiring()
@@ -54,13 +59,21 @@ import java.util.*;
  *     .addNamed("password", "dbpass")
  *     .construct(DatabaseClient.class);
  * </pre>
- * <p/>
+ * </p>
+ * <p>
  * This constructs a new DatabaseClient using the constructor shown, injecting the provided named Strings as parameters.
- * <p/>
+ * </p>
+ * <p>
  * Wirings are very light-weight containers for objects and properties that are meant to be wired together. Each
  * separate Wiring instance is self-contained, and when the {@link #construct(Class)} method is called, only
  * the objects (including named objects) added to the Wiring are considered as candidates when injecting.
- *
+ * </p>
+ * <p>
+ * You can associate a {@link PropertySource} or {@link PropertySourceChain} with a Wiring using
+ * {@link #setNamedPropertySource} so that it can resolve any named parameters by looking them up in the
+ * {@link PropertySource}. Note that any named values explicitly added to the Wiring using
+ * {@link #addNamed(String, Object)} will take precedence over the property source.
+ * </p>
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Wiring {
@@ -128,7 +141,7 @@ public class Wiring {
 
     private final Multimap<Class<?>, Object> members = HashMultimap.create();
     private final Map<String, Object> named = new HashMap<>();
-    private static final Logger logger = LoggerFactory.getLogger(Wiring.class);
+    private PropertySource propertySource;
 
     private void add(Class<?> clazz, Object addition) {
         members.put(clazz, addition);
@@ -234,8 +247,8 @@ public class Wiring {
      * of the objects it knows about for injection into other constructors. Note that unlike other dependency injection
      * frameworks, the order of construct calls is important.
      *
-     * @param clazz          Class we want to create an instance of.
-     * @param <T>            Type of instance.
+     * @param clazz Class we want to create an instance of.
+     * @param <T>   Type of instance.
      * @return Instance that was constructed.
      * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
      * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
@@ -257,8 +270,8 @@ public class Wiring {
      * Check if the wiring already contains an instance of the provided class. If it exists, return it, otherwise, delegate
      * to {@link #construct(Class)} in order to construct it.
      *
-     * @param clazz          Class we want to create an instance of.
-     * @param <T>            Type of instance.
+     * @param clazz Class we want to create an instance of.
+     * @param <T>   Type of instance.
      * @return Instance that was constructed.
      * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
      * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
@@ -308,16 +321,15 @@ public class Wiring {
         Parameter[] parameters = constructor.getParameters();
         Object[] values = new Object[parameters.length];
 
-        List<Object> missingDependencies = new ArrayList<>();
+        boolean unsatisfied = false;
         for (int i = 0; i < parameters.length; i++) {
             values[i] = getValueForParameter(parameters[i]);
             if (values[i] == null) {
-                missingDependencies.add(parameters[i]);
+                unsatisfied = true;
             }
         }
 
-        if (!missingDependencies.isEmpty()) {
-            logger.error("Could not build class {} as the following dependencies were not found {}", clazz, missingDependencies);
+        if (unsatisfied) {
             return null;
         }
 
@@ -406,9 +418,8 @@ public class Wiring {
             if (values.size() == 1) {
                 return values.iterator().next();
             }
-            else if (values.size() > 1) {
-                throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
-            }
+
+            throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
         }
 
         return null;
@@ -432,9 +443,8 @@ public class Wiring {
             if (casted.size() == 1) {
                 return casted.iterator().next();
             }
-            else if(casted.size() > 1) {
-                throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
-            }
+
+            throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
         }
 
         return null;
@@ -455,6 +465,11 @@ public class Wiring {
 
     private Object getValueForNamedParameter(Parameter parameter, Named name) {
         Object value = named.get(name.value());
+
+        if (value == null && propertySource != null) {
+            value = propertySource.get(name.value()).map(string -> new StringValue(string)).orElse(null);
+        }
+
         if (value != null) {
             Class<?> type = parameter.getType();
             if (type.isInstance(value)) {
@@ -518,6 +533,11 @@ public class Wiring {
                 return Wiring.this;
             }
         };
+    }
+
+    public Wiring setNamedPropertySource(PropertySource propertySource) {
+        this.propertySource = propertySource;
+        return this;
     }
 
     /**
