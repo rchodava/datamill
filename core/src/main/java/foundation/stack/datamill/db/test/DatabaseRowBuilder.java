@@ -22,7 +22,7 @@ public class DatabaseRowBuilder<T> {
     private final Outline<T> outline;
 
     public DatabaseRowBuilder(Class<T> clazz) {
-        this.outline = new OutlineBuilder().build(clazz);
+        this.outline = OutlineBuilder.DEFAULT.build(clazz);
     }
 
     public Row build(Func2<RowBuilder, Outline<T>, Map<String, ?>> rowBuilder) {

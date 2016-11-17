@@ -402,6 +402,11 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
+        public Member member(Consumer<T> memberInvoker) {
+            return outline().member(memberInvoker);
+        }
+
+        @Override
         public Outline<T> outline() {
             return (Outline<T>) OutlineImpl.this;
         }
@@ -421,7 +426,7 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
-        public T unwrap() {
+        public T get() {
             return instance;
         }
     }

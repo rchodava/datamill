@@ -61,7 +61,7 @@ public class HttpStepsTest {
         httpSteps = new HttpSteps(propertyStore, placeholderResolver, httpClient);
 
         server = new Server(
-                rb -> rb.ifMatchesBeanMethod(new OutlineBuilder().wrap(testController))
+                rb -> rb.ifMatchesBeanMethod(OutlineBuilder.DEFAULT.wrap(testController))
                         .orElse(r -> r.respond(b -> b.notFound())));
         serverPort = TestUtil.findRandomPort(DEFAULT_SERVER_PORT);
         server.listen("localhost", serverPort);

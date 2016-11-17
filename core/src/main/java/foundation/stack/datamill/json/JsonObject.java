@@ -4,15 +4,14 @@ import foundation.stack.datamill.reflection.Member;
 import foundation.stack.datamill.values.MutableStructuredValue;
 import foundation.stack.datamill.values.ReflectableValue;
 import foundation.stack.datamill.reflection.impl.TripleArgumentTypeSwitch;
+import foundation.stack.datamill.values.SerializationStrategy;
 import foundation.stack.datamill.values.Value;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -39,7 +38,7 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
                 @Override
                 protected Object caseShort(JSONObject value1, String value2, JsonProperty value3) {
                     try {
-                    return value1.has(value2) ? value3.asShort() : null;
+                        return value1.has(value2) ? value3.asShort() : null;
                     } catch (JSONException __) {
                         return null;
                     }
@@ -262,6 +261,31 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
     @Override
     public MutableStructuredValue put(String name, Map<String, ?> value) {
         object.put(name, value);
+        return this;
+    }
+
+    @Override
+    public <T> MutableStructuredValue put(
+            String name,
+            Collection<T> values,
+            SerializationStrategy<T> valueSerializationStrategy) {
+        if (values != null) {
+//            Json.serializer()
+            JSONArray array = new JSONArray();
+//            for (T value : values) {
+//                JsonObject transformed = transformer.call(new JsonObject(), value);
+//                if (transformed != null) {
+//                    array.put(transformed.object);
+//                } else {
+//                    array.put((Object) null);
+//                }
+//            }
+
+            object.put(name, array);
+        } else {
+            object.put(name, (Object) null);
+        }
+
         return this;
     }
 

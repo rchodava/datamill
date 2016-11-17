@@ -26,7 +26,7 @@ public class RowImplTest {
 
     @Test
     public void memberNameBasedValueRetrieval() throws Exception {
-        Outline<TestBean> outline = new OutlineBuilder().build(TestBean.class);
+        Outline<TestBean> outline = OutlineBuilder.DEFAULT.build(TestBean.class);
 
         ResultSet resultSet = mock(ResultSet.class);
 

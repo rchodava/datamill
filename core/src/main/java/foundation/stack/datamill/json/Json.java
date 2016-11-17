@@ -11,7 +11,7 @@ public interface Json {
     static <T> Func1<T, JsonObject> serializer(Outline<T> outline, SerializationStrategy<T> strategy) {
         return o -> {
             JsonObject json = new JsonObject();
-            strategy.serialize(json, outline, o);
+            strategy.serialize(json, outline.wrap(o));
             return json;
         };
     }

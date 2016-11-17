@@ -1,6 +1,6 @@
 package foundation.stack.datamill.values;
 
-import foundation.stack.datamill.reflection.Outline;
+import foundation.stack.datamill.reflection.Bean;
 
 /**
  * A {@link SerializationStrategy} defines a function which is used in serializing an object. It should insert values
@@ -10,19 +10,19 @@ import foundation.stack.datamill.reflection.Outline;
  * For example, serializing User objects may look like this:
  * <pre>
  * public static final SerializationStrategy&lt;User&gt; PUBLIC =
- *     (target, outline, user) -> target
- *          .put(outline.member(m -> m.getId()), user.getId())
- *          .put(outline.member(m -> m.getName()), user.getName());
+ *     (target, user) -> target
+ *          .put(user.member(m -> m.getId()), user.get().getId())
+ *          .put(user.member(m -> m.getName()), user.get().getName());
  * </pre>
- *
+ * <p>
  * User objects can then be serialized to JSON by calling:
  * <pre>
- * STANDARD.serialize(new JsonObject(), userOutline, user);
+ * STANDARD.serialize(new JsonObject(), userOutline.wrap(user));
  * </pre>
  *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 @FunctionalInterface
 public interface SerializationStrategy<T> {
-    MutableStructuredValue serialize(MutableStructuredValue target, Outline<T> sourceOutline, T source);
+    MutableStructuredValue serialize(MutableStructuredValue target, Bean<T> source);
 }
