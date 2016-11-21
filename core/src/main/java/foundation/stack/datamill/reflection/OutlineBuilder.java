@@ -15,7 +15,10 @@ import java.util.concurrent.ExecutionException;
  */
 public class OutlineBuilder {
     private static final Objenesis objenesis = new ObjenesisStd();
+
     public static final OutlineBuilder DEFAULT = new OutlineBuilder();
+    public static final OutlineBuilder CAMEL_CASED = new OutlineBuilder().defaultCamelCased();
+    public static final OutlineBuilder SNAKE_CASED = new OutlineBuilder().defaultSnakeCased();
 
     private static <T> Outline<T> buildOutline(Class<T> classToOutline, boolean camelCased) {
         ProxyFactory proxyFactory = new ProxyFactory();
@@ -45,11 +48,11 @@ public class OutlineBuilder {
     }
 
     public OutlineBuilder defaultCamelCased() {
-        return new OutlineBuilder(true, camelCasedOutlineCache, snakeCasedOutlineCache);
+        return CAMEL_CASED;
     }
 
     public OutlineBuilder defaultSnakeCased() {
-        return new OutlineBuilder(false, camelCasedOutlineCache, snakeCasedOutlineCache);
+        return SNAKE_CASED;
     }
 
     public <T> Outline<T> build(Class<T> classToOutline) {

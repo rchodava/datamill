@@ -1,10 +1,8 @@
-package foundation.stack.datamill.values;
-
-import foundation.stack.datamill.reflection.Bean;
+package foundation.stack.datamill.serialization;
 
 /**
  * A {@link DeserializationStrategy} defines a function which is used in deserializing an object. It should take values
- * from the given {@link StructuredValue} and insert them into the object so that the {@link StructuredValue} can
+ * from the given {@link StructuredInput} and insert them into the object so that the {@link StructuredInput} can
  * be deserialized.
  * <p>
  * For example, deserializing User objects may look like this:
@@ -14,15 +12,10 @@ import foundation.stack.datamill.reflection.Bean;
  *          .set(m -> m.getId(), source.get(user.member(m -> m.getId())))
  *          .set(m -> m.getName(), source.get(user.member(m -> m.getName())));
  * </pre>
- * <p>
- * User objects can then be serialized to JSON by calling:
- * <pre>
- * STANDARD.serialize(new JsonObject(), userOutline, user);
- * </pre>
  *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 @FunctionalInterface
 public interface DeserializationStrategy<T> {
-    T deserialize(Bean<T> target, StructuredValue source);
+    void deserialize(T target, SerializationOutline<T> targetOutline, StructuredInput source);
 }

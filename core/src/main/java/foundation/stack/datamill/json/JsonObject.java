@@ -1,11 +1,10 @@
 package foundation.stack.datamill.json;
 
 import foundation.stack.datamill.reflection.Member;
-import foundation.stack.datamill.values.MutableStructuredValue;
-import foundation.stack.datamill.values.ReflectableValue;
+import foundation.stack.datamill.serialization.SerializationOutline;
+import foundation.stack.datamill.serialization.StructuredOutput;
+import foundation.stack.datamill.values.*;
 import foundation.stack.datamill.reflection.impl.TripleArgumentTypeSwitch;
-import foundation.stack.datamill.values.SerializationStrategy;
-import foundation.stack.datamill.values.Value;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,7 +16,7 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class JsonObject implements Json, ReflectableValue, MutableStructuredValue {
+public class JsonObject implements Json, ReflectableValue, StructuredOutput<JsonObject> {
     private static final TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object> propertyAsObjectSwitch =
             new TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object>() {
                 @Override
@@ -170,12 +169,10 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
         return object.toString();
     }
 
-    @Override
     public Value get(String property) {
         return new JsonProperty(property);
     }
 
-    @Override
     public Value get(Member member) {
         return get(member.name());
     }
@@ -253,38 +250,34 @@ public class JsonObject implements Json, ReflectableValue, MutableStructuredValu
     }
 
     @Override
-    public MutableStructuredValue put(String name, Object[] value) {
+    public JsonObject put(String name, Object[] value) {
         object.put(name, Arrays.asList(value));
         return this;
     }
 
     @Override
-    public MutableStructuredValue put(String name, Map<String, ?> value) {
+    public JsonObject put(String name, Map<String, ?> value) {
         object.put(name, value);
         return this;
     }
 
     @Override
-    public <T> MutableStructuredValue put(
+    public <T> JsonObject put(
             String name,
             Collection<T> values,
-            SerializationStrategy<T> valueSerializationStrategy) {
-        if (values != null) {
-//            Json.serializer()
-            JSONArray array = new JSONArray();
-//            for (T value : values) {
-//                JsonObject transformed = transformer.call(new JsonObject(), value);
-//                if (transformed != null) {
-//                    array.put(transformed.object);
-//                } else {
-//                    array.put((Object) null);
-//                }
+            SerializationOutline.OutlineBoundSerializationStrategy<T> serializationStrategy) {
+        JSONArray array = new JSONArray();
+        for (Object element : values) {
+//            JsonObject transformed = (JsonObject)
+//                    serializationStrategy.serializationStrategy().serialize(
+//                            new JsonObject(), serializationStrategy.outline(), (T) element);
+//            if (transformed != null) {
+//                array.put(transformed.object);
+//            } else {
+//                array.put((Object) null);
 //            }
-
-            object.put(name, array);
-        } else {
-            object.put(name, (Object) null);
         }
+        object.put(name, array);
 
         return this;
     }
