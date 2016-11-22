@@ -5,6 +5,8 @@ import com.google.common.collect.Multimap;
 import foundation.stack.datamill.configuration.impl.Classes;
 import foundation.stack.datamill.reflection.impl.TypeSwitch;
 import foundation.stack.datamill.values.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.functions.Action1;
 
 import java.lang.reflect.Constructor;
@@ -126,6 +128,7 @@ public class Wiring {
 
     private final Multimap<Class<?>, Object> members = HashMultimap.create();
     private final Map<String, Object> named = new HashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(Wiring.class);
 
     private void add(Class<?> clazz, Object addition) {
         members.put(clazz, addition);
@@ -305,15 +308,16 @@ public class Wiring {
         Parameter[] parameters = constructor.getParameters();
         Object[] values = new Object[parameters.length];
 
-        boolean unsatisfied = false;
+        List<Object> missingDependencies = new ArrayList<>();
         for (int i = 0; i < parameters.length; i++) {
             values[i] = getValueForParameter(parameters[i]);
             if (values[i] == null) {
-                unsatisfied = true;
+                missingDependencies.add(parameters[i]);
             }
         }
 
-        if (unsatisfied) {
+        if (!missingDependencies.isEmpty()) {
+            logger.error("Could not build class {} as the following dependencies were not found {}", clazz, missingDependencies);
             return null;
         }
 
@@ -402,8 +406,9 @@ public class Wiring {
             if (values.size() == 1) {
                 return values.iterator().next();
             }
-
-            throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
+            else if (values.size() > 1) {
+                throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
+            }
         }
 
         return null;
@@ -427,8 +432,9 @@ public class Wiring {
             if (casted.size() == 1) {
                 return casted.iterator().next();
             }
-
-            throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
+            else if(casted.size() > 1) {
+                throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
+            }
         }
 
         return null;
