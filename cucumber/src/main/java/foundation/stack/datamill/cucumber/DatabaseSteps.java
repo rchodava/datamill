@@ -26,7 +26,7 @@ public class DatabaseSteps {
         this.placeholderResolver = placeholderResolver;
     }
 
-    @Given("^" + Phrases.SUBJECT + " store" + Phrases.OPTIONAL_PLURAL + " in table (.+) on database (.+) a row with:$")
+    @Given("^" + Phrases.SUBJECT + " store" + Phrases.OPTIONAL_PLURAL + " in table (.+) on (.+) a row with:$")
     public void storeDatabaseRow(String tableName, String databaseUrl, String json) {
         String resolvedUrl = placeholderResolver.resolve(databaseUrl);
         String resolvedJson = placeholderResolver.resolve(json);
