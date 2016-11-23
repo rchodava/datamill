@@ -26,7 +26,7 @@ public class DatabaseSteps {
         this.placeholderResolver = placeholderResolver;
     }
 
-    @Given("^the (.+) table in (.+) contains a row with:$")
+    @Given("^" + Phrases.SUBJECT + " store" + Phrases.OPTIONAL_PLURAL + " in table (.+) on (.+) a row with:$")
     public void storeDatabaseRow(String tableName, String databaseUrl, String json) {
         String resolvedUrl = placeholderResolver.resolve(databaseUrl);
         String resolvedJson = placeholderResolver.resolve(json);
@@ -37,9 +37,10 @@ public class DatabaseSteps {
             for (String propertyName : rowJson.keySet()) {
                 Object value = rowJson.get(propertyName);
                 if (value != null) {
-                    if (value == JSONObject.NULL) {
+                    if (value == JSONObject.NULL || value.equals("null")) {
                         builder.put(propertyName, null);
-                    } else if (value instanceof Number || value instanceof String) {
+                    }
+                    else if (value instanceof Number || value instanceof String) {
                         builder.put(propertyName, value);
                     }
                 }
@@ -69,7 +70,11 @@ public class DatabaseSteps {
     }
 
     private Observable<Row> executeSelect(String resolvedUrl, String sql, Object... parameters) {
-        return new DatabaseClient(resolvedUrl).query(sql, parameters).stream();
+        return buildDatabaseClient(resolvedUrl).query(sql, parameters).stream();
+    }
+
+    private DatabaseClient buildDatabaseClient(String resolvedUrl) {
+        return new DatabaseClient(resolvedUrl);
     }
 
     protected String buildQuery(String tableName, String testFragment, String criteriaFragment) {
