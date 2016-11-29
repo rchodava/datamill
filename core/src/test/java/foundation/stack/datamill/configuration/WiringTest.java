@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -194,6 +195,41 @@ public class WiringTest {
         }
     }
 
+    private static class Test8 {
+        private final Test7 test7;
+
+        public Test8(Test7 test7) {
+            this.test7 = test7;
+        }
+    }
+
+    private static class Test9 {
+        private final Test7 test7;
+        private final Test8 test8;
+
+        public Test9(Test7 test7, Test8 test8) {
+            this.test7 = test7;
+            this.test8 = test8;
+        }
+    }
+
+    @Test
+    public void autoConstruction() {
+        Test7 test7 = new Test7();
+        Test9 test9 = new Wiring().add(test7).construct(Test9.class);
+
+        assertEquals(test7, test9.test7);
+        assertEquals(test7, test9.test8.test7);
+    }
+
+    @Test
+    public void builders() {
+        Test9 test9 = new Wiring().addFactory(Test7.class, w -> new Test7("custom")).construct(Test9.class);
+
+        assertEquals("custom", test9.test7.string);
+        assertEquals("custom", test9.test8.test7.string);
+    }
+
     @Test
     public void named() {
         Test1 instance = new Wiring()
@@ -305,25 +341,25 @@ public class WiringTest {
     public void namedValuesFromPropertySource() {
         Test5 instance = new Wiring()
                 .setNamedPropertySource(Properties.fromSystem().orDefaults(d -> d
-                .put("boolean", "true")
-                .put("booleanWrapper", "true")
-                .put("byte", "1")
-                .put("byteWrapper", "1")
-                .put("char", "a")
-                .put("charWrapper", "a")
-                .put("short", "2")
-                .put("shortWrapper", "2")
-                .put("int", "3")
-                .put("intWrapper", "3")
-                .put("long", "4")
-                .put("longWrapper", "4")
-                .put("float", "1.1")
-                .put("floatWrapper", "1.1")
-                .put("double", "2.2")
-                .put("doubleWrapper", "2.2")
-                .put("LocalDateTime", "2007-12-03T10:15:30")
-                .put("String", "value")
-                .put("byteArray", "array")))
+                        .put("boolean", "true")
+                        .put("booleanWrapper", "true")
+                        .put("byte", "1")
+                        .put("byteWrapper", "1")
+                        .put("char", "a")
+                        .put("charWrapper", "a")
+                        .put("short", "2")
+                        .put("shortWrapper", "2")
+                        .put("int", "3")
+                        .put("intWrapper", "3")
+                        .put("long", "4")
+                        .put("longWrapper", "4")
+                        .put("float", "1.1")
+                        .put("floatWrapper", "1.1")
+                        .put("double", "2.2")
+                        .put("doubleWrapper", "2.2")
+                        .put("LocalDateTime", "2007-12-03T10:15:30")
+                        .put("String", "value")
+                        .put("byteArray", "array")))
                 .construct(Test5.class);
 
         assertEquals(true, instance.booleanProperty);

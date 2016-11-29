@@ -7,9 +7,11 @@ import foundation.stack.datamill.reflection.impl.TypeSwitch;
 import foundation.stack.datamill.values.StringValue;
 import foundation.stack.datamill.values.Value;
 import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.text.MessageFormat;
 import java.util.*;
@@ -39,6 +41,17 @@ import java.util.*;
  * <p>
  * This constructs a new UserRepository using the public constructor, injecting the provided instances of DatabaseClient
  * and OutlineBuilder. Note that the wiring does not care about the ordering of the constructor parameters.
+ * </p>
+ * <p>
+ * Factory methods can be registered with the Wiring using {@link #addFactory(Class, Func1)} and the Wiring will use the
+ * factory methods whenever it cannot satisfy dependencies with explicitly added and constructed instances. Note that
+ * once a factory method is invoked to construct an instance for a type, the built instance will be added to the Wiring.
+ * </p>
+ * <p>
+ * When the constructor's parameter types are concrete classes, Wirings will attempt to recursively construct instances
+ * of those concrete types. Most of the time, this is the intended behavior, and it reduces the amount of explicit calls
+ * that are required. Note that the Wiring will first attempt to use explicitly added and constructed instances when
+ * trying to satisfy dependencies before constructing them automatically.
  * </p>
  * <p>
  * When dealing with a constructor which has multiple parameters of the same type, Wirings support using a name as a
@@ -74,6 +87,7 @@ import java.util.*;
  * {@link PropertySource}. Note that any named values explicitly added to the Wiring using
  * {@link #addNamed(String, Object)} will take precedence over the property source.
  * </p>
+ *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Wiring {
@@ -139,9 +153,22 @@ public class Wiring {
         }
     };
 
+    private final Map<Class<?>, Func1<Wiring, ?>> factories = new HashMap<>();
     private final Multimap<Class<?>, Object> members = HashMultimap.create();
     private final Map<String, Object> named = new HashMap<>();
     private PropertySource propertySource;
+
+    /**
+     * Add the specified modules to this wiring.
+     *
+     * @param modules Modules to add.
+     */
+    public Wiring include(Module... modules) {
+        for (Module module : modules) {
+            module.call(this);
+        }
+        return this;
+    }
 
     private void add(Class<?> clazz, Object addition) {
         members.put(clazz, addition);
@@ -189,6 +216,17 @@ public class Wiring {
             }
         }
 
+        return this;
+    }
+
+    /**
+     * Add a factory method to the Wiring which is invoked to create an instance of the specified class.
+     *
+     * @param clazz   Class for which we want to add a factory.
+     * @param factory Factory method to invoke for the class specified.
+     */
+    public <T> Wiring addFactory(Class<T> clazz, Func1<Wiring, T> factory) {
+        factories.put(clazz, factory);
         return this;
     }
 
@@ -244,8 +282,9 @@ public class Wiring {
      * constructor for which it can provide all parameters. The Wiring will use all the objects that it currently knows
      * about (i.e., all objects that have been added or constructed by this Wiring at the time the construct method is
      * called) to perform the injection. After the instance is constructed, the instance is added to the Wiring as one
-     * of the objects it knows about for injection into other constructors. Note that unlike other dependency injection
-     * frameworks, the order of construct calls is important.
+     * of the objects it knows about for injection into other constructors. If a particular dependency is unsatisfied,
+     * if the parameter's type is a concrete class, the Wiring will try to recursively {@link #construct(Class)} an
+     * instance of that parameter type.
      *
      * @param clazz Class we want to create an instance of.
      * @param <T>   Type of instance.
@@ -321,16 +360,18 @@ public class Wiring {
         Parameter[] parameters = constructor.getParameters();
         Object[] values = new Object[parameters.length];
 
-        boolean unsatisfied = false;
         for (int i = 0; i < parameters.length; i++) {
             values[i] = getValueForParameter(parameters[i]);
             if (values[i] == null) {
-                unsatisfied = true;
+                Class<?> parameterType = parameters[i].getType();
+                if (!parameterType.isInterface() && !Modifier.isAbstract(parameterType.getModifiers())) {
+                    try {
+                        values[i] = construct(parameterType);
+                    } catch (IllegalArgumentException | IllegalStateException e) {
+                        return null;
+                    }
+                }
             }
-        }
-
-        if (unsatisfied) {
-            return null;
         }
 
         return instantiate(clazz, constructor, values);
@@ -376,8 +417,8 @@ public class Wiring {
     }
 
     /**
-     * Get an object of the specified type that was previously added to or constructed by this wiring, or null if no
-     * value of the specified type was added or constructed.
+     * Get an object of the specified type that was previously added to or constructed by this wiring, or that can be
+     * built by a registered factory, or null if no value of the specified type was added or constructed.
      */
     public <T> T get(Class<T> type) {
         Object value = getObjectOfType(type);
@@ -396,6 +437,16 @@ public class Wiring {
         value = getValueOfType(type);
         if (value != null) {
             return (T) value;
+        }
+
+        Func1<Wiring, ?> factory = factories.get(type);
+        if (factory != null) {
+            value = factory.call(this);
+            if (value != null) {
+                T casted = (T) value;
+                add(casted);
+                return casted;
+            }
         }
 
         return null;
@@ -464,14 +515,17 @@ public class Wiring {
     }
 
     private Object getValueForNamedParameter(Parameter parameter, Named name) {
-        Object value = named.get(name.value());
+        return getNamedValueOfType(name.value(), parameter.getType());
+    }
+
+    private Object getNamedValueOfType(String name, Class<?> type) {
+        Object value = named.get(name);
 
         if (value == null && propertySource != null) {
-            value = propertySource.get(name.value()).map(string -> new StringValue(string)).orElse(null);
+            value = propertySource.get(name).map(string -> new StringValue(string)).orElse(null);
         }
 
         if (value != null) {
-            Class<?> type = parameter.getType();
             if (type.isInstance(value)) {
                 return value;
             }

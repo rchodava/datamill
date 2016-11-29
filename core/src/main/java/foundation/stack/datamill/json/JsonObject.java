@@ -1,7 +1,6 @@
 package foundation.stack.datamill.json;
 
 import foundation.stack.datamill.reflection.Member;
-import foundation.stack.datamill.serialization.SerializationOutline;
 import foundation.stack.datamill.serialization.StructuredOutput;
 import foundation.stack.datamill.values.*;
 import foundation.stack.datamill.reflection.impl.TripleArgumentTypeSwitch;
@@ -258,27 +257,6 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
     @Override
     public JsonObject put(String name, Map<String, ?> value) {
         object.put(name, value);
-        return this;
-    }
-
-    @Override
-    public <T> JsonObject put(
-            String name,
-            Collection<T> values,
-            SerializationOutline.OutlineBoundSerializationStrategy<T> serializationStrategy) {
-        JSONArray array = new JSONArray();
-        for (Object element : values) {
-//            JsonObject transformed = (JsonObject)
-//                    serializationStrategy.serializationStrategy().serialize(
-//                            new JsonObject(), serializationStrategy.outline(), (T) element);
-//            if (transformed != null) {
-//                array.put(transformed.object);
-//            } else {
-//                array.put((Object) null);
-//            }
-        }
-        object.put(name, array);
-
         return this;
     }
 

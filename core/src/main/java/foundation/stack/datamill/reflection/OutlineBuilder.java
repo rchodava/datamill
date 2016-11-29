@@ -17,8 +17,8 @@ public class OutlineBuilder {
     private static final Objenesis objenesis = new ObjenesisStd();
 
     public static final OutlineBuilder DEFAULT = new OutlineBuilder();
-    public static final OutlineBuilder CAMEL_CASED = new OutlineBuilder().defaultCamelCased();
-    public static final OutlineBuilder SNAKE_CASED = new OutlineBuilder().defaultSnakeCased();
+    public static final OutlineBuilder CAMEL_CASED = new OutlineBuilder(DEFAULT, true);
+    public static final OutlineBuilder SNAKE_CASED = new OutlineBuilder(DEFAULT, false);
 
     private static <T> Outline<T> buildOutline(Class<T> classToOutline, boolean camelCased) {
         ProxyFactory proxyFactory = new ProxyFactory();
@@ -36,6 +36,12 @@ public class OutlineBuilder {
         this(false,
                 CacheBuilder.newBuilder().build(new OutlineCacheLoader(true)),
                 CacheBuilder.newBuilder().build(new OutlineCacheLoader(false)));
+    }
+
+    private OutlineBuilder(OutlineBuilder outlineBuilder, boolean camelCased) {
+        this.camelCased = camelCased;
+        this.camelCasedOutlineCache = outlineBuilder.camelCasedOutlineCache;
+        this.snakeCasedOutlineCache = outlineBuilder.snakeCasedOutlineCache;
     }
 
     private OutlineBuilder(
