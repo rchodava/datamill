@@ -2,6 +2,7 @@ package foundation.stack.datamill.configuration;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import foundation.stack.datamill.Pair;
 import foundation.stack.datamill.configuration.impl.Classes;
 import foundation.stack.datamill.reflection.impl.TypeSwitch;
 import foundation.stack.datamill.values.StringValue;
@@ -166,7 +167,7 @@ public class Wiring {
                 !Classes.isPrimitiveWrapper(type);
     }
 
-    private final Map<Class<?>, List<Func1<Wiring, ?>>> factories = new HashMap<>();
+    private final Map<Class<?>, List<Pair<Integer, Func1<Wiring, ?>>>> factories = new HashMap<>();
     private final Multimap<Class<?>, Object> members = HashMultimap.create();
     private final Map<String, Object> named = new HashMap<>();
     private PropertySource propertySource;
@@ -238,18 +239,38 @@ public class Wiring {
     }
 
     /**
-     * Add a factory method to the Wiring which is invoked to create an instance of the specified class.
+     * Add a factory method to the Wiring which is invoked to create an instance of the specified class. The factory
+     * method is added with a default priority of {@link Integer#MIN_VALUE}
      *
      * @param clazz   Class for which we want to add a factory.
      * @param factory Factory method to invoke for the class specified.
      */
     public <T> Wiring addFactory(Class<T> clazz, Func1<Wiring, T> factory) {
+        return addFactory(Integer.MIN_VALUE, clazz, factory);
+    }
+
+    /**
+     * Add a factory method to the Wiring which is invoked to create an instance of the specified class.
+     *
+     * @param priority Priority to give this factory - if multiple factory methods exist for a type, the instance
+     *                 returned by the method with higher priority will be used.
+     * @param clazz    Class for which we want to add a factory.
+     * @param factory  Factory method to invoke for the class specified.
+     */
+    public <T> Wiring addFactory(int priority, Class<T> clazz, Func1<Wiring, T> factory) {
         factories.compute(clazz, (__, existing) -> {
             if (existing == null) {
                 existing = new ArrayList<>();
             }
 
-            existing.add(factory);
+            int insertionPoint = 0;
+            for (int i = 0; i < existing.size(); i++) {
+                if (priority >= existing.get(i).getFirst()) {
+                    insertionPoint = i;
+                    break;
+                }
+            }
+            existing.add(insertionPoint, new Pair<>(priority, factory));
             return existing;
         });
         return this;
@@ -273,7 +294,7 @@ public class Wiring {
         }
 
         if (named.containsKey(name)) {
-            throw new IllegalArgumentException("Set already contains an object with name " + name);
+            throw new IllegalArgumentException("Wiring already contains an object with name " + name);
         }
 
         named.put(name, addition);
@@ -474,10 +495,10 @@ public class Wiring {
             return (T) value;
         }
 
-        List<Func1<Wiring, ?>> typeFactories = factories.get(type);
+        List<Pair<Integer, Func1<Wiring, ?>>> typeFactories = factories.get(type);
         if (typeFactories != null) {
-            for (Func1<Wiring, ?> factory : typeFactories) {
-                value = factory.call(this);
+            for (Pair<Integer, Func1<Wiring, ?>> factory : typeFactories) {
+                value = factory.getSecond().call(this);
                 if (value != null) {
                     T casted = (T) value;
                     add(casted);
