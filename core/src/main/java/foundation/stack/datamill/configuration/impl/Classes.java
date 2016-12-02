@@ -138,4 +138,10 @@ public class Classes {
 
         return toClass.isAssignableFrom(clazz);
     }
+
+    public static boolean isPrimitiveWrapper(Class<?> type) {
+        return type == Boolean.class || type == Byte.class || type == Short.class ||
+                type == Integer.class || type == Long.class || type == Float.class ||
+                type == Double.class || type == Void.class || type == Character.class;
+    }
 }

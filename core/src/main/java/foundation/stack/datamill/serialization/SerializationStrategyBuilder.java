@@ -35,7 +35,7 @@ public class SerializationStrategyBuilder<SourceType> {
                         strategies.get(i);
                 Outline<?> outline = outlines.get(i);
                 if (outline == null) {
-                    outline = strategy.getFirst().call(OutlineBuilder.DEFAULT);
+                    outline = strategy.getFirst().call(OutlineBuilder.CAMEL_CASED);
                     outlines.set(i, outline);
                 }
 

@@ -19,7 +19,7 @@ public interface Json {
     static <T> Serializer<T, JsonObject> serializer(SerializationStrategy<T> strategy) {
         return o -> {
             JsonObject json = new JsonObject();
-//            strategy.serialize(json, outline, o);
+            strategy.serialize(json, o);
             return json;
         };
     }

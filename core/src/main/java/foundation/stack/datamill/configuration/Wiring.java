@@ -6,6 +6,8 @@ import foundation.stack.datamill.configuration.impl.Classes;
 import foundation.stack.datamill.reflection.impl.TypeSwitch;
 import foundation.stack.datamill.values.StringValue;
 import foundation.stack.datamill.values.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import rx.functions.Action1;
 import rx.functions.Func1;
 
@@ -75,6 +77,7 @@ import java.util.*;
  * </p>
  * <p>
  * This constructs a new DatabaseClient using the constructor shown, injecting the provided named Strings as parameters.
+ * Note that for Strings and primitives, Wirings only support injection using a name.
  * </p>
  * <p>
  * Wirings are very light-weight containers for objects and properties that are meant to be wired together. Each
@@ -91,6 +94,8 @@ import java.util.*;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Wiring {
+    private static final Logger logger = LoggerFactory.getLogger(Wiring.class);
+
     private static final TypeSwitch<Value, Void, Object> valueCast = new TypeSwitch<Value, Void, Object>() {
         @Override
         protected Object caseBoolean(Value value, Void __) {
@@ -153,7 +158,15 @@ public class Wiring {
         }
     };
 
-    private final Map<Class<?>, Func1<Wiring, ?>> factories = new HashMap<>();
+    private static boolean canAutoConstruct(Class<?> type) {
+        return !type.isInterface() &&
+                !Modifier.isAbstract(type.getModifiers()) &&
+                type != String.class &&
+                !type.isPrimitive() &&
+                !Classes.isPrimitiveWrapper(type);
+    }
+
+    private final Map<Class<?>, List<Func1<Wiring, ?>>> factories = new HashMap<>();
     private final Multimap<Class<?>, Object> members = HashMultimap.create();
     private final Map<String, Object> named = new HashMap<>();
     private PropertySource propertySource;
@@ -195,18 +208,23 @@ public class Wiring {
 
     /**
      * Add one or more objects to the Wiring. These objects are then available for constructor injection when any
-     * matching constructor parameters are found.
+     * matching constructor parameters are found. Adding primitives to a Wiring without a name (i.e., without using
+     * {@link #addNamed(String, Object)} is not supported).
      *
      * @param additions Objects to add.
      */
     public Wiring add(Object... additions) {
         if (additions == null) {
-            throw new IllegalArgumentException("Cannot add null to graph");
+            throw new IllegalArgumentException("Cannot add null to a Wiring");
         }
 
         for (Object addition : additions) {
             if (addition == null) {
-                throw new IllegalArgumentException("Cannot add null to graph");
+                throw new IllegalArgumentException("Cannot add null to a Wiring");
+            }
+
+            if (addition instanceof String || addition.getClass().isPrimitive()) {
+                throw new IllegalArgumentException("Cannot add Strings and primitives to a Wiring without a name");
             }
 
             if (addition instanceof Optional) {
@@ -226,12 +244,19 @@ public class Wiring {
      * @param factory Factory method to invoke for the class specified.
      */
     public <T> Wiring addFactory(Class<T> clazz, Func1<Wiring, T> factory) {
-        factories.put(clazz, factory);
+        factories.compute(clazz, (__, existing) -> {
+            if (existing == null) {
+                existing = new ArrayList<>();
+            }
+
+            existing.add(factory);
+            return existing;
+        });
         return this;
     }
 
     /**
-     * Add an object to the Wiring under the specified name. These objects are only injected when a constuctor
+     * Add an object to the Wiring under the specified name. These objects are only injected when a constructor
      * parameter has a {@link Named} annotation with the specified name.
      *
      * @param name     Name for the object.
@@ -293,12 +318,17 @@ public class Wiring {
      * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
      */
     public <T> T construct(Class<T> clazz) {
+        return construct(clazz, new HashSet<>());
+    }
+
+    private <T> T construct(Class<T> clazz, Set<Class<?>> autoConstructionCandidates) {
+        autoConstructionCandidates.add(clazz);
         Constructor<?>[] constructors = getPublicConstructors(clazz);
 
         for (Constructor<?> constructor : constructors) {
-            T values = constructWithConstructor(clazz, constructor);
-            if (values != null) {
-                return values;
+            T instance = constructWithConstructor(clazz, constructor, autoConstructionCandidates);
+            if (instance != null) {
+                return instance;
             }
         }
 
@@ -332,7 +362,7 @@ public class Wiring {
     public <T> T constructWith(Class<T> clazz, Class<?>... parameterTypes) {
         try {
             Constructor<T> constructor = clazz.getConstructor(parameterTypes);
-            return constructWithConstructor(clazz, constructor);
+            return constructWithConstructor(clazz, constructor, new HashSet<>());
         } catch (NoSuchMethodException | SecurityException e) {
             throw new IllegalStateException("Unable to find a constructor with specified parameters on " + clazz.getName());
         }
@@ -356,7 +386,10 @@ public class Wiring {
         return constructWith(clazz, parameterTypes);
     }
 
-    private <T> T constructWithConstructor(Class<T> clazz, Constructor<?> constructor) {
+    private <T> T constructWithConstructor(
+            Class<T> clazz,
+            Constructor<?> constructor,
+            Set<Class<?>> autoConstructionCandidates) {
         Parameter[] parameters = constructor.getParameters();
         Object[] values = new Object[parameters.length];
 
@@ -364,12 +397,14 @@ public class Wiring {
             values[i] = getValueForParameter(parameters[i]);
             if (values[i] == null) {
                 Class<?> parameterType = parameters[i].getType();
-                if (!parameterType.isInterface() && !Modifier.isAbstract(parameterType.getModifiers())) {
+                if (canAutoConstruct(parameterType) && !autoConstructionCandidates.contains(parameterType)) {
                     try {
-                        values[i] = construct(parameterType);
+                        values[i] = construct(parameterType, autoConstructionCandidates);
                     } catch (IllegalArgumentException | IllegalStateException e) {
                         return null;
                     }
+                } else {
+                    return null;
                 }
             }
         }
@@ -398,15 +433,18 @@ public class Wiring {
 
     private Object getValueForParameter(Parameter parameter) {
         Named[] names = parameter.getAnnotationsByType(Named.class);
-        Object namedValue = getValueForNamedParameter(parameter, names);
-        if (namedValue != null) {
-            return namedValue;
+        if (names != null && names.length > 0) {
+            Object namedValue = getValueForNamedParameter(parameter, names);
+            if (namedValue != null) {
+                return namedValue;
+            }
+        } else {
+            Object value = getValueForParameterByType(parameter);
+            if (value != null) {
+                return value;
+            }
         }
 
-        Object value = getValueForParameterByType(parameter);
-        if (value != null) {
-            return value;
-        }
 
         return null;
     }
@@ -421,17 +459,14 @@ public class Wiring {
      * built by a registered factory, or null if no value of the specified type was added or constructed.
      */
     public <T> T get(Class<T> type) {
+        if (type.isPrimitive() || type == String.class || Classes.isPrimitiveWrapper(type)) {
+            logger.debug("Injection of dependencies that primitives and not named is not supported!");
+            return null;
+        }
+
         Object value = getObjectOfType(type);
         if (value != null) {
             return (T) value;
-        }
-
-        if (type.isPrimitive()) {
-            Class<?> wrapper = Classes.primitiveToWrapper(type);
-            value = getObjectOfType(wrapper);
-            if (value != null) {
-                return (T) value;
-            }
         }
 
         value = getValueOfType(type);
@@ -439,13 +474,15 @@ public class Wiring {
             return (T) value;
         }
 
-        Func1<Wiring, ?> factory = factories.get(type);
-        if (factory != null) {
-            value = factory.call(this);
-            if (value != null) {
-                T casted = (T) value;
-                add(casted);
-                return casted;
+        List<Func1<Wiring, ?>> typeFactories = factories.get(type);
+        if (typeFactories != null) {
+            for (Func1<Wiring, ?> factory : typeFactories) {
+                value = factory.call(this);
+                if (value != null) {
+                    T casted = (T) value;
+                    add(casted);
+                    return casted;
+                }
             }
         }
 
@@ -453,10 +490,49 @@ public class Wiring {
     }
 
     /**
-     * Get the object added by using {@link Wiring#addNamed(String, Object)}, identified by the provided name.
+     * @see #getNamedAs(String, Class)
      */
-    public <T> T getNamed(String name) {
-        return (T) named.get(name);
+    public Value getNamed(String name) {
+        return getNamedAs(name, Value.class);
+    }
+
+    /**
+     * Get the object identified by the give name that was added by using {@link Wiring#addNamed(String, Object)},
+     * or available from the property source chain set on the wiring.
+     */
+    public <T> T getNamedAs(String name, Class<T> type) {
+        Object value = named.get(name);
+
+        if (value == null && propertySource != null) {
+            value = propertySource.get(name).map(string -> new StringValue(string)).orElse(null);
+        }
+
+        if (value != null) {
+            if (type.isInstance(value)) {
+                return (T) value;
+            }
+
+            if (type.isPrimitive()) {
+                Class<?> wrapper = Classes.primitiveToWrapper(type);
+                if (wrapper.isInstance(value)) {
+                    return (T) value;
+                }
+            }
+
+            if (Value.class.isAssignableFrom(value.getClass())) {
+                if (type == Value.class) {
+                    return (T) value;
+                }
+
+                return (T) castValueToTypeIfPossible((Value) value, type);
+            }
+
+            if (type == Value.class) {
+                return (T) new StringValue(value.toString());
+            }
+        }
+
+        return null;
     }
 
     private Object getObjectOfType(Class<?> type) {
@@ -495,6 +571,10 @@ public class Wiring {
                 return casted.iterator().next();
             }
 
+            if (casted.size() == 0) {
+                return null;
+            }
+
             throw new IllegalStateException("Multiple objects in graph match type " + type.getName());
         }
 
@@ -502,12 +582,10 @@ public class Wiring {
     }
 
     private Object getValueForNamedParameter(Parameter parameter, Named[] names) {
-        if (names != null && names.length > 0) {
-            for (Named name : names) {
-                Object value = getValueForNamedParameter(parameter, name);
-                if (value != null) {
-                    return value;
-                }
+        for (Named name : names) {
+            Object value = getValueForNamedParameter(parameter, name);
+            if (value != null) {
+                return value;
             }
         }
 
@@ -515,34 +593,7 @@ public class Wiring {
     }
 
     private Object getValueForNamedParameter(Parameter parameter, Named name) {
-        return getNamedValueOfType(name.value(), parameter.getType());
-    }
-
-    private Object getNamedValueOfType(String name, Class<?> type) {
-        Object value = named.get(name);
-
-        if (value == null && propertySource != null) {
-            value = propertySource.get(name).map(string -> new StringValue(string)).orElse(null);
-        }
-
-        if (value != null) {
-            if (type.isInstance(value)) {
-                return value;
-            }
-
-            if (type.isPrimitive()) {
-                Class<?> wrapper = Classes.primitiveToWrapper(type);
-                if (wrapper.isInstance(value)) {
-                    return value;
-                }
-            }
-
-            if (Value.class.isAssignableFrom(value.getClass())) {
-                return castValueToTypeIfPossible((Value) value, type);
-            }
-        }
-
-        return null;
+        return getNamedAs(name.value(), parameter.getType());
     }
 
 
@@ -561,13 +612,13 @@ public class Wiring {
      * <p>
      * <pre>
      * new Wiring().add(...)
-     *     .ifCondition(..., w -> {
+     *     .performIf(..., w -> {
      *         w.construct(...);
      *     })
      *     .orElse(...);
      * </pre>
      */
-    public ElseBuilder ifCondition(boolean condition, Action1<Wiring> consumer) {
+    public ElseBuilder performIf(boolean condition, Action1<Wiring> consumer) {
         if (condition) {
             consumer.call(this);
         }
@@ -587,6 +638,46 @@ public class Wiring {
                 return Wiring.this;
             }
         };
+    }
+
+    /**
+     * Similar convenience mechanism to {@link #with(Action1)} and {@link #performIf(boolean, Action1)} but the function
+     * is invoked if condition is true. If it is not true, an else clause can be chained, as in:
+     * <p>
+     * <pre>
+     * new Wiring().add(...)
+     *     .returnIf(..., w -> {
+     *         w.construct(...);
+     *     })
+     *     .orElse(...);
+     * </pre>
+     */
+    public <T> ReturningElseBuilder<T> returnIf(boolean condition, Func1<Wiring, T> function) {
+        if (condition) {
+            return new ReturningElseBuilder<T>() {
+                @Override
+                public T orElseReturnNull() {
+                    return function.call(Wiring.this);
+                }
+
+                @Override
+                public T orElse(Func1<Wiring, T> __) {
+                    return function.call(Wiring.this);
+                }
+            };
+        } else {
+            return new ReturningElseBuilder<T>() {
+                @Override
+                public T orElseReturnNull() {
+                    return null;
+                }
+
+                @Override
+                public T orElse(Func1<Wiring, T> elseFunction) {
+                    return elseFunction.call(Wiring.this);
+                }
+            };
+        }
     }
 
     public Wiring setNamedPropertySource(PropertySource propertySource) {
@@ -615,5 +706,11 @@ public class Wiring {
         Wiring orElseDoNothing();
 
         Wiring orElse(Action1<Wiring> consumer);
+    }
+
+    public interface ReturningElseBuilder<T> {
+        T orElseReturnNull();
+
+        T orElse(Func1<Wiring, T> function);
     }
 }

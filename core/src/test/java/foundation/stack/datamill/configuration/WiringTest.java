@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -73,11 +73,11 @@ public class WiringTest {
 
     private static class Test3 {
         private final Base base;
-        private final String string;
+        private final Func0<String> stringSupplier;
 
-        public Test3(Base base, String string) {
+        public Test3(Base base, Func0<String> stringSupplier) {
             this.base = base;
-            this.string = string;
+            this.stringSupplier = stringSupplier;
         }
     }
 
@@ -146,52 +146,25 @@ public class WiringTest {
     }
 
     private static class Test6 {
-        private final boolean booleanProperty;
-        private final byte byteProperty;
-        private final char characterProperty;
-        private final short shortProperty;
-        private final int integerProperty;
-        private final long longProperty;
-        private final float floatProperty;
-        private final double doubleProperty;
         private final LocalDateTime localDateTimeProperty;
         private final byte[] byteArrayProperty;
-        private final String stringProperty;
 
-        public Test6(boolean booleanProperty,
-                     byte byteProperty,
-                     char characterProperty,
-                     short shortProperty,
-                     int integerProperty,
-                     long longProperty,
-                     float floatProperty,
-                     double doubleProperty,
-                     LocalDateTime localDateTimeProperty,
-                     byte[] byteArrayProperty,
-                     String stringProperty) {
-            this.booleanProperty = booleanProperty;
-            this.byteProperty = byteProperty;
-            this.characterProperty = characterProperty;
-            this.shortProperty = shortProperty;
-            this.integerProperty = integerProperty;
-            this.longProperty = longProperty;
-            this.floatProperty = floatProperty;
-            this.doubleProperty = doubleProperty;
+        public Test6(LocalDateTime localDateTimeProperty,
+                     byte[] byteArrayProperty) {
             this.localDateTimeProperty = localDateTimeProperty;
             this.byteArrayProperty = byteArrayProperty;
-            this.stringProperty = stringProperty;
         }
     }
 
     private static class Test7 {
-        private final String string;
+        private final Func0<String> stringSupplier;
 
         public Test7() {
-            string = "default";
+            stringSupplier = () -> "default";
         }
 
-        public Test7(String string) {
-            this.string = string;
+        public Test7(Func0<String> stringSupplier) {
+            this.stringSupplier = stringSupplier;
         }
     }
 
@@ -224,10 +197,10 @@ public class WiringTest {
 
     @Test
     public void builders() {
-        Test9 test9 = new Wiring().addFactory(Test7.class, w -> new Test7("custom")).construct(Test9.class);
+        Test9 test9 = new Wiring().addFactory(Test7.class, w -> new Test7(() -> "custom")).construct(Test9.class);
 
-        assertEquals("custom", test9.test7.string);
-        assertEquals("custom", test9.test8.test7.string);
+        assertEquals("custom", test9.test7.stringSupplier.call());
+        assertEquals("custom", test9.test8.test7.stringSupplier.call());
     }
 
     @Test
@@ -258,11 +231,11 @@ public class WiringTest {
     @Test
     public void parents() {
         Test3 instance = new Wiring()
-                .add(new Derived(), "testString")
+                .add(new Derived(), (Func0) () -> "testString")
                 .construct(Test3.class);
 
         assertEquals("derived", instance.base.get());
-        assertEquals("testString", instance.string);
+        assertEquals("testString", instance.stringSupplier.call());
     }
 
     @Test
@@ -321,14 +294,14 @@ public class WiringTest {
         assertEquals("value1", instance.arg1);
         assertEquals("value2", instance.arg2);
 
-        instance = new Wiring().ifCondition(true, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
+        instance = new Wiring().performIf(true, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
                 .orElse(w -> w.addNamed("arg1", "false1").addNamed("arg2", "false2"))
                 .construct(Test1.class);
 
         assertEquals("true1", instance.arg1);
         assertEquals("true2", instance.arg2);
 
-        instance = new Wiring().ifCondition(false, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
+        instance = new Wiring().performIf(false, w -> w.addNamed("arg1", "true1").addNamed("arg2", "true2"))
                 .orElse(w -> w.addNamed("arg1", "false1").addNamed("arg2", "false2"))
                 .construct(Test1.class);
 
@@ -339,7 +312,7 @@ public class WiringTest {
 
     @Test
     public void namedValuesFromPropertySource() {
-        Test5 instance = new Wiring()
+        Wiring wiring = new Wiring()
                 .setNamedPropertySource(Properties.fromSystem().orDefaults(d -> d
                         .put("boolean", "true")
                         .put("booleanWrapper", "true")
@@ -359,8 +332,8 @@ public class WiringTest {
                         .put("doubleWrapper", "2.2")
                         .put("LocalDateTime", "2007-12-03T10:15:30")
                         .put("String", "value")
-                        .put("byteArray", "array")))
-                .construct(Test5.class);
+                        .put("byteArray", "array")));
+        Test5 instance = wiring.construct(Test5.class);
 
         assertEquals(true, instance.booleanProperty);
         assertEquals(true, instance.booleanWrapperProperty);
@@ -381,6 +354,12 @@ public class WiringTest {
         assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
         assertEquals("value", instance.stringProperty);
         assertArrayEquals("array".getBytes(), instance.byteArrayProperty);
+
+        assertEquals(true, wiring.getNamed("boolean").asBoolean());
+        assertEquals(true, wiring.getNamed("booleanWrapper").asBoolean());
+        assertEquals(1, wiring.getNamed("byte").asByte());
+        assertEquals(1, wiring.getNamed("byteWrapper").asByte());
+        assertEquals(1.1f, wiring.getNamedAs("floatWrapper", Float.class), 0.001f);
     }
 
     @Test
@@ -431,63 +410,45 @@ public class WiringTest {
     @Test
     public void values() {
         Wiring wiring = new Wiring()
-                .add(true)
-                .add(Optional.of((byte) 1))
-                .add('a')
-                .add((short) 2)
-                .add((int) 3)
-                .add((long) 4)
-                .add(1.1f)
-                .add(2.2d)
                 .add(new StringValue("2007-12-03T10:15:30"))
-                .add("value")
                 .add("array".getBytes());
 
         Test6 instance = wiring.construct(Test6.class);
 
-        assertEquals(true, instance.booleanProperty);
-        assertEquals(1, instance.byteProperty);
-        assertEquals('a', instance.characterProperty);
-        assertEquals(2, instance.shortProperty);
-        assertEquals(3, instance.integerProperty);
-        assertEquals(4, instance.longProperty);
-        assertEquals(1.1f, instance.floatProperty, 0.1f);
-        assertEquals(2.2d, instance.doubleProperty, 0.1d);
         assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), instance.localDateTimeProperty);
-        assertEquals("value", instance.stringProperty);
         assertArrayEquals("array".getBytes(), instance.byteArrayProperty);
 
-        assertEquals(true, wiring.get(boolean.class));
-        assertEquals(true, wiring.get(Boolean.class));
-        assertEquals(1, (byte) wiring.get(byte.class));
-        assertEquals(1, (byte) wiring.get(Byte.class));
-        assertEquals('a', (char) wiring.get(char.class));
-        assertEquals('a', (char) wiring.get(Character.class));
-        assertEquals(2, (short) wiring.get(short.class));
-        assertEquals(2, (short) wiring.get(Short.class));
-        assertEquals(3, (int) wiring.get(int.class));
-        assertEquals(3, (int) wiring.get(Integer.class));
-        assertEquals(4, (long) wiring.get(long.class));
-        assertEquals(4, (long) wiring.get(Long.class));
-        assertEquals(1.1f, wiring.get(float.class), 0.1f);
-        assertEquals(1.1f, wiring.get(Float.class), 0.1f);
-        assertEquals(2.2d, wiring.get(double.class), 0.1d);
-        assertEquals(2.2d, wiring.get(Double.class), 0.1d);
+        assertNull(wiring.get(boolean.class));
+        assertNull(wiring.get(Boolean.class));
+        assertNull(wiring.get(byte.class));
+        assertNull(wiring.get(Byte.class));
+        assertNull(wiring.get(char.class));
+        assertNull(wiring.get(Character.class));
+        assertNull(wiring.get(short.class));
+        assertNull(wiring.get(Short.class));
+        assertNull(wiring.get(int.class));
+        assertNull(wiring.get(Integer.class));
+        assertNull(wiring.get(long.class));
+        assertNull(wiring.get(Long.class));
+        assertNull(wiring.get(float.class));
+        assertNull(wiring.get(Float.class));
+        assertNull(wiring.get(double.class));
+        assertNull(wiring.get(Double.class));
+        assertNull(wiring.get(String.class));
         assertEquals(LocalDateTime.parse("2007-12-03T10:15:30"), wiring.get(LocalDateTime.class));
-        assertEquals("value", wiring.get(String.class));
         assertArrayEquals("array".getBytes(), wiring.get(byte[].class));
     }
 
     @Test
     public void constructWith() {
         Test7 instance = new Wiring()
-                .add("value")
+                .add((Func0) () -> "value")
                 .constructWith(Test7.class);
-        assertEquals("default", instance.string);
+        assertEquals("default", instance.stringSupplier.call());
 
         instance = new Wiring()
-                .add("value")
-                .constructWith(Test7.class, String.class);
-        assertEquals("value", instance.string);
+                .add((Func0) () -> "value")
+                .constructWith(Test7.class, Func0.class);
+        assertEquals("value", instance.stringSupplier.call());
     }
 }
