@@ -5,5 +5,5 @@ package foundation.stack.datamill.serialization;
  */
 @FunctionalInterface
 public interface DeserializationStrategy<T> {
-    void deserialize(T target, StructuredInput source);
+    T deserialize(DeepStructuredInput source);
 }

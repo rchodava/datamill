@@ -1,12 +1,13 @@
 package foundation.stack.datamill.json;
 
 import foundation.stack.datamill.reflection.Member;
-import foundation.stack.datamill.serialization.StructuredOutput;
+import foundation.stack.datamill.serialization.*;
 import foundation.stack.datamill.values.*;
 import foundation.stack.datamill.reflection.impl.TripleArgumentTypeSwitch;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import rx.functions.Action1;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -15,7 +16,7 @@ import java.util.function.Function;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class JsonObject implements Json, ReflectableValue, StructuredOutput<JsonObject> {
+public class JsonObject implements Json, ReflectableValue, StructuredOutput<JsonObject>, DeepStructuredInput {
     private static final TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object> propertyAsObjectSwitch =
             new TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object>() {
                 @Override
@@ -168,12 +169,58 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
         return object.toString();
     }
 
+    @Override
+    public DeepStructuredInput forEach(String name, Action1<Value> action) {
+        Object child = object.opt(name);
+        if (child instanceof JSONArray) {
+            JSONArray array = (JSONArray) child;
+            for (int i = 0; i < array.length(); i++) {
+                action.call(new JsonElement(array, i));
+            }
+        } else {
+            action.call(new JsonProperty(name));
+        }
+
+        return this;
+    }
+
+    @Override
+    public <T> DeepStructuredInput forEach(String name, DeserializationStrategy<T> strategy, Action1<T> action) {
+        JSONObject child = object.optJSONObject(name);
+        if (child != null) {
+            T deserialized = strategy.deserialize(new JsonObject(child));
+            action.call(deserialized);
+        } else {
+            JSONArray array = object.optJSONArray(name);
+            if (array != null) {
+                for (int i = 0; i < array.length(); i++) {
+                    T deserialized = strategy.deserialize(new JsonObject(array.getJSONObject(i)));
+                    action.call(deserialized);
+                }
+            }
+        }
+
+        return this;
+    }
+
+    @Override
     public Value get(String property) {
         return new JsonProperty(property);
     }
 
+    @Override
     public Value get(Member member) {
         return get(member.name());
+    }
+
+    @Override
+    public <T> T get(String name, DeserializationStrategy<T> strategy) {
+        JSONObject child = object.optJSONObject(name);
+        if (child != null) {
+            return strategy.deserialize(new JsonObject(child));
+        }
+
+        return null;
     }
 
     @Override
@@ -237,6 +284,41 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
         return this;
     }
 
+    @Override
+    public <T> JsonObject put(String key, T value, SerializationStrategy<T> strategy) {
+        if (value != null) {
+            JsonObject serialized = new JsonObject();
+            serialized = (JsonObject) strategy.serialize(serialized, value);
+
+            if (serialized != null) {
+                object.put(key, serialized.object);
+            }
+        }
+
+        return this;
+    }
+
+    @Override
+    public <T> JsonObject put(String key, Iterable<T> values, SerializationStrategy<T> strategy) {
+        if (values != null) {
+            JSONArray array = new JSONArray();
+            for (T value : values) {
+                JsonObject serialized = new JsonObject();
+                serialized = (JsonObject) strategy.serialize(serialized, value);
+
+                if (serialized != null) {
+                    array.put(serialized.object);
+                } else {
+                    array.put((Object) null);
+                }
+            }
+
+            this.object.put(key, array);
+        }
+
+        return this;
+    }
+
     public JsonObject put(String key, JsonObject object) {
         this.object.put(key, object.object);
         return this;
@@ -269,6 +351,112 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
         return asString();
     }
 
+    private class JsonElement implements Value {
+        private final JSONArray array;
+        private final int index;
+
+        private JsonElement(JSONArray array, int index) {
+            this.array = array;
+            this.index = index;
+        }
+
+        @Override
+        public boolean asBoolean() {
+            return array.getBoolean(index);
+        }
+
+        @Override
+        public byte asByte() {
+            return (byte) array.getInt(index);
+        }
+
+        @Override
+        public byte[] asByteArray() {
+            try {
+                JSONArray array = this.array.getJSONArray(index);
+                if (array != null) {
+                    byte[] bytes = new byte[array.length()];
+                    for (int i = 0; i < bytes.length; i++) {
+                        bytes[i] = (byte) array.getInt(i);
+                    }
+
+                    return bytes;
+                }
+            } catch (JSONException e) {
+                String value = asString();
+                if (value != null) {
+                    return value.getBytes();
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public char asCharacter() {
+            try {
+                return (char) array.getInt(index);
+            } catch (JSONException e) {
+                String value = array.getString(index);
+                if (value.length() == 1) {
+                    return value.charAt(0);
+                }
+
+                throw new JsonException("Property cannot be converted to a character!");
+            }
+        }
+
+        @Override
+        public double asDouble() {
+            return array.getDouble(index);
+        }
+
+        @Override
+        public float asFloat() {
+            return (float) array.getDouble(index);
+        }
+
+        @Override
+        public int asInteger() {
+            return array.getInt(index);
+        }
+        @Override
+        public LocalDateTime asLocalDateTime() {
+            String value = array.optString(index);
+            if (value != null) {
+                return LocalDateTime.parse(value);
+            }
+
+            return null;
+        }
+
+        @Override
+        public long asLong() {
+            return array.getLong(index);
+        }
+
+        @Override
+        public Object asObject(Class<?> type) {
+//            return propertyAsObjectSwitch.doSwitch(type, object, name, this);
+            return null;
+        }
+
+        @Override
+        public short asShort() {
+            return (short) array.getInt(index);
+        }
+
+        @Override
+        public String asString() {
+            return array.optString(index);
+        }
+
+        @Override
+        public <T> T map(Function<Value, T> mapper) {
+            return mapper.apply(this);
+        }
+    }
+
     public class JsonProperty implements Value {
         private String name;
 
@@ -283,7 +471,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public byte asByte() {
-            return (byte) (int) object.getInt(name);
+            return (byte) object.getInt(name);
         }
 
         @Override
@@ -311,7 +499,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
         @Override
         public char asCharacter() {
             try {
-                return (char) (int) object.getInt(name);
+                return (char) object.getInt(name);
             } catch (JSONException e) {
                 String value = object.getString(name);
                 if (value.length() == 1) {
@@ -329,7 +517,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public float asFloat() {
-            return object.getBigDecimal(name).floatValue();
+            return (float) object.getDouble(name);
         }
 
         @Override
@@ -387,7 +575,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public <T> T map(Function<Value, T> mapper) {
-            return null;
+            return mapper.apply(this);
         }
     }
 }

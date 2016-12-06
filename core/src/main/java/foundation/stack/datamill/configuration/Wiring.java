@@ -240,13 +240,13 @@ public class Wiring {
 
     /**
      * Add a factory method to the Wiring which is invoked to create an instance of the specified class. The factory
-     * method is added with a default priority of {@link Integer#MIN_VALUE}
+     * method is added with a default priority of 0.
      *
      * @param clazz   Class for which we want to add a factory.
      * @param factory Factory method to invoke for the class specified.
      */
     public <T> Wiring addFactory(Class<T> clazz, Func1<Wiring, T> factory) {
-        return addFactory(Integer.MIN_VALUE, clazz, factory);
+        return addFactory(0, clazz, factory);
     }
 
     /**

@@ -10,10 +10,7 @@ import foundation.stack.datamill.serialization.Serializer;
  */
 public interface Json {
     static <T> Deserializer<JsonObject, T> deserializer(DeserializationStrategy<T> strategy) {
-        return json -> {
-            T object = null;
-            return object;
-        };
+        return json -> strategy.deserialize(json);
     }
 
     static <T> Serializer<T, JsonObject> serializer(SerializationStrategy<T> strategy) {

@@ -19,14 +19,6 @@ public class SerializationStrategyBuilder<SourceType> {
             Func1<OutlineBuilder, Outline<SourceType>>,
             Func3<StructuredOutput<?>, SourceType, Outline<?>, StructuredOutput<?>>>> strategies = new ArrayList<>();
 
-    public SerializationStrategyBuilder<SourceType> withOutline(
-            Func1<OutlineBuilder, Outline<SourceType>> outlineBuilder,
-            Func3<StructuredOutput<?>, SourceType, Outline<SourceType>, StructuredOutput<?>> strategy) {
-        strategies.add(new Pair(outlineBuilder, strategy));
-        outlines.add(null);
-        return this;
-    }
-
     public SerializationStrategy<SourceType> build() {
         return (target, source) -> {
             for (int i = 0; i < strategies.size(); i++) {
@@ -44,5 +36,13 @@ public class SerializationStrategyBuilder<SourceType> {
 
             return target;
         };
+    }
+
+    public SerializationStrategyBuilder<SourceType> withOutline(
+            Func1<OutlineBuilder, Outline<SourceType>> outlineBuilder,
+            Func3<StructuredOutput<?>, SourceType, Outline<SourceType>, StructuredOutput<?>> strategy) {
+        strategies.add(new Pair(outlineBuilder, strategy));
+        outlines.add(null);
+        return this;
     }
 }
