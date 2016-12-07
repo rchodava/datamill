@@ -512,17 +512,17 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public double asDouble() {
-            return object.getDouble(name);
+            return object.optDouble(name);
         }
 
         @Override
         public float asFloat() {
-            return (float) object.getDouble(name);
+            return (float) object.optDouble(name);
         }
 
         @Override
         public int asInteger() {
-            return object.getInt(name);
+            return object.optInt(name);
         }
 
         public JsonArray asJsonArray() {
@@ -555,7 +555,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public long asLong() {
-            return object.getLong(name);
+            return object.optLong(name);
         }
 
         @Override
@@ -565,7 +565,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
         @Override
         public short asShort() {
-            return (short) (int) object.getInt(name);
+            return (short) (int) object.optInt(name);
         }
 
         @Override
