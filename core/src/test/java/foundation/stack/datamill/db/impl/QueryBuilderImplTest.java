@@ -103,7 +103,7 @@ public class QueryBuilderImplTest {
 
     @Test
     public void selectQueries() {
-        Outline<QueryTestBean> outline = new OutlineBuilder().build(QueryTestBean.class);
+        Outline<QueryTestBean> outline = OutlineBuilder.DEFAULT.build(QueryTestBean.class);
         TestQueryBuilderImpl queryBuilder = new TestQueryBuilderImpl();
 
         queryBuilder.selectAll().from("table_name").all();

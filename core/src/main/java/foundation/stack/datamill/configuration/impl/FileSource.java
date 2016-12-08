@@ -30,7 +30,7 @@ public class FileSource extends AbstractSource {
     }
 
     @Override
-    public Optional<String> get(String name) {
+    public Optional<String> getOptional(String name) {
         String value = properties.getProperty(name);
         return Optional.ofNullable(value);
     }

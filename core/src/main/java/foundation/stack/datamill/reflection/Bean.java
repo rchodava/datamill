@@ -11,9 +11,14 @@ public interface Bean<T> {
     <R, A1> R invoke(Method method, A1 argument);
     <R, A1, A2> R invoke(Method method, A1 argument1, A2 argument2);
     <R> R invoke(Method method, Object... arguments);
+
     Bean<T> set(Consumer<T> propertyInvoker, Value value);
     <P> Bean<T> set(Consumer<T> propertyInvoker, P value);
+
     <P> P get(Consumer<T> propertyInvoker);
+
+    Member member(Consumer<T> memberInvoker);
     Outline<T> outline();
-    T unwrap();
+
+    T get();
 }

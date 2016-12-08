@@ -124,7 +124,7 @@ public class BeanMethodMatcherTest {
     public void beanMethodMatching() {
         TestBean bean = new TestBean();
         BeanMethodMatcher matcher = new BeanMethodMatcher(
-                new OutlineBuilder().wrap(bean),
+                OutlineBuilder.DEFAULT.wrap(bean),
                 (request, method) -> method.invoke(bean));
 
         ServerRequest request = mock(ServerRequest.class);
@@ -155,7 +155,7 @@ public class BeanMethodMatcherTest {
     public void beanMethodMatchingWithPaths() {
         TestBeanWithPaths bean = new TestBeanWithPaths();
         BeanMethodMatcher matcher = new BeanMethodMatcher(
-                new OutlineBuilder().wrap(bean),
+                OutlineBuilder.DEFAULT.wrap(bean),
                 (request, method) -> method.invoke(bean));
 
         ServerRequest request = mock(ServerRequest.class);
@@ -207,7 +207,7 @@ public class BeanMethodMatcherTest {
     public void beanMethodMatchingWithOnlyMethodPaths() {
         TestBeanWithOnlyMethodPaths bean = new TestBeanWithOnlyMethodPaths();
         BeanMethodMatcher matcher = new BeanMethodMatcher(
-                new OutlineBuilder().wrap(bean),
+                OutlineBuilder.DEFAULT.wrap(bean),
                 (request, method) -> method.invoke(bean));
 
         ServerRequest request = mock(ServerRequest.class);
@@ -224,7 +224,7 @@ public class BeanMethodMatcherTest {
     public void beanMethodMatchingWithOnlyBeanPath() {
         TestBeanWithOnlyBeanPath bean = new TestBeanWithOnlyBeanPath();
         BeanMethodMatcher matcher = new BeanMethodMatcher(
-                new OutlineBuilder().wrap(bean),
+                OutlineBuilder.DEFAULT.wrap(bean),
                 (request, method) -> method.invoke(bean));
 
         ServerRequest request = mock(ServerRequest.class);
@@ -248,7 +248,7 @@ public class BeanMethodMatcherTest {
     public void queryOptions() {
         TestBeanWithOnlyBeanPath bean = new TestBeanWithOnlyBeanPath();
         BeanMethodMatcher matcher = new BeanMethodMatcher(
-                new OutlineBuilder().wrap(bean),
+                OutlineBuilder.DEFAULT.wrap(bean),
                 (request, method) -> method.invoke(bean));
 
         ServerRequest request = mock(ServerRequest.class);

@@ -131,8 +131,7 @@ public class OutlineImplTest {
 
     @Test
     public void camelCasedNames() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultSnakeCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultSnakeCased().build(TestBeanClass.class);
 
         assertEquals("readOnlyProperty", outline.member(m -> m.getReadOnlyProperty()).camelCasedName());
         assertEquals("booleanProperty", outline.member(m -> m.isBooleanProperty()).camelCasedName());
@@ -146,8 +145,7 @@ public class OutlineImplTest {
 
     @Test
     public void methods() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultSnakeCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultSnakeCased().build(TestBeanClass.class);
 
         // Test all methods in class are present
         assertEquals(5, outline.methods().stream().mapToInt(m -> {
@@ -170,7 +168,7 @@ public class OutlineImplTest {
 
     @Test
     public void propertyNamesCamelCased() {
-        assertThat(new OutlineBuilder().defaultCamelCased().build(TestBeanClass.class).propertyNames(),
+        assertThat(OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class).propertyNames(),
                 hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
 
         assertEquals(0, actualBeanMethodInvocations);
@@ -178,7 +176,7 @@ public class OutlineImplTest {
 
     @Test
     public void propertyNamesSnakeCased() {
-        assertThat(new OutlineBuilder().defaultSnakeCased().build(TestBeanClass.class).propertyNames(),
+        assertThat(OutlineBuilder.DEFAULT.defaultSnakeCased().build(TestBeanClass.class).propertyNames(),
                 hasItems("read_write_property", "read_only_property", "boolean_property"));
 
         assertEquals(0, actualBeanMethodInvocations);
@@ -186,7 +184,7 @@ public class OutlineImplTest {
 
     @Test
     public void getPropertiesCamelCasedDoesNotHaveGetClass() {
-        assertThat(new OutlineBuilder().defaultCamelCased().build(TestBeanClass.class).properties().stream()
+        assertThat(OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class).properties().stream()
                         .map(p -> p.name()).collect(Collectors.toList()),
                 not(hasItems("class")));
 
@@ -195,7 +193,7 @@ public class OutlineImplTest {
 
     @Test
     public void getPropertiesCamelCased() {
-        assertThat(new OutlineBuilder().defaultCamelCased().build(TestBeanClass.class).properties().stream()
+        assertThat(OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class).properties().stream()
                         .map(p -> p.name()).collect(Collectors.toList()),
                 hasItems("readWriteProperty", "readOnlyProperty", "booleanProperty"));
 
@@ -204,7 +202,7 @@ public class OutlineImplTest {
 
     @Test
     public void getPropertiesSnakeCased() {
-        assertThat(new OutlineBuilder().defaultSnakeCased().build(TestBeanClass.class).properties().stream()
+        assertThat(OutlineBuilder.DEFAULT.defaultSnakeCased().build(TestBeanClass.class).properties().stream()
                         .map(p -> p.name()).collect(Collectors.toList()),
                 hasItems("read_write_property", "read_only_property", "boolean_property"));
 
@@ -213,7 +211,7 @@ public class OutlineImplTest {
 
     @Test
     public void getPropertyCamelCased() {
-        Outline<TestBeanClass> outline = new OutlineBuilder().defaultCamelCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class);
         assertEquals("readWriteProperty", outline.property(m -> m.getReadWriteProperty()).name());
         assertEquals("booleanProperty", outline.property(m -> m.isBooleanProperty()).name());
         assertEquals("readWriteProperty", outline.property(m -> m.getReadWriteProperty()).name());
@@ -223,7 +221,7 @@ public class OutlineImplTest {
 
     @Test
     public void getPropertySnakeCased() {
-        Outline<TestBeanClass> outline = new OutlineBuilder().defaultSnakeCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultSnakeCased().build(TestBeanClass.class);
         assertEquals("read_write_property", outline.property(m -> m.getReadWriteProperty()).name());
         assertEquals("boolean_property", outline.property(m -> m.isBooleanProperty()).name());
         assertEquals("read_write_property", outline.property(m -> m.getReadWriteProperty()).name());
@@ -233,8 +231,7 @@ public class OutlineImplTest {
 
     @Test
     public void snakeCasedNames() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class);
 
         assertEquals("read_only_property", outline.member(m -> m.getReadOnlyProperty()).snakeCasedName());
         assertEquals("boolean_property", outline.member(m -> m.isBooleanProperty()).snakeCasedName());
@@ -248,8 +245,7 @@ public class OutlineImplTest {
 
     @Test
     public void wrapAndBeanGet() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class);
 
         TestBeanClass instance = new TestBeanClass();
         instance.setReadWriteProperty("value1");
@@ -260,8 +256,7 @@ public class OutlineImplTest {
 
     @Test
     public void wrapAndBeanSet() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class);
 
         TestBeanClass instance = new TestBeanClass();
         outline.wrap(instance).set(m -> m.getReadWriteProperty(), "value1");
@@ -272,8 +267,7 @@ public class OutlineImplTest {
 
     @Test
     public void wrapAndBeanSetCastedValue() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClassWithVariousProperties> outline = outlineBuilder.defaultCamelCased()
+        Outline<TestBeanClassWithVariousProperties> outline = OutlineBuilder.DEFAULT.defaultCamelCased()
                 .build(TestBeanClassWithVariousProperties.class);
 
         TestBeanClassWithVariousProperties instance = new TestBeanClassWithVariousProperties();
@@ -301,11 +295,10 @@ public class OutlineImplTest {
 
     @Test
     public void unwrapWrappedBean() {
-        OutlineBuilder outlineBuilder = new OutlineBuilder();
-        Outline<TestBeanClass> outline = outlineBuilder.defaultCamelCased().build(TestBeanClass.class);
+        Outline<TestBeanClass> outline = OutlineBuilder.DEFAULT.defaultCamelCased().build(TestBeanClass.class);
 
         TestBeanClass instance = new TestBeanClass();
 
-        assertEquals(instance, outline.wrap(instance).unwrap());
+        assertEquals(instance, outline.wrap(instance).get());
     }
 }

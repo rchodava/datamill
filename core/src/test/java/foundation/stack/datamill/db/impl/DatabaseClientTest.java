@@ -39,7 +39,7 @@ public class DatabaseClientTest {
     @Test
     public void queries() {
         DatabaseClient client = new DatabaseClient("jdbc:hsqldb:mem:test");
-        Outline<Quark> outline = new OutlineBuilder().build(Quark.class);
+        Outline<Quark> outline = OutlineBuilder.DEFAULT.build(Quark.class);
 
         client.update("create table quarks(name varchar(64), spin integer)", 0)
                 .count()
@@ -55,9 +55,9 @@ public class DatabaseClientTest {
                 .last();
 
         List<Quark> quarks = client.selectAll().from(outline).all().getAs(r -> outline.wrap(new Quark())
-                .set(p -> p.getName(), r.column(outline.member(m -> m.getName())))
-                .set(p -> p.getSpin(), r.column(outline.member(m -> m.getSpin())))
-                .unwrap())
+                .set(p -> p.getName(), r.get(outline.member(m -> m.getName())))
+                .set(p -> p.getSpin(), r.get(outline.member(m -> m.getSpin())))
+                .get())
                 .toBlocking().last();
 
         assertEquals(1, quarks.size());
@@ -65,9 +65,9 @@ public class DatabaseClientTest {
         assertEquals(1, quarks.get(0).getSpin());
 
         Quark quark = client.selectAll().from(outline).all().firstAs(r -> outline.wrap(new Quark())
-                .set(p -> p.getName(), r.column(outline.member(m -> m.getName())))
-                .set(p -> p.getSpin(), r.column(outline.member(m -> m.getSpin())))
-                .unwrap())
+                .set(p -> p.getName(), r.get(outline.member(m -> m.getName())))
+                .set(p -> p.getSpin(), r.get(outline.member(m -> m.getSpin())))
+                .get())
                 .toBlocking().last();
 
         assertEquals(1, quarks.size());

@@ -12,6 +12,15 @@ import java.util.Optional;
  */
 public interface PropertySource {
     /**
+     * Alias a property so that the alias can be used in a {@link #get(String)} call in order to retrieve the original
+     * property's value.
+     *
+     * @param alias    New alias for the original property.
+     * @param original Original property to create an alias for.
+     */
+    PropertySource alias(String alias, String original);
+
+    /**
      * Get the specified property from the source, if it exists.
      *
      * @param name Name of property to retrieve.

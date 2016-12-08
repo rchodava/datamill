@@ -22,7 +22,7 @@ public class SystemPropertiesSource extends AbstractSource {
     }
 
     @Override
-    public Optional<String> get(String name) {
+    public Optional<String> getOptional(String name) {
         return Optional.ofNullable(System.getProperty(transformer.call(name)));
     }
 }

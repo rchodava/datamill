@@ -65,6 +65,15 @@ public class PropertiesTest {
         assertEquals("value2", Properties.fromSystem().orDefaults(d -> d.put("test2", "value2")).getRequired("test2").asString());
     }
 
+
+    @Test
+    public void aliases() {
+        System.setProperty("test", "value");
+
+        assertEquals("value", Properties.fromSystem().get("test").get());
+        assertEquals("value", Properties.fromSystem().alias("test2", "test").get("test2").get());
+    }
+
     @Test
     public void chains() {
         environmentVariables.set("test4", "value4");

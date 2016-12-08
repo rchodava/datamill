@@ -1,9 +1,12 @@
 package foundation.stack.datamill.db.impl;
 
 import foundation.stack.datamill.reflection.Member;
+import foundation.stack.datamill.serialization.DeserializationStrategy;
+import foundation.stack.datamill.serialization.StructuredInput;
 import foundation.stack.datamill.values.Value;
 import foundation.stack.datamill.db.DatabaseException;
 import foundation.stack.datamill.db.Row;
+import rx.functions.Action1;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,23 +25,23 @@ public class RowImpl implements Row {
     }
 
     @Override
-    public Value column(int index) {
+    public Value get(int index) {
         return new IndexedColumnValue(index);
     }
 
     @Override
-    public Value column(String name) {
+    public Value get(String name) {
         return new LabeledColumnValue(name);
     }
 
     @Override
-    public Value column(String table, String name) {
+    public Value get(String table, String name) {
         return new LabeledColumnValue(table + "." + name);
     }
 
     @Override
-    public Value column(Member member) {
-        return column(member.outline().pluralName(), member.name());
+    public Value get(Member member) {
+        return get(member.outline().pluralName(), member.name());
     }
 
     @Override

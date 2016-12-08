@@ -76,7 +76,7 @@ public class TestDatabaseClientTest {
 
     @Test
     public void rowBuilding() {
-        Outline<TestModel> testModelOutline = new OutlineBuilder().build(TestModel.class);
+        Outline<TestModel> testModelOutline = OutlineBuilder.DEFAULT.build(TestModel.class);
 
         TestDatabaseClient client = new TestDatabaseClient(database);
 
@@ -91,9 +91,9 @@ public class TestDatabaseClientTest {
                 .from(testModelOutline)
                 .all()
                 .firstAs(row -> testModelOutline.wrap(new TestModel())
-                        .set(m -> m.getProperty(), row.column(testModelOutline.member(m -> m.getProperty())))
-                        .set(m -> m.getStringProperty(), row.column(testModelOutline.member(m -> m.getStringProperty())))
-                        .unwrap())
+                        .set(m -> m.getProperty(), row.get(testModelOutline.member(m -> m.getProperty())))
+                        .set(m -> m.getStringProperty(), row.get(testModelOutline.member(m -> m.getStringProperty())))
+                        .get())
                 .subscribe(testSubscriber);
 
         assertEquals(5, testSubscriber.getOnNextEvents().get(0).getProperty());

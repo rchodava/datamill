@@ -4,7 +4,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Defaults;
 import com.sun.beans.TypeResolver;
 import foundation.stack.datamill.reflection.*;
-import foundation.stack.datamill.values.Value;
+import foundation.stack.datamill.values.*;
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.Proxy;
 import org.atteo.evo.inflector.English;
@@ -195,7 +195,7 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         Class interfaces[] = start.getInterfaces();
-        for (int i = 0 ; i < interfaces.length; i++) {
+        for (int i = 0; i < interfaces.length; i++) {
             Method method = findMethod(interfaces[i], methodName, numberOfArguments, null);
             if (method != null) {
                 return method;
@@ -402,6 +402,11 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
+        public Member member(Consumer<T> memberInvoker) {
+            return outline().member(memberInvoker);
+        }
+
+        @Override
         public Outline<T> outline() {
             return (Outline<T>) OutlineImpl.this;
         }
@@ -421,13 +426,12 @@ public class OutlineImpl<T> implements Outline<T> {
         }
 
         @Override
-        public T unwrap() {
+        public T get() {
             return instance;
         }
     }
 
     private class PropertyImpl<T> extends MemberImpl implements Property<T> {
-
         private final PropertyDescriptor descriptor;
         private final Method writeMethod;
 
@@ -447,7 +451,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
                 String writeMethodName = "set" + capitalize(descriptor.getName());
 
-                Class<?>[] args = (type == null) ? null : new Class<?>[] { type };
+                Class<?>[] args = (type == null) ? null : new Class<?>[]{type};
                 method = findMethod(cls, writeMethodName, 1, args);
             }
 

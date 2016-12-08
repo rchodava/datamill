@@ -26,6 +26,11 @@ import rx.functions.Func1;
  */
 public interface PropertySourceChain extends PropertySource {
     /**
+     * @see PropertySource#alias(String, String)
+     */
+    PropertySourceChain alias(String alias, String original);
+
+    /**
      * Add a property source to the chain which retrieves properties specified in the file at the specified path.
      *
      * @param path Path to properties file to add as a source.

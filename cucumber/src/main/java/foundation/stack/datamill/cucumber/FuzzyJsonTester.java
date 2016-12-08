@@ -1,6 +1,7 @@
 package foundation.stack.datamill.cucumber;
 
 import foundation.stack.datamill.json.JsonObject;
+import foundation.stack.datamill.values.Value;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,8 +24,8 @@ public class FuzzyJsonTester {
         }
 
         for (String propertyName : expected.propertyNames()) {
-            JsonObject.JsonProperty expectedProperty = expected.get(propertyName);
-            JsonObject.JsonProperty actualProperty = actual.get(propertyName);
+            Value expectedProperty = expected.get(propertyName);
+            Value actualProperty = actual.get(propertyName);
             if (ANY_VALUE.equals(expectedProperty.asString())) {
                 // When we can't anticipate the return value of a property (i.e. db set id) we must set ANY_VALUE as the property
                 // value so that comparison only fails if it is not found in actual json object
