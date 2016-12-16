@@ -21,23 +21,23 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
             new TripleArgumentTypeSwitch<JSONObject, String, JsonProperty, Object>() {
                 @Override
                 protected Object caseBoolean(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asBoolean() : null;
+                    return value1.has(value2) && !value1.isNull(value2) ? value3.asBoolean() : null;
                 }
 
                 @Override
                 protected Object caseByte(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asByte() : null;
+                    return value1.has(value2) && !value1.isNull(value2) ? value3.asByte() : null;
                 }
 
                 @Override
                 protected Object caseCharacter(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asCharacter() : null;
+                    return value1.has(value2) && !value1.isNull(value2) ? value3.asCharacter() : null;
                 }
 
                 @Override
                 protected Object caseShort(JSONObject value1, String value2, JsonProperty value3) {
                     try {
-                        return value1.has(value2) ? value3.asShort() : null;
+                        return value1.has(value2) && !value1.isNull(value2) ? value3.asShort() : null;
                     } catch (JSONException __) {
                         return null;
                     }
@@ -46,7 +46,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
                 @Override
                 protected Object caseInteger(JSONObject value1, String value2, JsonProperty value3) {
                     try {
-                        return value1.has(value2) ? value3.asInteger() : null;
+                        return value1.has(value2) && !value1.isNull(value2) ? value3.asInteger() : null;
                     } catch (JSONException __) {
                         return null;
                     }
@@ -55,7 +55,7 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
                 @Override
                 protected Object caseLong(JSONObject value1, String value2, JsonProperty value3) {
                     try {
-                        return value1.has(value2) ? value3.asLong() : null;
+                        return value1.has(value2) && !value1.isNull(value2) ? value3.asLong() : null;
                     } catch (JSONException __) {
                         return null;
                     }
@@ -63,12 +63,12 @@ public class JsonObject implements Json, ReflectableValue, StructuredOutput<Json
 
                 @Override
                 protected Object caseFloat(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asFloat() : null;
+                    return value1.has(value2) && !value1.isNull(value2) ? value3.asFloat() : null;
                 }
 
                 @Override
                 protected Object caseDouble(JSONObject value1, String value2, JsonProperty value3) {
-                    return value1.has(value2) ? value3.asDouble() : null;
+                    return value1.has(value2) && !value1.isNull(value2) ? value3.asDouble() : null;
                 }
 
                 @Override
