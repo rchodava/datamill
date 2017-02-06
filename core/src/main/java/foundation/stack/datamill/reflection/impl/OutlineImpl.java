@@ -2,6 +2,7 @@ package foundation.stack.datamill.reflection.impl;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Defaults;
+import com.google.common.base.Strings;
 import com.sun.beans.TypeResolver;
 import foundation.stack.datamill.reflection.*;
 import foundation.stack.datamill.values.*;
@@ -222,6 +223,7 @@ public class OutlineImpl<T> implements Outline<T> {
     private final T members;
     private Collection<foundation.stack.datamill.reflection.Method> methods;
     private Map<String, Property> properties;
+    private String pluralName;
 
     public OutlineImpl(T members, boolean camelCased) {
         this.members = members;
@@ -237,7 +239,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public String camelCasedPluralName() {
-        return English.plural(camelCasedName());
+        return Strings.isNullOrEmpty(pluralName) ? English.plural(snakeCasedName()) : pluralName;
     }
 
     @Override
@@ -332,7 +334,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public String pluralName() {
-        return English.plural(name());
+        return Strings.isNullOrEmpty(pluralName) ? English.plural(snakeCasedName()) : pluralName;
     }
 
     @Override
@@ -357,7 +359,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public String snakeCasedPluralName() {
-        return English.plural(snakeCasedName());
+        return Strings.isNullOrEmpty(pluralName) ? English.plural(snakeCasedName()) : pluralName;
     }
 
     private String typeName() {
@@ -372,6 +374,12 @@ public class OutlineImpl<T> implements Outline<T> {
     @Override
     public Bean<T> wrap(T instance) {
         return new BeanImpl(instance);
+    }
+
+    @Override
+    public Outline<T> withPluralName(String pluralName) {
+        this.pluralName = pluralName;
+        return this;
     }
 
     private class BeanImpl implements Bean<T> {

@@ -35,4 +35,6 @@ public interface Outline<T> {
     Collection<String> propertyNames();
 
     Bean<T> wrap(T instance);
+
+    Outline<T> withPluralName(String pluralName);
 }
