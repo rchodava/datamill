@@ -15,12 +15,14 @@ public class Repository<T> {
 
     private DatabaseClient client;
     private OutlineBuilder outlineBuilder;
-    private Class<T> entityClass;
+    protected Class<T> entityClass;
+    protected Outline<T> outline;
 
     protected Repository(DatabaseClient client, OutlineBuilder outlineBuilder, Class<T> entityClass) {
         this.client = client;
         this.outlineBuilder = outlineBuilder;
         this.entityClass = entityClass;
+        this.outline = buildOutline(entityClass);
     }
 
     protected <E> Outline<E> buildOutline(Class<E> entityClass) {
@@ -29,7 +31,7 @@ public class Repository<T> {
 
     protected <R> R executeQuery(BiFunction<DatabaseClient, Outline<T>, R> executor) {
         try {
-            return executor.apply(client, buildOutline(entityClass));
+            return executor.apply(client, outline);
         } catch (Throwable t) {
             logger.debug("An error occurred while building a SQL query!", t);
             throw t;
