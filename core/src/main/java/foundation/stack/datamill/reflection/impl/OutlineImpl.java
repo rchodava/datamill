@@ -334,7 +334,7 @@ public class OutlineImpl<T> implements Outline<T> {
 
     @Override
     public String pluralName() {
-        return Strings.isNullOrEmpty(pluralName) ? English.plural(snakeCasedName()) : pluralName;
+        return Strings.isNullOrEmpty(pluralName) ? English.plural(name()) : pluralName;
     }
 
     @Override
