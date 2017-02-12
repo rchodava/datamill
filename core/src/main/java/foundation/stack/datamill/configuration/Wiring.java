@@ -422,9 +422,11 @@ public class Wiring {
                     try {
                         values[i] = construct(parameterType, autoConstructionCandidates);
                     } catch (IllegalArgumentException | IllegalStateException e) {
+                        logger.error("Could not build class {} as the following type could not be constructed {}", clazz, parameterType, e);
                         return null;
                     }
                 } else {
+                    logger.error("Could not build class {} as the following type was not found {}", clazz, parameterType);
                     return null;
                 }
             }
