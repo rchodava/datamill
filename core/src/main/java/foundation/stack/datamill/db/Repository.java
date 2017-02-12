@@ -15,8 +15,8 @@ public class Repository<T> {
 
     private DatabaseClient client;
     private OutlineBuilder outlineBuilder;
-    protected Class<T> entityClass;
-    protected Outline<T> outline;
+    private Class<T> entityClass;
+    private Outline<T> outline;
 
     protected Repository(DatabaseClient client, OutlineBuilder outlineBuilder, Class<T> entityClass) {
         this.client = client;
@@ -36,5 +36,9 @@ public class Repository<T> {
             logger.debug("An error occurred while building a SQL query!", t);
             throw t;
         }
+    }
+
+    public Outline<T> getOutline() {
+        return outline;
     }
 }
