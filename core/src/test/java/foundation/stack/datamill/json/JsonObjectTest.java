@@ -64,17 +64,30 @@ public class JsonObjectTest {
 
     @Test
     public void propertyConversions() {
-        JsonObject json = new JsonObject("{\"character\": \"v\", \"numeric\": 2, \"boolean\": true, \"string\": \"value\", \"bytes\": [1, 2]}");
+        JsonObject json = new JsonObject("{\"character\": \"v\", \"numeric\": 2, \"nullNumeric\": null, \"boolean\": true, \"nullBoolean\": null, \"string\": \"value\", \"bytes\": [1, 2]}");
         assertEquals(true, json.get("boolean").asBoolean());
+        assertNull(json.get("nullNumeric").asObject(Boolean.class));
+        assertNull(json.get("nonexistent").asObject(Boolean.class));
         assertEquals(2, json.get("numeric").asByte());
         assertEquals('v', json.get("character").asCharacter());
         assertEquals((char) 2, json.get("numeric").asCharacter());
         assertEquals(2d, json.get("numeric").asDouble(), 0.001);
+        assertNull(json.get("nullNumeric").asObject(Double.class));
+        assertNull(json.get("nonexistent").asObject(Double.class));
         assertEquals(2f, json.get("numeric").asFloat(), 0.001);
+        assertNull(json.get("nullNumeric").asObject(Float.class));
+        assertNull(json.get("nonexistent").asObject(Float.class));
         assertEquals(2, json.get("numeric").asInteger());
+        assertNull(json.get("nullNumeric").asObject(Integer.class));
+        assertNull(json.get("nonexistent").asObject(Integer.class));
         assertEquals(2l, json.get("numeric").asLong());
+        assertNull(json.get("nullNumeric").asObject(Long.class));
+        assertNull(json.get("nonexistent").asObject(Long.class));
         assertEquals(2, json.get("numeric").asShort());
+        assertNull(json.get("nullNumeric").asObject(Short.class));
+        assertNull(json.get("nonexistent").asObject(Short.class));
         assertEquals("value", json.get("string").asString());
+        assertNull(json.get("nonexistent").asObject(String.class));
         assertArrayEquals("value".getBytes(), json.get("string").asByteArray());
         assertArrayEquals(new byte[] {(byte) 1, (byte) 2}, json.get("bytes").asByteArray());
 

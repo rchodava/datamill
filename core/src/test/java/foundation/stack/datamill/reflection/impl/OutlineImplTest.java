@@ -1,5 +1,6 @@
 package foundation.stack.datamill.reflection.impl;
 
+import foundation.stack.datamill.json.JsonObject;
 import foundation.stack.datamill.reflection.Outline;
 import foundation.stack.datamill.reflection.OutlineBuilder;
 import foundation.stack.datamill.values.StringValue;
@@ -9,6 +10,7 @@ import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertEquals;
 
@@ -47,17 +49,27 @@ public class OutlineImplTest {
 
     public class TestBeanClassWithVariousProperties {
         private boolean booleanProperty;
+        private Boolean booleanWrapperProperty;
         private byte byteProperty;
         private char charProperty;
         private short shortProperty;
+        private Short shortWrapperProperty;
         private int intProperty;
+        private Integer intWrapperProperty;
         private long longProperty;
+        private Long longWrapperProperty;
         private float floatProperty;
+        private Float floatWrapperProperty;
         private double doubleProperty;
+        private Double doubleWrapperProperty;
         private String stringProperty;
 
         public boolean isBooleanProperty() {
             return booleanProperty;
+        }
+
+        public Boolean getBooleanWrapperProperty() {
+            return booleanWrapperProperty;
         }
 
         public byte getByteProperty() {
@@ -72,20 +84,40 @@ public class OutlineImplTest {
             return shortProperty;
         }
 
+        public Short getShortWrapperProperty() {
+            return shortWrapperProperty;
+        }
+
         public int getIntProperty() {
             return intProperty;
+        }
+
+        public Integer getIntWrapperProperty() {
+            return intWrapperProperty;
         }
 
         public long getLongProperty() {
             return longProperty;
         }
 
+        public Long getLongWrapperProperty() {
+            return longWrapperProperty;
+        }
+
         public float getFloatProperty() {
             return floatProperty;
         }
 
+        public Float getFloatWrapperProperty() {
+            return floatWrapperProperty;
+        }
+
         public double getDoubleProperty() {
             return doubleProperty;
+        }
+
+        public Double getDoubleWrapperProperty() {
+            return doubleWrapperProperty;
         }
 
         public String getStringProperty() {
@@ -94,6 +126,10 @@ public class OutlineImplTest {
 
         public void setBooleanProperty(boolean booleanProperty) {
             this.booleanProperty = booleanProperty;
+        }
+
+        public void setBooleanWrapperProperty(Boolean booleanWrapperProperty) {
+            this.booleanWrapperProperty = booleanWrapperProperty;
         }
 
         public void setByteProperty(byte byteProperty) {
@@ -108,20 +144,40 @@ public class OutlineImplTest {
             this.shortProperty = shortProperty;
         }
 
+        public void setShortWrapperProperty(Short shortWrapperProperty) {
+            this.shortWrapperProperty = shortWrapperProperty;
+        }
+
         public void setIntProperty(int intProperty) {
             this.intProperty = intProperty;
+        }
+
+        public void setIntWrapperProperty(Integer intWrapperProperty) {
+            this.intWrapperProperty = intWrapperProperty;
         }
 
         public void setLongProperty(long longProperty) {
             this.longProperty = longProperty;
         }
 
+        public void setLongWrapperProperty(Long longWrapperProperty) {
+            this.longWrapperProperty = longWrapperProperty;
+        }
+
         public void setFloatProperty(float floatProperty) {
             this.floatProperty = floatProperty;
         }
 
+        public void setFloatWrapperProperty(Float floatWrapperProperty) {
+            this.floatWrapperProperty = floatWrapperProperty;
+        }
+
         public void setDoubleProperty(double doubleProperty) {
             this.doubleProperty = doubleProperty;
+        }
+
+        public void setDoubleWrapperProperty(Double doubleWrapperProperty) {
+            this.doubleWrapperProperty = doubleWrapperProperty;
         }
 
         public void setStringProperty(String stringProperty) {
@@ -273,24 +329,52 @@ public class OutlineImplTest {
         TestBeanClassWithVariousProperties instance = new TestBeanClassWithVariousProperties();
         outline.wrap(instance)
                 .set(m -> m.isBooleanProperty(), new StringValue("true"))
+                .set(m -> m.getBooleanWrapperProperty(), null)
                 .set(m -> m.getByteProperty(), new StringValue("10"))
                 .set(m -> m.getCharProperty(), new StringValue("c"))
                 .set(m -> m.getDoubleProperty(), new StringValue("1.0"))
+                .set(m -> m.getDoubleWrapperProperty(), null)
                 .set(m -> m.getFloatProperty(), new StringValue("2.0"))
+                .set(m -> m.getFloatWrapperProperty(), null)
                 .set(m -> m.getIntProperty(), new StringValue("1"))
+                .set(m -> m.getIntWrapperProperty(), null)
                 .set(m -> m.getLongProperty(), new StringValue("2"))
+                .set(m -> m.getLongWrapperProperty(), null)
                 .set(m -> m.getShortProperty(), new StringValue("3"))
+                .set(m -> m.getShortWrapperProperty(), null)
                 .set(m -> m.getStringProperty(), new StringValue("string"));
 
         assertEquals(true, instance.isBooleanProperty());
+        assertNull(instance.getBooleanWrapperProperty());
         assertEquals(10, instance.getByteProperty());
         assertEquals('c', instance.getCharProperty());
         assertEquals(1.0d, instance.getDoubleProperty(), 0.1);
+        assertNull(instance.getDoubleWrapperProperty());
         assertEquals(2.0f, instance.getFloatProperty(), 0.1);
+        assertNull(instance.getFloatWrapperProperty());
         assertEquals(1, instance.getIntProperty());
+        assertNull(instance.getIntWrapperProperty());
         assertEquals(2, instance.getLongProperty());
+        assertNull(instance.getLongWrapperProperty());
         assertEquals(3, instance.getShortProperty());
+        assertNull(instance.getShortWrapperProperty());
         assertEquals("string", instance.getStringProperty());
+
+        JsonObject json = new JsonObject("{\"nullBoolean\": null, \"nullNumeric\": null}");
+        outline.wrap(instance)
+                .set(m -> m.getBooleanWrapperProperty(), json.get("nullBoolean"))
+                .set(m -> m.getDoubleWrapperProperty(), json.get("nullNumeric"))
+                .set(m -> m.getFloatWrapperProperty(), json.get("nullNumeric"))
+                .set(m -> m.getIntWrapperProperty(), json.get("nullNumeric"))
+                .set(m -> m.getLongWrapperProperty(), json.get("nullNumeric"))
+                .set(m -> m.getShortWrapperProperty(), json.get("nullNumeric"));
+
+        assertNull(instance.getBooleanWrapperProperty());
+        assertNull(instance.getDoubleWrapperProperty());
+        assertNull(instance.getFloatWrapperProperty());
+        assertNull(instance.getIntWrapperProperty());
+        assertNull(instance.getLongWrapperProperty());
+        assertNull(instance.getShortWrapperProperty());
     }
 
     @Test
