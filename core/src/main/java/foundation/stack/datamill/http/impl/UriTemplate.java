@@ -59,6 +59,18 @@ public class UriTemplate {
         }
     }
 
+    private static boolean queryStartsAt(String uri, int position) {
+        while (position < uri.length() && uri.charAt(position) == '/') {
+            position++;
+        }
+
+        if (position < uri.length() && uri.charAt(position) == '?') {
+            return true;
+        }
+
+        return false;
+    }
+
     private void addMatchedVariableRegion(Matcher matcher) {
         String variableName = matcher.group(1);
         String regex = matcher.group(3);
@@ -77,12 +89,16 @@ public class UriTemplate {
 
         int uriLength = uri.length();
         int position = 0;
-        for (UriTemplateRegion region : regions) {
+        int numberOfRegions = regions.size();
+
+        for (int i = 0; i < numberOfRegions; i++) {
+            UriTemplateRegion region = regions.get(i);
+
             if (position > uriLength) {
                 return null;
             }
 
-            int regionEnd = region.match(uri, position);
+            int regionEnd = region.match(uri, position, i == numberOfRegions - 1);
             if (regionEnd < 0) {
                 return null;
             }
@@ -98,7 +114,7 @@ public class UriTemplate {
             position = regionEnd;
         }
 
-        if (position != uri.length()) {
+        if (position != uri.length() && !queryStartsAt(uri, position)) {
             return null;
         }
 

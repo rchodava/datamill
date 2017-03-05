@@ -21,6 +21,10 @@ public class UriTemplateTest {
                 equalTo(ImmutableMap.of("id", "12", "userId", "456")));
         assertThat(new UriTemplate("/{id}/users/{userId}/").match("12/users/456"),
                 equalTo(ImmutableMap.of("id", "12", "userId", "456")));
+        assertThat(new UriTemplate("/{id}/users/{userId}/").match("12/users/456?param=value"),
+                equalTo(ImmutableMap.of("id", "12", "userId", "456")));
+        assertThat(new UriTemplate("/{id}/users/{userId}/").match("12/users/456?param=value?another=test"),
+                equalTo(ImmutableMap.of("id", "12", "userId", "456")));
 
         assertThat(new UriTemplate("/{id}/property/").match("/12/property"),
                 equalTo(ImmutableMap.of("id", "12")));
@@ -32,11 +36,17 @@ public class UriTemplateTest {
         assertThat(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/"),
                 equalTo(ImmutableMap.of("userId", "user_12", "postId", "Post ID 456")));
         assertNull(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/furtherUri/content"));
+        assertThat(new UriTemplate("/users/{userId}/posts/{postId}").match("/users/user_12/posts/Post ID 456/?param=1&param2=test"),
+                equalTo(ImmutableMap.of("userId", "user_12", "postId", "Post ID 456")));
 
         assertThat(new UriTemplate("{id:\\w+}/users/{userId:\\w+}/").match("/testIdContent/users/testUserIdContent"),
                 equalTo(ImmutableMap.of("id", "testIdContent", "userId", "testUserIdContent")));
+        assertThat(new UriTemplate("{id:\\w+}/users/{userId:\\w+}/").match("/testIdContent/users/testUserIdContent?param=test"),
+                equalTo(ImmutableMap.of("id", "testIdContent", "userId", "testUserIdContent")));
         assertThat(new UriTemplate("{id:\\w+}/users/{userId:\\w+}").match("/testIdContent/users/testUserIdContent/"),
                 equalTo(ImmutableMap.of("id", "testIdContent", "userId", "testUserIdContent")));
+        assertThat(new UriTemplate("{id:\\w+}/users/{userName:.+}").match("/testIdContent/users/nameWithAllChars?param=test"),
+                equalTo(ImmutableMap.of("id", "testIdContent", "userName", "nameWithAllChars?param=test")));
         assertNull(new UriTemplate("{id:\\w+}/users/{userId:\\w+}/").match("/testIdContent.32/users/testUserIdContent"));
     }
 
