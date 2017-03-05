@@ -7,6 +7,15 @@ import java.util.regex.Pattern;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class UriTemplateRegion {
+    private static String stripQueryParams(String uri) {
+        int querySeparator = uri.indexOf('?');
+        if (querySeparator > -1) {
+            return uri.substring(0, querySeparator);
+        }
+
+        return uri;
+    }
+
     private final String variable;
     private final String content;
     private final Pattern pattern;
@@ -40,12 +49,12 @@ public class UriTemplateRegion {
         return variable == null;
     }
 
-    public int match(String uri, int start) {
+    public int match(String uri, int start, boolean finalRegion) {
         if (isFixedContent()) {
-            return matchFixedContent(uri, start);
+            return matchFixedContent(finalRegion ? stripQueryParams(uri) : uri, start);
         } else {
             if (isDefaultPattern()) {
-                return matchDefaultPatternContent(uri, start);
+                return matchDefaultPatternContent(finalRegion ? stripQueryParams(uri) : uri, start);
             } else {
                 return matchCustomPatternContent(uri, start);
             }
