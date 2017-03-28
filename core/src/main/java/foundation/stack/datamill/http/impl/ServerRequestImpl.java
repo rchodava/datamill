@@ -1,7 +1,9 @@
 package foundation.stack.datamill.http.impl;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import foundation.stack.datamill.http.*;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import foundation.stack.datamill.values.Value;
@@ -15,11 +17,27 @@ import java.util.function.Function;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequest {
+    private static final Multimap<String, String> EMPTY_QUERY_PARAMETERS =
+            Multimaps.unmodifiableMultimap(ArrayListMultimap.create());
+
     private Multimap<String, String> queryParameters;
     private QueryStringDecoder queryStringDecoder;
     private Multimap<String, String> trailingHeaders;
 
-    ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body) {
+    public ServerRequestImpl(
+            String method,
+            Multimap<String, String> headers,
+            String uri,
+            Multimap<String, String> queryParameters,
+            Charset charset,
+            Body body) {
+        super(method, headers, uri, body);
+
+        this.queryStringDecoder = null;
+        this.queryParameters = queryParameters;
+    }
+
+    public ServerRequestImpl(String method, Multimap<String, String> headers, String uri, Charset charset, Body body) {
         super(method, headers, uri, body);
 
         this.queryStringDecoder = new QueryStringDecoder(uri, charset);
@@ -62,8 +80,12 @@ public class ServerRequestImpl extends AbstractRequestImpl implements ServerRequ
 
     @Override
     public Multimap<String, String> queryParameters() {
-        if (queryParameters == null && queryStringDecoder != null) {
-            queryParameters = extractQueryParameters();
+        if (queryParameters == null) {
+            if (queryStringDecoder != null) {
+                queryParameters = extractQueryParameters();
+            } else {
+                queryParameters = EMPTY_QUERY_PARAMETERS;
+            }
         }
 
         return queryParameters;

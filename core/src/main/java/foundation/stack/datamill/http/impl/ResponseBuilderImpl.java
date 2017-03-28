@@ -77,6 +77,21 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
+    public Response status(Status status) {
+        return new ResponseImpl(status, headers, body);
+    }
+
+    @Override
+    public Response status(Status status, String content) {
+        return new ResponseImpl(status, headers, new ValueBody(new StringValue(content)));
+    }
+
+    @Override
+    public Response status(Status status, byte[] content) {
+        return new ResponseImpl(status, headers, new BytesBody(content));
+    }
+
+    @Override
     public ResponseBuilder streamingBodyAsBufferChunks(Func1<Observer<ByteBuffer>, Observable<ByteBuffer>> bodyStreamer) {
         Observable<ByteBuffer> chunkStream = Observable.fromEmitter(emitter -> {
             Subscription subscription = bodyStreamer.call(new PassthroughObserver<>(emitter))

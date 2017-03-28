@@ -31,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
 import rx.schedulers.Schedulers;
-import rx.util.async.Async;
 
 import java.io.IOException;
 import java.io.PipedInputStream;
@@ -88,15 +87,14 @@ public class Client {
 
         final URI targetURI = parsedURI;
 
-        return Async.fromCallable(() -> {
+        return Observable.fromCallable(() -> {
             CloseableHttpClient httpClient = HttpClients.createDefault();
             HttpUriRequest request = buildHttpRequest(method, targetURI);
             setRequestOptions(request, options);
             setRequestHeaders(request, headers);
             printRequestIfDebugging(method, targetURI, headers);
 
-            CloseableHttpResponse httpResponse = null;
-
+            CloseableHttpResponse httpResponse;
             if (body != null) {
                 httpResponse = doWithEntity(body, httpClient, request);
             } else {
@@ -109,7 +107,7 @@ public class Client {
             int responseCode = finalResponse.getStatusLine().getStatusCode();
             return new ResponseImpl(Status.valueOf(responseCode), combinedHeaders,
                     buildResponseEntity(finalResponse, httpClient));
-        }, Schedulers.io());
+        });
     }
 
     private Body buildResponseEntity(CloseableHttpResponse finalResponse, CloseableHttpClient httpClient) throws IOException {

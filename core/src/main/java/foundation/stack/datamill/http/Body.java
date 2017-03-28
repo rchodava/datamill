@@ -29,4 +29,12 @@ public interface Body {
 
     /** Get an {@link Observable} that emits the whole body as a single string. */
     Observable<String> asString();
+
+    /**
+     * Deserialize (using Jackson) the body as an object.
+     * @param clazz Class to deserialize as.
+     * @param <T> Type of object to deserialize.
+     * @return An observable that emits the body as an object of the desired type.
+     */
+    <T> Observable<T> fromJson(Class<T> clazz);
 }

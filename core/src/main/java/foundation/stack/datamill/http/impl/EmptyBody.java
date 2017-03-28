@@ -39,4 +39,9 @@ public class EmptyBody implements Body {
     public Observable<String> asString() {
         return Observable.empty();
     }
+
+    @Override
+    public <T> Observable<T> fromJson(Class<T> clazz) {
+        return Observable.empty();
+    }
 }
