@@ -87,7 +87,7 @@ public abstract class ApiHandler {
             while (keys.hasNext()) {
                 String key = keys.next();
                 if (key != null) {
-                    map.put(key, object.optString(key));
+                    map.put(key, object.optString(key, null));
                 }
             }
 
@@ -108,6 +108,24 @@ public abstract class ApiHandler {
         }
 
         return null;
+    }
+
+    private static JSONObject transformErrorResponse(
+            Throwable originalError,
+            Observable<Response> handledResponse) {
+        JSONObject[] responseJson = new JSONObject[]{null};
+
+        if (handledResponse != null) {
+            logger.debug("Error occurred: {} - invoking application error handler", originalError.getMessage());
+            handledResponse.subscribe(
+                    response -> responseJson[0] = transformResponse(response),
+                    ___ -> responseJson[0] = internalServerError());
+        } else {
+            logger.debug("No application error handler to handle error", originalError);
+            responseJson[0] = internalServerError();
+        }
+
+        return responseJson[0];
     }
 
     private static JSONObject transformResponse(Response response) {
@@ -135,21 +153,6 @@ public abstract class ApiHandler {
         return notFound();
     }
 
-    private static void transformErrorResponse(
-            Throwable originalError,
-            Observable<Response> handledResponse,
-            JSONObject[] responseJson) {
-        if (handledResponse != null) {
-            logger.debug("Error occurred: {} - invoking application error handler", originalError.getMessage());
-            handledResponse.subscribe(
-                    response -> responseJson[0] = transformResponse(response),
-                    ___ -> responseJson[0] = internalServerError());
-        } else {
-            logger.debug("No application error handler to handle error", originalError);
-            responseJson[0] = internalServerError();
-        }
-    }
-
     private static void write(OutputStream outputStream, JSONObject json) {
         logger.debug("Returning {} response", json.get(STATUS_CODE));
         if (logger.isTraceEnabled()) {
@@ -165,49 +168,36 @@ public abstract class ApiHandler {
 
     protected abstract Route constructRoute(RouteBuilder builder);
 
+    private JSONObject handle(JSONObject requestJson) {
+        String path = requestJson.optString(PATH_PROPERTY, null);
+        Multimap<String, String> headers = toStringMap(requestJson.optJSONObject(HEADERS_PROPERTY));
+        Multimap<String, String> queryParameters = toStringMap(requestJson.optJSONObject(QUERY_PARAMETERS_PROPERTY));
+        String method = requestJson.optString(HTTP_METHOD_PROPERTY, null);
+        String body = requestJson.optString(BODY_PROPERTY, null);
+
+        if (method != null) {
+            logger.debug("{} {} request received", method, path);
+
+            Route route = constructRoute(new RouteBuilderImpl());
+            ServerRequest request = buildRequest(method, path, headers, queryParameters, body);
+
+            return handleWithRoute(route, request);
+        } else {
+            logger.debug("Received request with no HTTP method!");
+            return badRequest();
+        }
+    }
+
     public final void handle(InputStream requestStream, OutputStream responseStream, Context __) {
         setLogLevel();
 
         ServerRequest request = null;
-        JSONObject[] responseJson = new JSONObject[]{null};
         try {
-            JSONObject json = new JSONObject(new JSONTokener(requestStream));
-
-            String path = json.optString(PATH_PROPERTY);
-            Multimap<String, String> headers = toStringMap(json.optJSONObject(HEADERS_PROPERTY));
-            Multimap<String, String> queryParameters = toStringMap(json.optJSONObject(QUERY_PARAMETERS_PROPERTY));
-            String method = json.optString(HTTP_METHOD_PROPERTY);
-            String body = json.optString(BODY_PROPERTY);
-
-            if (method != null) {
-                logger.debug("{} {} request received", method, path);
-
-                Route route = constructRoute(new RouteBuilderImpl());
-                request = buildRequest(method, path, headers, queryParameters, body);
-
-                Observable<Response> responseObservable = route.apply(request);
-                if (responseObservable != null) {
-                    ServerRequest pinnedRequest = request;
-                    responseObservable.subscribe(
-                            response -> responseJson[0] = transformResponse(response),
-                            error -> handleError(pinnedRequest, error, responseJson));
-
-                    if (responseJson[0] == null) {
-                        responseJson[0] = notFound();
-                    }
-
-                    write(responseStream, responseJson[0]);
-                } else {
-                    write(responseStream, notFound());
-                }
-            } else {
-                logger.debug("Received request with no HTTP method!");
-                write(responseStream, badRequest());
-            }
+            JSONObject requestJson = new JSONObject(new JSONTokener(requestStream));
+            write(responseStream, handle(requestJson));
         } catch (Exception e) {
             logger.debug("Error occurred: {} - invoking error handler", e.getMessage());
-            handleError(request, e, responseJson);
-            write(responseStream, responseJson[0]);
+            write(responseStream, handleErrorAndTransformResponse(request, e));
         }
     }
 
@@ -219,7 +209,7 @@ public abstract class ApiHandler {
         return null;
     }
 
-    private void handleError(ServerRequest request, Throwable error, JSONObject[] responseJson) {
+    private JSONObject handleErrorAndTransformResponse(ServerRequest request, Throwable error) {
         Observable<Response> errorObservable;
 
         if (request != null) {
@@ -228,6 +218,26 @@ public abstract class ApiHandler {
             errorObservable = handleError(error);
         }
 
-        transformErrorResponse(error, errorObservable, responseJson);
+        return transformErrorResponse(error, errorObservable);
+    }
+
+    private JSONObject handleWithRoute(Route route, ServerRequest request) {
+        JSONObject[] responseJson = new JSONObject[]{null};
+
+        Observable<Response> responseObservable = route.apply(request);
+        if (responseObservable != null) {
+            ServerRequest pinnedRequest = request;
+            responseObservable.subscribe(
+                    response -> responseJson[0] = transformResponse(response),
+                    error -> responseJson[0] = handleErrorAndTransformResponse(pinnedRequest, error));
+
+            if (responseJson[0] == null) {
+                responseJson[0] = notFound();
+            }
+        } else {
+            responseJson[0] = notFound();
+        }
+
+        return responseJson[0];
     }
 }

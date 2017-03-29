@@ -1,8 +1,8 @@
 package foundation.stack.datamill.http.impl;
 
-import com.github.davidmoten.rx.Obs;
 import com.google.common.collect.ImmutableMultimap;
 import foundation.stack.datamill.http.Method;
+import foundation.stack.datamill.http.ServerRequest;
 import io.netty.handler.codec.http.DefaultFullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
@@ -12,6 +12,7 @@ import rx.Observable;
 import java.nio.charset.Charset;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
@@ -29,6 +30,14 @@ public class ServerRequestImplTest {
         assertEquals(null, request.firstHeader("header3"));
         assertEquals("value1", request.firstQueryParameter("param1").asString());
         assertEquals("value2", request.firstQueryParameter("param2").asString());
+    }
+
+    @Test
+    public void headerAndQueryMapsAreNonNull() {
+        ServerRequest request = new ServerRequestImpl(
+                "GET", null, "/test", null, Charset.defaultCharset(), null);
+        assertNotNull(request.headers());
+        assertNotNull(request.queryParameters());
     }
 
     @Test

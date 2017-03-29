@@ -6,6 +6,7 @@ import org.apache.http.message.BasicNameValuePair;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +24,7 @@ public class UrlEncodedFormBody extends BytesBody {
             return pairs;
         }
 
-        return null;
+        return Collections.emptyList();
     }
 
     public UrlEncodedFormBody(Map<String, String> parameters, Charset charset) {
