@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface ElseBuilder {
+    ElseBuilder elseAny(Route route);
     ElseBuilder elseIfMethodMatches(foundation.stack.datamill.http.Method method, Route route);
     ElseBuilder elseIfUriMatches(String pattern, Route route);
     ElseBuilder elseIfMethodAndUriMatch(foundation.stack.datamill.http.Method method, String pattern, Route route);

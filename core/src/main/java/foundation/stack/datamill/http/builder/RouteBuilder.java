@@ -13,6 +13,7 @@ import java.util.function.BiFunction;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface RouteBuilder {
+    ElseBuilder any(Route route);
     ElseBuilder ifUriMatches(String pattern, Route route);
     ElseBuilder ifMethodMatches(Method method, Route route);
     ElseBuilder ifMethodAndUriMatch(Method method, String pattern, Route route);
