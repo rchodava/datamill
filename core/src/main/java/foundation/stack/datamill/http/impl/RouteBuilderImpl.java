@@ -8,6 +8,7 @@ import foundation.stack.datamill.http.builder.ElseBuilder;
 import foundation.stack.datamill.http.builder.RouteBuilder;
 import foundation.stack.datamill.reflection.Method;
 import foundation.stack.datamill.reflection.Bean;
+import foundation.stack.datamill.reflection.OutlineBuilder;
 import rx.Observable;
 
 import java.util.ArrayList;
@@ -19,6 +20,11 @@ import java.util.function.BiFunction;
  */
 public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     private final List<Matcher> matchers = new ArrayList<>();
+
+    @Override
+    public <T> ElseBuilder elseIfMatchesBeanMethod(T bean) {
+        return elseIfMatchesBeanMethod(OutlineBuilder.DEFAULT.wrap(bean));
+    }
 
     @Override
     public ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean) {
@@ -43,6 +49,11 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     @Override
     public ElseBuilder elseIfUriMatches(String pattern, Route route) {
         return ifUriMatches(pattern, route);
+    }
+
+    @Override
+    public <T> ElseBuilder ifMatchesBeanMethod(T bean) {
+        return ifMatchesBeanMethod(OutlineBuilder.DEFAULT.wrap(bean));
     }
 
     @Override

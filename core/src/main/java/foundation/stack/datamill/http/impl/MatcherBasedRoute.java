@@ -3,7 +3,6 @@ package foundation.stack.datamill.http.impl;
 import com.google.common.base.Joiner;
 import foundation.stack.datamill.http.*;
 import rx.Observable;
-import rx.functions.Func1;
 import rx.functions.Func2;
 
 import java.util.ArrayList;

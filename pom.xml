@@ -59,6 +59,7 @@
         <module>parent</module>
         <module>core</module>
         <module>cucumber</module>
+        <module>lambda-api</module>
     </modules>
 
     <profiles>

@@ -1,6 +1,7 @@
 package foundation.stack.datamill.cucumber;
 
 import foundation.stack.datamill.http.Client;
+import foundation.stack.datamill.http.impl.ClientImpl;
 import foundation.stack.datamill.http.Method;
 import foundation.stack.datamill.http.Response;
 import foundation.stack.datamill.values.StringValue;
@@ -16,7 +17,7 @@ import java.util.Map;
 public class HttpClient {
     private final static Logger logger = LoggerFactory.getLogger(HttpClient.class);
 
-    private final Client client = new Client();
+    private final Client client = new ClientImpl();
 
     public Observable<Response> request(Method method, String uri, Map<String, String> headers, String payload) {
         logger.debug("Making a {} request to {} with headers {} and payload {}", method, uri, headers, payload);

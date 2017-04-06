@@ -2,6 +2,7 @@ package foundation.stack.datamill.http;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
+import foundation.stack.datamill.http.impl.ClientImpl;
 import foundation.stack.datamill.http.impl.ValueBody;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -27,8 +28,8 @@ import static org.mockito.Mockito.*;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public class ClientTest {
-    private void verifyConnectionSetup(TestClient client, Method method, String uri, Map<String, String> headers, String entity)
+public class ClientImplTest {
+    private void verifyConnectionSetup(TestClientImpl client, Method method, String uri, Map<String, String> headers, String entity)
             throws Exception {
         HttpUriRequest request = client.getRequest();
 
@@ -47,13 +48,13 @@ public class ClientTest {
         }
     }
 
-    private void verifyConnectionSetup(TestClient client, Method method, String uri, Map<String, String> headers)
+    private void verifyConnectionSetup(TestClientImpl client, Method method, String uri, Map<String, String> headers)
             throws Exception {
         verifyConnectionSetup(client, method, uri, headers, null);
     }
 
-    private TestClient createClientAndRequest(Function<TestClient, Observable<Response>> requestor) {
-        TestClient client = new TestClient();
+    private TestClientImpl createClientAndRequest(Function<TestClientImpl, Observable<Response>> requestor) {
+        TestClientImpl client = new TestClientImpl();
         requestor.apply(client).toBlocking().last();
         return client;
     }
@@ -206,11 +207,11 @@ public class ClientTest {
                         "Accept", "application/json"), "test");
     }
 
-    private class TestClient extends Client {
+    private class TestClientImpl extends ClientImpl {
         private PipedOutputStream spiedPipedOutputStream;
         private HttpUriRequest request;
 
-        public TestClient() {
+        public TestClientImpl() {
         }
 
 

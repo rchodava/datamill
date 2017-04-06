@@ -17,6 +17,7 @@ public interface ElseBuilder {
     ElseBuilder elseIfMethodMatches(foundation.stack.datamill.http.Method method, Route route);
     ElseBuilder elseIfUriMatches(String pattern, Route route);
     ElseBuilder elseIfMethodAndUriMatch(foundation.stack.datamill.http.Method method, String pattern, Route route);
+    <T> ElseBuilder elseIfMatchesBeanMethod(T bean);
     ElseBuilder elseIfMatchesBeanMethod(Bean<?> bean);
     ElseBuilder elseIfMatchesBeanMethod(
             Bean<?> bean,

@@ -45,6 +45,15 @@ public interface ResponseBuilder {
     /** Build a response with a 200 OK status, and the given byte array body. */
     Response ok(byte[] content);
 
+    /** Build a response with a specific status, and an empty body. */
+    Response status(Status status);
+
+    /** Build a response with a specific status, and the given string body. */
+    Response status(Status status, String content);
+
+    /** Build a response with a specific status, and the given byte array body. */
+    Response status(Status status, byte[] content);
+
     /**
      * Add a body to the response being built which is made up of byte buffer data emissions. The lambda will receive a
      * {@link Observer} on which it can call {@link Observer#onNext(Object)} to emit data as byte buffers. These

@@ -8,9 +8,6 @@ import org.json.JSONArray;
 import org.junit.Test;
 import rx.Observable;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -39,6 +36,9 @@ public class ResponseBuilderTest {
         assertEquals("Content", builder.forbidden("Content").body().get().asString().toBlocking().last());
         assertEquals(Status.CONFLICT, builder.conflict("Content").status());
         assertEquals("Content", builder.conflict("Content").body().get().asString().toBlocking().last());
+        assertEquals(Status.TEMPORARY_REDIRECT, builder.status(Status.TEMPORARY_REDIRECT).status());
+        assertEquals(Status.TEMPORARY_REDIRECT, builder.status(Status.TEMPORARY_REDIRECT, "Content").status());
+        assertEquals("Content", builder.status(Status.TEMPORARY_REDIRECT, "Content").body().get().asString().toBlocking().last());
     }
 
     @Test

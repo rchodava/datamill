@@ -1,5 +1,6 @@
 package foundation.stack.datamill.http.impl;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import foundation.stack.datamill.http.Body;
 import foundation.stack.datamill.http.Method;
@@ -34,7 +35,7 @@ public abstract class AbstractRequestImpl implements Request {
 
     protected AbstractRequestImpl(String method, Multimap<String, String> headers, String uri, Body body) {
         this.method = method;
-        this.headers = headers;
+        this.headers = headers != null ? headers : ArrayListMultimap.create();
         this.uri = uri;
         this.body = body;
     }

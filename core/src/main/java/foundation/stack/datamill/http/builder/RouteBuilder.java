@@ -16,6 +16,7 @@ public interface RouteBuilder {
     ElseBuilder ifUriMatches(String pattern, Route route);
     ElseBuilder ifMethodMatches(Method method, Route route);
     ElseBuilder ifMethodAndUriMatch(Method method, String pattern, Route route);
+    <T> ElseBuilder ifMatchesBeanMethod(T bean);
     ElseBuilder ifMatchesBeanMethod(Bean<?> bean);
     ElseBuilder ifMatchesBeanMethod(
             Bean<?> bean,

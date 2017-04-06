@@ -33,7 +33,8 @@ public class MethodAndUriMatcher extends RouteMatcher {
     public boolean matches(ServerRequest request) {
         boolean matches = matchesMethod(request) && matchesUri(request);
         if (matches) {
-            logger.debug("Request matched {} {}", method, uriTemplate == null ? "*" : uriTemplate);
+            logger.debug("Request matched {} {}",
+                    method != null ? method : "<* method>", uriTemplate == null ? "*" : uriTemplate);
         }
 
         return matches;
