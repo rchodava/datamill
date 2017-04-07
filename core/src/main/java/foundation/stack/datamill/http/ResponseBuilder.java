@@ -36,6 +36,9 @@ public interface ResponseBuilder {
     /** Build a response with a 404 Not Found status, and an empty body. */
     Response notFound();
 
+    /** Build a response with a 404 Not Found status, and the given string body. */
+    Response notFound(String content);
+
     /** Build a response with a 200 OK status, and an empty body. */
     Response ok();
 

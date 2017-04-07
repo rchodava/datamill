@@ -106,4 +106,16 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
         matchers.add(new TautologyMatcher(response));
         return new MatcherBasedRoute(matchers);
     }
+
+    @Override
+    public ElseBuilder any(Route route) {
+        matchers.add(new TautologyMatcher(route));
+        return this;
+    }
+
+    @Override
+    public ElseBuilder elseAny(Route route) {
+        matchers.add(new TautologyMatcher(route));
+        return this;
+    }
 }
