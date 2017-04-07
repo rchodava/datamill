@@ -21,6 +21,7 @@ import static org.mockito.Mockito.when;
 public class RouteBuilderTest {
 
     private RouteBuilder routeBuilder;
+    private ElseBuilder elseBuilder;
 
     private Route anyRoute = mock(Route.class);
     private Route orElseRoute = mock(Route.class);
@@ -28,6 +29,7 @@ public class RouteBuilderTest {
     @Before
     public void setup() {
         routeBuilder = new RouteBuilderImpl();
+        elseBuilder = new RouteBuilderImpl();
     }
 
     @Test
@@ -52,8 +54,6 @@ public class RouteBuilderTest {
 
     @Test
     public void elseOfAnyRouteHonoredIfNoObservableReturned() {
-
-        mock(Response.class);
         when(anyRoute.apply(any(ServerRequest.class))).thenReturn(null);
 
         Response elseRouteMockResponse = mock(Response.class);
@@ -70,4 +70,42 @@ public class RouteBuilderTest {
         assertThat(elseRouteMockResponse, is(actualResponse));
     }
 
+
+    @Test
+    public void elseAnyRouteHonoredIfObservableReturned() {
+        Response anyRouteMockResponse = mock(Response.class);
+        when(anyRoute.apply(any(ServerRequest.class))).thenReturn(Observable.just(anyRouteMockResponse));
+
+        Response elseRouteMockResponse = mock(Response.class);
+        when(orElseRoute.apply(any(ServerRequest.class))).thenReturn(Observable.just(elseRouteMockResponse));
+
+        Route route = elseBuilder.elseAny(anyRoute).orElse(orElseRoute);
+
+        ServerRequest serverRequest = mock(ServerRequest.class);
+        when(serverRequest.method()).thenReturn(Method.GET);
+
+        Observable<Response> responseObservable = route.apply(serverRequest);
+        Response actualResponse = responseObservable.toBlocking().lastOrDefault(null);
+
+        assertThat(anyRouteMockResponse, is(actualResponse));
+
+    }
+
+    @Test
+    public void elseOfElseAnyRouteHonoredIfNoObservableReturned() {
+        when(anyRoute.apply(any(ServerRequest.class))).thenReturn(null);
+
+        Response elseRouteMockResponse = mock(Response.class);
+        when(orElseRoute.apply(any(ServerRequest.class))).thenReturn(Observable.just(elseRouteMockResponse));
+
+        Route route = elseBuilder.elseAny(anyRoute).orElse(orElseRoute);
+
+        ServerRequest serverRequest = mock(ServerRequest.class);
+        when(serverRequest.method()).thenReturn(Method.GET);
+
+        Observable<Response> responseObservable = route.apply(serverRequest);
+        Response actualResponse = responseObservable.toBlocking().lastOrDefault(null);
+
+        assertThat(elseRouteMockResponse, is(actualResponse));
+    }
 }
