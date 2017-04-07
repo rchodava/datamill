@@ -62,6 +62,11 @@ public class ResponseBuilderImpl implements ResponseBuilder {
     }
 
     @Override
+    public Response notFound(String content) {
+        return new ResponseImpl(Status.NOT_FOUND, headers, new ValueBody(new StringValue(content)));
+    }
+
+    @Override
     public Response ok() {
         return new ResponseImpl(Status.OK, headers, body);
     }
