@@ -31,6 +31,7 @@ public class ResponseBuilderTest {
         assertEquals(Status.UNAUTHORIZED, builder.unauthorized("Content").status());
         assertEquals("Content", builder.unauthorized("Content").body().get().asString().toBlocking().last());
         assertEquals(Status.NO_CONTENT, builder.noContent().status());
+        assertEquals("Content", builder.notFound("Content").body().get().asString().toBlocking().last());
         assertEquals(Status.FORBIDDEN, builder.forbidden().status());
         assertEquals(Status.FORBIDDEN, builder.forbidden("Content").status());
         assertEquals("Content", builder.forbidden("Content").body().get().asString().toBlocking().last());
