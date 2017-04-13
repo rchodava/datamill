@@ -31,6 +31,14 @@ public interface PropertySourceChain extends PropertySource {
     PropertySourceChain alias(String alias, String original);
 
     /**
+     * Add a property source to the chain which retrieves properties from a constants interface or class. The constants
+     * are expected to
+     *
+     * @param constantsClass Constants class to add as a source.
+     */
+    <T> PropertySourceChain orConstantsClass(Class<T> constantsClass);
+
+    /**
      * Add a property source to the chain which retrieves properties specified in the file at the specified path.
      *
      * @param path Path to properties file to add as a source.

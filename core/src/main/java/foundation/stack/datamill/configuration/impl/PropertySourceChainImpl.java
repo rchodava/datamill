@@ -44,6 +44,11 @@ public class PropertySourceChainImpl extends AbstractSource implements PropertyS
     }
 
     @Override
+    public <T> PropertySourceChain orConstantsClass(Class<T> constantsClass) {
+        return orSource(new ConstantsClassSource<>(constantsClass));
+    }
+
+    @Override
     public PropertySource orDefaults(Action1<Defaults> defaultsInitializer) {
         DefaultsSource defaults = new DefaultsSource();
         defaultsInitializer.call(defaults);

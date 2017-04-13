@@ -426,7 +426,27 @@ public class Wiring {
                         return null;
                     }
                 } else {
-                    logger.error("Could not build class {} as the following type was not found {}", clazz, parameterType);
+                    StringBuilder parameterNames = new StringBuilder();
+
+                    Named[] annotations = parameters[i].getAnnotationsByType(Named.class);
+                    if (annotations != null && annotations.length > 0) {
+                        for (Named annotation : annotations) {
+                            if (parameterNames.length() > 0) {
+                                parameterNames.append(", ");
+                            }
+
+                            parameterNames.append(annotation.value());
+                        }
+                    }
+
+                    if (parameterNames.length() > 0) {
+                        logger.error("Could not build class {} as the following named parameter was not found: {}",
+                                clazz, parameterNames.toString());
+                    } else {
+                        logger.error("Could not build class {} as the following type was not found {}",
+                                clazz, parameterType);
+                    }
+
                     return null;
                 }
             }

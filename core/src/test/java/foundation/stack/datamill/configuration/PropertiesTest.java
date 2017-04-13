@@ -43,6 +43,26 @@ public class PropertiesTest {
     }
 
     @Test
+    public void constantClasses() {
+        assertEquals("value", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.property).get());
+        assertFalse(Properties.fromConstantsClass(ConstantsClass.class).get("property2").isPresent());
+        assertFalse(Properties.fromConstantsClass(ConstantsClass.class).get("config/instance").isPresent());
+
+        assertEquals("publicValue", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.publicProperty).get());
+        assertEquals("privateValue", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.privateProperty).get());
+        assertEquals("nonFinalValue", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.nonFinalProperty).get());
+        assertEquals("1", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.integerProperty).get());
+        assertEquals("true", Properties.fromConstantsClass(ConstantsClass.class).get(ConstantsClass.booleanProperty).get());
+
+        assertEquals("value", Properties.fromConstantsClass(ConstantsClass.class).getRequired("config/property").asString());
+
+        assertEquals("ifacePublic", Properties.fromConstantsClass(ConstantsClass.class).orConstantsClass(ConstantsInterface.class).get(ConstantsInterface.IFACE_PUBLIC_TEST).get());
+        assertEquals("2", Properties.fromConstantsClass(ConstantsClass.class).orConstantsClass(ConstantsInterface.class).get(ConstantsInterface.IFACE_INTEGER).get());
+        assertEquals("true", Properties.fromConstantsClass(ConstantsClass.class).orConstantsClass(ConstantsInterface.class).get(ConstantsInterface.IFACE_BOOLEAN).get());
+        assertEquals("true", Properties.fromConstantsClass(ConstantsClass.class).orConstantsClass(ConstantsInterface.class).get(ConstantsClass.booleanProperty).get());
+    }
+
+    @Test
     public void files() {
         assertEquals("value", Properties.fromFile("test.properties").get("test").get());
         assertFalse(Properties.fromFile("test.properties").get("test2").isPresent());
@@ -130,5 +150,21 @@ public class PropertiesTest {
             fail();
         } catch (IllegalArgumentException e) {
         }
+    }
+
+    private static class ConstantsClass {
+        @StringValue("value") static final String property = "config/property";
+        @StringValue("publicValue") public static final String publicProperty = "config/public";
+        @StringValue("privateValue") private static final String privateProperty = "config/private";
+        @StringValue("nonFinalValue") static String nonFinalProperty = "config/nonFinal";
+        @IntegerValue(1) static String integerProperty = "config/integer";
+        @BooleanValue(true) static String booleanProperty = "config/boolean";
+        @StringValue("instanceValue") String instanceProperty = "config/instance";
+    }
+
+    private interface ConstantsInterface {
+        @StringValue("ifacePublic") String IFACE_PUBLIC_TEST = "iface/public";
+        @IntegerValue(2) String IFACE_INTEGER = "iface/integer";
+        @BooleanValue(true) String IFACE_BOOLEAN = "iface/boolean";
     }
 }

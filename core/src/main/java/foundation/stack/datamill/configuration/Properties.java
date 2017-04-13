@@ -12,6 +12,11 @@ import java.io.IOException;
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public class Properties {
+    /** @see PropertySourceChain#orConstantsClass(Class) */
+    public static <T> PropertySourceChain fromConstantsClass(Class<T> constantsClass) {
+        return fromSource(new ConstantsClassSource<>(constantsClass));
+    }
+
     /** @see PropertySourceChain#orFile(String) */
     public static PropertySourceChain fromFile(String path) {
         try {
