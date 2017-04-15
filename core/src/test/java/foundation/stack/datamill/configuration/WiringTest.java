@@ -313,7 +313,7 @@ public class WiringTest {
     @Test
     public void namedValuesFromPropertySource() {
         Wiring wiring = new Wiring()
-                .setNamedPropertySource(Properties.fromSystem().orDefaults(d -> d
+                .setNamedPropertySource(PropertySourceChain.ofSystem().orImmediate(d -> d
                         .put("boolean", "true")
                         .put("booleanWrapper", "true")
                         .put("byte", "1")

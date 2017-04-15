@@ -6,20 +6,11 @@ import rx.functions.Action1;
 import java.util.Optional;
 
 /**
- * A source of properties.
+ * A source of properties. Use {@link PropertySourceChain} to create {@link PropertySource}s.
  *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface PropertySource {
-    /**
-     * Alias a property so that the alias can be used in a {@link #get(String)} call in order to retrieve the original
-     * property's value.
-     *
-     * @param alias    New alias for the original property.
-     * @param original Original property to create an alias for.
-     */
-    PropertySource alias(String alias, String original);
-
     /**
      * Get the specified property from the source, if it exists.
      *

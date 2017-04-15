@@ -357,24 +357,6 @@ public class Wiring {
     }
 
     /**
-     * Check if the wiring already contains an instance of the provided class. If it exists, return it, otherwise, delegate
-     * to {@link #construct(Class)} in order to construct it.
-     *
-     * @param clazz Class we want to create an instance of.
-     * @param <T>   Type of instance.
-     * @return Instance that was constructed.
-     * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
-     * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
-     */
-    public <T> T constructIfMissing(Class<T> clazz) {
-        T target = get(clazz);
-        if (target != null) {
-            return target;
-        }
-        return construct(clazz);
-    }
-
-    /**
      * Construct an instance of the specified class using a public constructors that has parameters of the specified
      * types.
      *
@@ -387,24 +369,6 @@ public class Wiring {
         } catch (NoSuchMethodException | SecurityException e) {
             throw new IllegalStateException("Unable to find a constructor with specified parameters on " + clazz.getName());
         }
-    }
-
-    /**
-     * Check if the wiring already contains an instance of the provided class. If it exists, return it, otherwise, delegate
-     * to {@link #constructWith(Class, Class[])} in order to construct it.
-     *
-     * @param clazz          Class we want to create an instance of.
-     * @param parameterTypes Parameter types to be matched in constructor to be used.
-     * @return Instance that was constructed.
-     * @throws IllegalArgumentException If the class is an interface, abstract class or has no public constructors.
-     * @throws IllegalStateException    If all dependencies for constructing an instance cannot be satisfied.
-     */
-    public <T> T constructWithIfMissing(Class<T> clazz, Class<?>... parameterTypes) {
-        T target = get(clazz);
-        if (target != null) {
-            return target;
-        }
-        return constructWith(clazz, parameterTypes);
     }
 
     private <T> T constructWithConstructor(
