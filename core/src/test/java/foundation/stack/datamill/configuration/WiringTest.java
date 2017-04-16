@@ -3,6 +3,7 @@ package foundation.stack.datamill.configuration;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -77,5 +78,26 @@ public class WiringTest {
         original.singleton(ConcreteClass.class);
         assertEquals(instance, original.with(FactoryChains.forType(ConcreteClass.class, w -> instance2),
                 w -> w.singleton(ConcreteClass.class)));
+    }
+
+    @Test
+    public void scopes() {
+        Wiring wiring = new Wiring(FactoryChains.forAnyConcreteClass());
+        ConcreteClass concreteClass = wiring.newInstance(ConcreteClass.class);
+        assertTrue(concreteClass != wiring.newInstance(ConcreteClass.class));
+
+        wiring = new Wiring(FactoryChains.forAnyConcreteClass());
+        concreteClass = wiring.singleton(ConcreteClass.class);
+        assertEquals(concreteClass, wiring.singleton(ConcreteClass.class));
+
+        wiring = new Wiring(FactoryChains.forAnyConcreteClass());
+        concreteClass = wiring.singleton(ConcreteClass.class, "qualifier");
+        assertEquals(concreteClass, wiring.singleton(ConcreteClass.class, "qualifier"));
+        assertTrue(concreteClass != wiring.singleton(ConcreteClass.class, "qualifier2"));
+
+        wiring = new Wiring(FactoryChains.forAnyConcreteClass());
+        concreteClass = wiring.singleton(ConcreteClass.class, "qualifier1", "qualifier2");
+        assertEquals(concreteClass, wiring.singleton(ConcreteClass.class, "qualifier1", "qualifier2"));
+        assertTrue(concreteClass != wiring.singleton(ConcreteClass.class, "qualifier2", "qualifier3"));
     }
 }

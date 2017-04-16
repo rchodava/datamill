@@ -1,5 +1,6 @@
 package foundation.stack.datamill.configuration.impl;
 
+import foundation.stack.datamill.configuration.Qualifier;
 import foundation.stack.datamill.configuration.QualifyingFactory;
 import foundation.stack.datamill.configuration.Wiring;
 import foundation.stack.datamill.configuration.WiringException;
@@ -20,6 +21,20 @@ import java.util.List;
  */
 public class ConcreteClassFactory<T, R extends T> implements QualifyingFactory<T, R> {
     private static final ConcreteClassFactory<?, ?> INSTANCE = new ConcreteClassFactory<>();
+
+    private static void appendException(StringBuilder message, Throwable e) {
+        message.append(e.getClass().getName());
+
+        if (e.getCause() != null && e.getCause() != e) {
+            message.append(": ");
+            appendException(message, e.getCause());
+        }
+
+        if (e.getMessage() != null) {
+            message.append(": ");
+            message.append(e.getMessage());
+        }
+    }
 
     private static <T> Constructor<?>[] getPublicConstructors(Class<T> type) {
         Constructor<?>[] constructors = type.getConstructors();
@@ -64,17 +79,14 @@ public class ConcreteClassFactory<T, R extends T> implements QualifyingFactory<T
         StringBuilder message = new StringBuilder("Failed to instantiate using constructor [");
         message.append(constructor.getName());
         message.append("] - ");
-        message.append(e.getMessage());
+        appendException(message, e);
         throw new WiringException(message.toString());
     }
-
     private static void throwInvalidParameterValue(Parameter parameter, IllegalArgumentException e) {
         StringBuilder message = new StringBuilder("Value retrieved for parameter [");
         message.append(parameter.getName());
         message.append("] was invalid: ");
-        message.append(e.getClass().getName());
-        message.append(", ");
-        message.append(e.getMessage());
+        appendException(message, e);
 
         throw new WiringException(message.toString());
     }
@@ -116,6 +128,24 @@ public class ConcreteClassFactory<T, R extends T> implements QualifyingFactory<T
         return null;
     }
 
+    private Collection<String> retrieveQualifierIfPresent(Parameter parameter) {
+        Qualifier[] qualifiers = parameter.getAnnotationsByType(Qualifier.class);
+        if (qualifiers != null) {
+            ArrayList<String> qualifierNames = new ArrayList<>();
+            for (Qualifier qualifier : qualifiers) {
+                if (qualifier.value() != null) {
+                    qualifierNames.add(qualifier.value());
+                }
+            }
+
+            if (!qualifierNames.isEmpty()) {
+                return qualifierNames;
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
     private R constructWithConstructor(
             Wiring wiring,
             Constructor<?> constructor) {
@@ -125,7 +155,7 @@ public class ConcreteClassFactory<T, R extends T> implements QualifyingFactory<T
         for (int i = 0; i < parameters.length; i++) {
             Class<?> parameterType = parameters[i].getType();
             try {
-                values[i] = wiring.defaultScoped(parameterType);
+                values[i] = wiring.defaultScoped(parameterType, retrieveQualifierIfPresent(parameters[i]));
                 if (values[i] == null) {
                     try {
                         values[i] = NamedParameterValueRetriever.retrieveValueIfNamedParameter(wiring, parameters[i]);

@@ -95,6 +95,13 @@ public class ConcreteClassFactoryTest {
         } catch (WiringException e) {
             logger.debug("\n" + e.toString());
         }
+
+        try {
+            new Wiring().singleton(FailureThrowingConstructor.class);
+            fail("Should have failed to construct class with a throwing constructor!");
+        } catch (WiringException e) {
+            logger.debug("\n" + e.toString());
+        }
     }
 
     private static class ConcreteClass {
@@ -183,6 +190,12 @@ public class ConcreteClassFactoryTest {
     private static class FailureInvalidNamedParameters {
         public FailureInvalidNamedParameters(@Named("named") int __) {
 
+        }
+    }
+
+    private static class FailureThrowingConstructor {
+        public FailureThrowingConstructor() {
+            throw new IllegalArgumentException("Error!");
         }
     }
 }

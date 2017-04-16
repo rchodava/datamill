@@ -77,6 +77,8 @@ public class PropertySourcesTest {
 
     @Test
     public void files() throws IOException {
+        assertFalse(PropertySources.fromFile("nonexistent.properties").get("test2").isPresent());
+
         File externalProperties = File.createTempFile("test", ".properties");
         try {
             Files.write("test4=value4\n", externalProperties, Charsets.UTF_8);
@@ -107,6 +109,8 @@ public class PropertySourcesTest {
         assertEquals("value2", PropertySources.fromSystem().orImmediate(d -> d.put("test2", "value2")).getRequired("test2").asString());
 
         assertEquals("value2", PropertySources.fromImmediate(d -> d.put("test2", "value2")).getRequired("test2").asString());
+
+        assertEquals("value-value2", PropertySources.fromImmediate(d -> d.put("test", "{0}-{1}","value", "value2")).getRequired("test").asString());
     }
 
     @Test

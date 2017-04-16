@@ -31,13 +31,13 @@ import java.io.IOException;
  * transformers.
  * </p>
  * <p>
- * Note that each of the chaining methods returns a new chain with the additional property source added. This allows you
- * to have common chains which you can combine in different ways, because each of those combinations is a new chain. For
- * example:
+ * Note that property chains are immutable, and each of the chaining methods returns a new chain with the additional
+ * property source added. This allows you to have common chains which you can combine in different ways, because each
+ * of those combinations is a new chain. For example:
  * </p>
  * <pre>
- * chain1 = COMMON.orEnvironment(PropertyNameTransformers.LOWER_CAMEL_TO_UPPER_UNDERSCORE);
- * chain2 = COMMON.orFile("defaults.properties");
+ * chain1 = common.orEnvironment(PropertyNameTransformers.LOWER_CAMEL_TO_UPPER_UNDERSCORE);
+ * chain2 = common.orFile("defaults.properties");
  * </pre>
  * <p>
  * Each of these chains is a separate chain that has some common section.
@@ -127,7 +127,9 @@ public final class PropertySources {
     /**
      * @see PropertySourceChain#orImmediate(Action1, Func1)
      */
-    public static PropertySourceChain fromImmediate(Action1<ImmediatePropertySource> initializer, Func1<String, String> transformer) {
+    public static PropertySourceChain fromImmediate(
+            Action1<ImmediatePropertySource> initializer,
+            Func1<String, String> transformer) {
         ImmediatePropertySourceImpl immediateSource = new ImmediatePropertySourceImpl();
         initializer.call(immediateSource);
 

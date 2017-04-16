@@ -6,7 +6,7 @@ import java.util.Collection;
 
 /**
  * An object factory like {@link Factory} but one that requires qualifiers (see {@link Qualifier}) to be present before
- * it constructs objects. The qualifying factory is passed a set of qualifiers (as a {@link Collection} of strings to
+ * it constructs objects. The qualifying factory is passed a set of qualifiers (as a {@link Collection} of Strings to
  * allow the factory to test which qualifiers are present.
  *
  * @author Ravi Chodavarapu (rchodava@gmail.com)

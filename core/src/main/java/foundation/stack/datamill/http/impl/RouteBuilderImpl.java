@@ -22,7 +22,7 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     private final List<Matcher> matchers = new ArrayList<>();
 
     @Override
-    public <T> ElseBuilder elseIfMatchesBeanMethod(T bean) {
+    public <T> ElseBuilder elseIfMatchesInstanceMethod(T bean) {
         return elseIfMatchesBeanMethod(OutlineBuilder.DEFAULT.wrap(bean));
     }
 
@@ -52,7 +52,7 @@ public class RouteBuilderImpl implements RouteBuilder, ElseBuilder {
     }
 
     @Override
-    public <T> ElseBuilder ifMatchesBeanMethod(T bean) {
+    public <T> ElseBuilder ifMatchesInstanceMethod(T bean) {
         return ifMatchesBeanMethod(OutlineBuilder.DEFAULT.wrap(bean));
     }
 

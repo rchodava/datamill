@@ -3,6 +3,7 @@ package foundation.stack.datamill.configuration;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,6 +43,17 @@ public class FactoryChainsTest {
 
         assertTrue(new Wiring(FactoryChains.forAnyConcreteClass().thenForType(DerivedClass.class, w -> derived))
                 .singleton(DerivedClass.class) != derived);
+    }
+
+    @Test
+    public void noInfiniteRecursion() {
+        assertNotNull(
+                new Wiring(FactoryChains.forType(ConcreteClass.class, w -> w.singleton(ConcreteClass.class))
+                        .thenForAnyConcreteClass()).singleton(ConcreteClass.class));
+
+        assertNotNull(
+                new Wiring(FactoryChains.forSuperOf(DerivedClass.class, w -> w.singleton(ConcreteClass.class))
+                        .thenForAnyConcreteClass()).singleton(ConcreteClass.class));
     }
 
     @Test
