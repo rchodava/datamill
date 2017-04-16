@@ -1,7 +1,7 @@
 package foundation.stack.datamill.cucumber;
 
 import com.jayway.jsonpath.JsonPath;
-import foundation.stack.datamill.configuration.PropertySourceChain;
+import foundation.stack.datamill.configuration.PropertySources;
 import foundation.stack.datamill.values.Value;
 import foundation.stack.datamill.security.impl.BCrypt;
 import org.slf4j.Logger;
@@ -129,7 +129,7 @@ public class PlaceholderResolver {
     private String resolveSystemPlaceholder(String key) {
         if (key.startsWith(SYSTEM_PLACEHOLDER_PREFIX)) {
             key = key.substring(SYSTEM_PLACEHOLDER_PREFIX.length());
-            return PropertySourceChain.ofSystem().get(key).orElse(null);
+            return PropertySources.fromSystem().get(key).orElse(null);
         }
 
         return null;

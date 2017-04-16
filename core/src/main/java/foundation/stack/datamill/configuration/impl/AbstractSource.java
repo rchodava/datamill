@@ -3,7 +3,7 @@ package foundation.stack.datamill.configuration.impl;
 import foundation.stack.datamill.configuration.PropertySource;
 import foundation.stack.datamill.values.StringValue;
 import foundation.stack.datamill.values.Value;
-import rx.functions.Action1;
+import rx.functions.Func1;
 
 import java.util.Optional;
 
@@ -29,8 +29,7 @@ public abstract class AbstractSource implements PropertySource {
     }
 
     @Override
-    public PropertySource with(Action1<PropertySource> propertiesConsumer) {
-        propertiesConsumer.call(this);
-        return this;
+    public <R> R with(Func1<PropertySource, R> propertiesConsumer) {
+        return propertiesConsumer.call(this);
     }
 }

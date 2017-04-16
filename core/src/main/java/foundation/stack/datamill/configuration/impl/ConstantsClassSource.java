@@ -1,8 +1,6 @@
 package foundation.stack.datamill.configuration.impl;
 
-import foundation.stack.datamill.configuration.BooleanValue;
-import foundation.stack.datamill.configuration.IntegerValue;
-import foundation.stack.datamill.configuration.StringValue;
+import foundation.stack.datamill.configuration.Value;
 import javassist.Modifier;
 
 import java.lang.reflect.Field;
@@ -54,19 +52,9 @@ public class ConstantsClassSource<T> extends AbstractSource {
         for (Field field : fields) {
             String propertyName = getConstantValue(field);
             if (propertyName != null) {
-                StringValue stringValue = field.getAnnotation(StringValue.class);
-                if (stringValue != null) {
-                    constants.put(propertyName, stringValue.value());
-                } else {
-                    BooleanValue booleanValue = field.getAnnotation(BooleanValue.class);
-                    if (booleanValue != null) {
-                        constants.put(propertyName, String.valueOf(booleanValue.value()));
-                    } else {
-                        IntegerValue integerValue = field.getAnnotation(IntegerValue.class);
-                        if (integerValue != null) {
-                            constants.put(propertyName, String.valueOf(integerValue.value()));
-                        }
-                    }
+                Value value = field.getAnnotation(Value.class);
+                if (value != null) {
+                    constants.put(propertyName, value.value());
                 }
             }
         }
