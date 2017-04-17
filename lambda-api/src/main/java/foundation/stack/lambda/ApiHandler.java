@@ -1,6 +1,7 @@
 package foundation.stack.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.google.common.base.Charsets;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
@@ -28,7 +29,7 @@ import java.util.Optional;
 /**
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
-public abstract class ApiHandler {
+public abstract class ApiHandler implements RequestStreamHandler {
     private static final String BODY_PROPERTY = "body";
     private static final String LOG_LEVEL_PROPERTY = "logLevel";
     private static final String HEADERS_PROPERTY = "headers";
@@ -188,7 +189,8 @@ public abstract class ApiHandler {
         }
     }
 
-    public final void handle(InputStream requestStream, OutputStream responseStream, Context __) {
+    @Override
+    public final void handleRequest(InputStream requestStream, OutputStream responseStream, Context __) {
         setLogLevel();
 
         ServerRequest request = null;

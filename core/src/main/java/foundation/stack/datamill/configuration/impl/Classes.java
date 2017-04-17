@@ -62,7 +62,7 @@ public class Classes {
         return convertedClass;
     }
 
-    private static Class<?> wrapperToPrimitive(final Class<?> clazz) {
+    public static Class<?> wrapperToPrimitive(final Class<?> clazz) {
         return wrapperPrimitiveMap.get(clazz);
     }
 
