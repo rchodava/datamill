@@ -4,31 +4,61 @@ import rx.functions.Action1;
 import rx.functions.Func1;
 
 /**
- * Allows {@link PropertySource}s to be linked together into a chain so that alternative sources of desired properties
- * can be specified when looking up configuration properties. For example, consider a chain composed and used as follows:
- * <p/>
- * <pre>
- * chain = Properties.fromFile("service.properties").orFile("defaults.properties").orEnvironment()
- *     .orDefaults(defaults -> defaults.put("property1", "value1").put("property2", "value2"));
- *
- * chain.getRequired("property1");
- * chain.getRequired("property3");
- * </pre>
- * <p/>
- * This chain will first attempt to retrieve requested properties from the service.properties file. It will consult the
- * defaults.properties file next if it can't find properties in service.properties. Subsequently, it will attempt to
- * look for those properties amongst environment variables if it still fails to find a requested property. Finally,
- * it will return the defaults specified by the orDefaults(...) call.
- * <p/>
- * Note that each of the chaining methods returns a new chain with the additional property source added.
- *
  * @author Ravi Chodavarapu (rchodava@gmail.com)
  */
 public interface PropertySourceChain extends PropertySource {
     /**
-     * @see PropertySource#alias(String, String)
+     * Add a custom property source to the chain at this point.
+     *
+     * @param source Source to add to the chain.
      */
-    PropertySourceChain alias(String alias, String original);
+    PropertySourceChain or(PropertySource source);
+
+    /**
+     * @See PropertySources
+     * @see #or(PropertySource)
+     */
+    PropertySourceChain or(PropertySource source, Func1<String, String> transformer);
+
+    /**
+     * Add a property source to the chain which computes the value of property using the specified function. The
+     * function can return either a value, or a null to indicate it cannot compute the value of the property - in this
+     * case, the chain will look to the next source.
+     *
+     * @param computation Computation function for the source.
+     */
+    PropertySourceChain orComputed(Func1<String, String> computation);
+
+    /**
+     * @See PropertySources
+     * @see #orComputed(Func1)
+     */
+    PropertySourceChain orComputed(Func1<String, String> computation, Func1<String, String> transformer);
+
+    /**
+     * Add a property source to the chain which retrieves properties from a constants interface or class. The interface
+     * or class is expected to define String constants that are annotated with {@link Value} annotations.
+     *
+     * @param constantsClass Constants class to add as a source.
+     */
+    <T> PropertySourceChain orConstantsClass(Class<T> constantsClass);
+
+    /**
+     * @See PropertySources
+     * @see #orConstantsClass(Class)
+     */
+    <T> PropertySourceChain orConstantsClass(Class<T> constantsClass, Func1<String, String> transformer);
+
+    /**
+     * Add a source which looks up properties defined as environment variables to the chain.
+     */
+    PropertySourceChain orEnvironment();
+
+    /**
+     * @See PropertySources
+     * @see #orEnvironment()
+     */
+    PropertySourceChain orEnvironment(Func1<String, String> transformer);
 
     /**
      * Add a property source to the chain which retrieves properties specified in the file at the specified path.
@@ -38,26 +68,23 @@ public interface PropertySourceChain extends PropertySource {
     PropertySourceChain orFile(String path);
 
     /**
-     * Add a source which looks up properties defined as environment variables to the chain.
+     * @See PropertySources
+     * @see #orFile(String)
      */
-    PropertySourceChain orEnvironment();
+    PropertySourceChain orFile(String path, Func1<String, String> transformer);
 
     /**
-     * Add a source which looks up properties defined as environment variables but first transforms the property names
-     * using the specified function before looking up the environment variable.
+     * Add immediate set of properties that can be looked up at this point in the chain.
      *
-     * @param transformer Transformation function used to transform property names before looking them up as
-     *                    environment variables. For example, you may want to prefix property names before looking them
-     *                    up as environment variables.
+     * @param initializer Function which sets up immediate properties at this point in the chain.
      */
-    PropertySourceChain orEnvironment(Func1<String, String> transformer);
+    PropertySourceChain orImmediate(Action1<ImmediatePropertySource> initializer);
 
     /**
-     * Add a custom property source to the chain at this point..
-     *
-     * @param source Source to add to the chain.
+     * @See PropertySources
+     * @see #orImmediate(Action1)
      */
-    PropertySourceChain orSource(PropertySource source);
+    PropertySourceChain orImmediate(Action1<ImmediatePropertySource> initializer, Func1<String, String> transformer);
 
     /**
      * Add a source which looks up properties defined as system properties to the chain.
@@ -65,17 +92,8 @@ public interface PropertySourceChain extends PropertySource {
     PropertySourceChain orSystem();
 
     /**
-     * Add a source which looks up properties defined as system properties but first transforms the property names
-     * using the specified function before looking up the system property.
-     *
-     * @see #orEnvironment(Func1)
+     * @See PropertySources
+     * @see #orSystem()
      */
     PropertySourceChain orSystem(Func1<String, String> transformer);
-
-    /**
-     * Add defaults for properties that cannot be found by any other source in the chain.
-     *
-     * @param defaultsInitializer Function which sets up defaults for properties not found in the chain.
-     */
-    PropertySource orDefaults(Action1<Defaults> defaultsInitializer);
 }

@@ -70,7 +70,7 @@ public class ApiHandlerTest {
         // Test valid request
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         TestApiHandler handler = new TestApiHandler();
-        handler.handle(new ByteArrayInputStream(("{" +
+        handler.handleRequest(new ByteArrayInputStream(("{" +
                 "\"path\": \"/test\", " +
                 "\"httpMethod\": \"GET\", " +
                 "\"headers\": {" +
@@ -92,7 +92,7 @@ public class ApiHandlerTest {
 
         // Request with no HTTP method
         output = new ByteArrayOutputStream();
-        handler.handle(new ByteArrayInputStream(("{ \"path\": \"/test\" }").getBytes(Charsets.UTF_8)), output, null);
+        handler.handleRequest(new ByteArrayInputStream(("{ \"path\": \"/test\" }").getBytes(Charsets.UTF_8)), output, null);
 
         response = new JSONObject(new String(output.toByteArray(), Charsets.UTF_8));
         assertEquals(400, response.optInt("statusCode"));
@@ -100,7 +100,7 @@ public class ApiHandlerTest {
 
         // Test a route that returns a null response
         output = new ByteArrayOutputStream();
-        handler.handle(new ByteArrayInputStream(("{" +
+        handler.handleRequest(new ByteArrayInputStream(("{" +
                 "\"path\": \"/null\", " +
                 "\"httpMethod\": \"GET\"" +
                 "}")
@@ -112,7 +112,7 @@ public class ApiHandlerTest {
 
         // Test a request with an uknown path
         output = new ByteArrayOutputStream();
-        handler.handle(new ByteArrayInputStream(("{" +
+        handler.handleRequest(new ByteArrayInputStream(("{" +
                 "\"path\": \"/other\", " +
                 "\"httpMethod\": \"GET\"" +
                 "}")
@@ -124,7 +124,7 @@ public class ApiHandlerTest {
 
         // Test a route that results in an error being emitted, that isn't handled
         output = new ByteArrayOutputStream();
-        handler.handle(new ByteArrayInputStream(("{" +
+        handler.handleRequest(new ByteArrayInputStream(("{" +
                 "\"path\": \"/error\", " +
                 "\"httpMethod\": \"GET\"" +
                 "}")
@@ -136,7 +136,7 @@ public class ApiHandlerTest {
 
         // Test a route that results in an error being thrown
         output = new ByteArrayOutputStream();
-        handler.handle(new ByteArrayInputStream(("{" +
+        handler.handleRequest(new ByteArrayInputStream(("{" +
                 "\"path\": \"/unhandled\", " +
                 "\"httpMethod\": \"GET\"" +
                 "}")

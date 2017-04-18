@@ -6,9 +6,12 @@ import foundation.stack.datamill.db.impl.QueryBuilderImpl;
 import foundation.stack.datamill.db.impl.RowImpl;
 import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationInfo;
+import org.flywaydb.core.api.callback.FlywayCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import rx.Observable;
+import rx.functions.Action1;
 import rx.functions.Func1;
 
 import javax.sql.DataSource;
@@ -111,8 +114,17 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         getFlyway().clean();
     }
 
+    public void migrate(Action1<Connection> migrationPreparation) {
+        Flyway flyway = getFlyway();
+        if (migrationPreparation != null) {
+            flyway.setCallbacks(new MigrationCallback(migrationPreparation));
+        }
+
+        flyway.migrate();
+    }
+
     public void migrate() {
-        getFlyway().migrate();
+        migrate(null);
     }
 
     @Override
@@ -210,6 +222,94 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         @Override
         public Observable<Row> stream() {
             return results;
+        }
+    }
+
+    private static class MigrationCallback implements FlywayCallback {
+        private final Action1<Connection> migrationAction;
+
+        public MigrationCallback(Action1<Connection> migrationAction) {
+            this.migrationAction = migrationAction;
+        }
+
+        @Override
+        public void beforeClean(Connection connection) {
+
+        }
+
+        @Override
+        public void afterClean(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeMigrate(Connection connection) {
+            migrationAction.call(connection);
+        }
+
+        @Override
+        public void afterMigrate(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeEachMigrate(Connection connection, MigrationInfo info) {
+
+        }
+
+        @Override
+        public void afterEachMigrate(Connection connection, MigrationInfo info) {
+
+        }
+
+        @Override
+        public void beforeValidate(Connection connection) {
+
+        }
+
+        @Override
+        public void afterValidate(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeBaseline(Connection connection) {
+
+        }
+
+        @Override
+        public void afterBaseline(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeInit(Connection connection) {
+
+        }
+
+        @Override
+        public void afterInit(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeRepair(Connection connection) {
+
+        }
+
+        @Override
+        public void afterRepair(Connection connection) {
+
+        }
+
+        @Override
+        public void beforeInfo(Connection connection) {
+
+        }
+
+        @Override
+        public void afterInfo(Connection connection) {
+
         }
     }
 }
