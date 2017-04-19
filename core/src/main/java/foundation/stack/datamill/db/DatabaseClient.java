@@ -147,6 +147,10 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         return this;
     }
 
+    public int executeUpdate(String sql) {
+        return getDatabase().update(sql).execute();
+    }
+
     private static class UpdateQueryExecutionImpl implements UpdateQueryExecution {
         private static final Logger logger = LoggerFactory.getLogger(UpdateQueryExecutionImpl.class);
 
