@@ -12,7 +12,7 @@ public interface KeyGenerators {
         private Symmetric() {
         }
 
-        public static void main(String[] arguments) throws Exception {
+        public static void generate() throws Exception {
             byte[] bytes = ByteUtil.randomBytes(ByteUtil.byteLength(512));
             OctetSequenceJsonWebKey key = new OctetSequenceJsonWebKey(new HmacKey(bytes));
             key.setKeyId("k" + System.currentTimeMillis());
@@ -24,7 +24,7 @@ public interface KeyGenerators {
         private RSA() {
         }
 
-        public static void main(String[] arguments) throws Exception {
+        public static void generate() throws Exception {
             RsaJsonWebKey key = RsaJwkGenerator.generateJwk(2048);
             key.setKeyId("k" + System.currentTimeMillis());
 

@@ -91,7 +91,7 @@ public class ClientImpl implements Client {
             HttpUriRequest request = buildHttpRequest(method, targetURI);
             setRequestOptions(request, options);
             setRequestHeaders(request, headers);
-            printRequestIfDebugging(method, targetURI, headers);
+            printRequestIfTracingLog(method, targetURI, headers);
 
             CloseableHttpResponse httpResponse;
             if (body != null) {
@@ -156,13 +156,13 @@ public class ClientImpl implements Client {
         return httpClient.execute(request);
     }
 
-    private void printRequestIfDebugging(Method method, URI composedUri, Multimap<String, String> headers) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Making HTTP request {} {}", method.name(), composedUri);
+    private void printRequestIfTracingLog(Method method, URI composedUri, Multimap<String, String> headers) {
+        if (logger.isTraceEnabled()) {
+            logger.trace("Making HTTP request {} {}", method.name(), composedUri);
             if (headers != null && logger.isDebugEnabled()) {
-                logger.debug("  HTTP request headers:");
+                logger.trace("  HTTP request headers:");
                 for (Map.Entry<String, String> header : headers.entries()) {
-                    logger.debug("    {}: {}", header.getKey(), header.getValue());
+                    logger.trace("    {}: {}", header.getKey(), header.getValue());
                 }
             }
         }
