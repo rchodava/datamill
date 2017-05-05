@@ -1,9 +1,6 @@
 package foundation.stack.datamill.db.test;
 
-import foundation.stack.datamill.db.DatabaseClient;
-import foundation.stack.datamill.db.ResultBuilder;
-import foundation.stack.datamill.db.Row;
-import foundation.stack.datamill.db.UpdateQueryExecution;
+import foundation.stack.datamill.db.*;
 import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
 import rx.Observable;
 import rx.functions.Func1;
@@ -19,7 +16,7 @@ public class TestDatabaseClient extends DatabaseClient {
     private final Database database;
 
     public TestDatabaseClient(Database database) {
-        super((String) null);
+        super(DatabaseType.H2, (String) null);
 
         this.database = database;
     }

@@ -1,6 +1,7 @@
 package foundation.stack.datamill.db.impl;
 
 import foundation.stack.datamill.db.DatabaseClient;
+import foundation.stack.datamill.db.DatabaseType;
 import foundation.stack.datamill.reflection.Outline;
 import foundation.stack.datamill.reflection.OutlineBuilder;
 import org.junit.Test;
@@ -38,7 +39,7 @@ public class DatabaseClientTest {
 
     @Test
     public void queries() {
-        DatabaseClient client = new DatabaseClient("jdbc:hsqldb:mem:test");
+        DatabaseClient client = new DatabaseClient(DatabaseType.H2, "jdbc:h2:mem:test");
         Outline<Quark> outline = OutlineBuilder.DEFAULT.build(Quark.class);
 
         client.update("create table quarks(name varchar(64), spin integer)", 0)
