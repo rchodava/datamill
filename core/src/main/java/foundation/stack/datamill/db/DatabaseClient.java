@@ -1,10 +1,9 @@
 package foundation.stack.datamill.db;
 
 import com.github.davidmoten.rx.jdbc.*;
+import com.zaxxer.hikari.HikariDataSource;
 import foundation.stack.datamill.configuration.Named;
-import foundation.stack.datamill.db.impl.QueryBuilderImpl;
-import foundation.stack.datamill.db.impl.RowImpl;
-import foundation.stack.datamill.db.impl.UnsubscribeOnNextOperator;
+import foundation.stack.datamill.db.impl.*;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationInfo;
 import org.flywaydb.core.api.callback.FlywayCallback;
@@ -25,41 +24,60 @@ import java.util.List;
 public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseClient.class);
 
+    private static String adaptUrl(DatabaseTypeAdapter typeAdapter, String url) {
+        if (typeAdapter != null) {
+            DatabaseTypeAdapter.UrlTransformer urlTransformer = typeAdapter.createUrlTransformer();
+            if (urlTransformer != null) {
+                url = urlTransformer.transform(url);
+            }
+        }
+
+        return url;
+    }
+
     private DelegatingConnectionProvider connectionProvider;
-    private final DataSource dataSource;
+    private DataSource dataSource;
     private Database database;
-    private final String password;
-    private final String url;
-    private final String username;
+    private DatabaseTypeAdapter typeAdapter;
 
-    public DatabaseClient(DataSource dataSource) {
+    public DatabaseClient(DatabaseType type, DataSource dataSource) {
+        this.typeAdapter = type == DatabaseType.H2 ? new H2DatabaseTypeAdapter() : null;
         this.dataSource = dataSource;
-
-        this.url = null;
-        this.username = null;
-        this.password = null;
     }
 
-    public DatabaseClient(String url) {
-        this(url, null, null);
+    public DatabaseClient(DatabaseType type, @Named("url") String url) {
+        this(type, url, null, null);
     }
 
-    public DatabaseClient(@Named("url") String url, @Named("username") String username, @Named("password") String password) {
-        this.dataSource = null;
+    public DatabaseClient(@Named("url") String url) {
+        this(DatabaseType.guess(url), url);
+    }
 
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public DatabaseClient(
+            DatabaseType type,
+            @Named("url") String url,
+            @Named("username") String username,
+            @Named("password") String password) {
+        this.typeAdapter = type == DatabaseType.H2 ? new H2DatabaseTypeAdapter() : null;
+
+        HikariDataSource dataSource = new HikariDataSource();
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        dataSource.setJdbcUrl(adaptUrl(typeAdapter, url));
+
+        this.dataSource = dataSource;
+    }
+
+    public DatabaseClient(
+            @Named("url") String url,
+            @Named("username") String username,
+            @Named("password") String password) {
+        this(DatabaseType.guess(url), url, username, password);
     }
 
     private void setupConnectionProvider() {
-        if (dataSource != null) {
-            connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
-            database = Database.from(connectionProvider);
-        } else if (url != null) {
-            connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderPooled(url, username, password, 0, 10));
-            database = Database.from(connectionProvider);
-        }
+        connectionProvider = new DelegatingConnectionProvider(new ConnectionProviderFromDataSource(dataSource));
+        database = Database.from(connectionProvider);
     }
 
     private DelegatingConnectionProvider getConnectionProvider() {
@@ -102,11 +120,7 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
 
     private Flyway getFlyway() {
         Flyway flyway = new Flyway();
-        if (dataSource != null) {
-            flyway.setDataSource(dataSource);
-        } else {
-            flyway.setDataSource(url, username, password);
-        }
+        flyway.setDataSource(dataSource);
         return flyway;
     }
 
@@ -116,9 +130,9 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
 
     public void migrate(Action1<Connection> migrationPreparation) {
         Flyway flyway = getFlyway();
-        if (migrationPreparation != null) {
-            flyway.setCallbacks(new MigrationCallback(migrationPreparation));
-        }
+        flyway.setCallbacks(new MigrationCallback(
+                typeAdapter != null ? typeAdapter.createConnectionPreparer() : null,
+                migrationPreparation));
 
         flyway.migrate();
     }
@@ -226,9 +240,11 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
     }
 
     private static class MigrationCallback implements FlywayCallback {
+        private final DatabaseTypeAdapter.ConnectionPreparer connectionPreparer;
         private final Action1<Connection> migrationAction;
 
-        public MigrationCallback(Action1<Connection> migrationAction) {
+        public MigrationCallback(DatabaseTypeAdapter.ConnectionPreparer connectionPreparer, Action1<Connection> migrationAction) {
+            this.connectionPreparer = connectionPreparer;
             this.migrationAction = migrationAction;
         }
 
@@ -244,7 +260,17 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
 
         @Override
         public void beforeMigrate(Connection connection) {
-            migrationAction.call(connection);
+            if (connectionPreparer != null) {
+                try {
+                    connectionPreparer.prepare(connection);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            if (migrationAction != null) {
+                migrationAction.call(connection);
+            }
         }
 
         @Override
