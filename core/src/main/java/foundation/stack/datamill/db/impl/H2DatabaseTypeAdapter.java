@@ -1,5 +1,7 @@
 package foundation.stack.datamill.db.impl;
 
+import foundation.stack.datamill.db.DatabaseType;
+
 import java.net.URI;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -27,20 +29,6 @@ public class H2DatabaseTypeAdapter implements DatabaseTypeAdapter {
     }
 
     static class H2UrlTransformer implements UrlTransformer {
-        private static boolean isH2Url(URI uri) {
-            String scheme = uri.getScheme();
-            if (scheme != null) {
-                if (scheme.contains("h2")) {
-                    return true;
-                } else if (scheme.contains("jdbc")) {
-                    String schemeSpecificPart = uri.getSchemeSpecificPart();
-                    return schemeSpecificPart != null && schemeSpecificPart.startsWith("h2");
-                }
-            }
-
-            return false;
-        }
-
         private static boolean isMySqlModeSpecified(String[] options) {
             for (String option : options) {
                 int keySeparator = option.indexOf('=');
@@ -61,9 +49,9 @@ public class H2DatabaseTypeAdapter implements DatabaseTypeAdapter {
         @Override
         public String transform(String uri) {
             if (uri != null) {
-                try {
-                    URI parsed = URI.create(uri);
-                    if (isH2Url(parsed)) {
+                if (DatabaseType.guess(uri) == DatabaseType.H2) {
+                    try {
+                        URI parsed = URI.create(uri);
                         String schemeSpecificPart = parsed.getSchemeSpecificPart();
                         String[] options = schemeSpecificPart.split(";");
                         if (options != null) {
@@ -71,9 +59,8 @@ public class H2DatabaseTypeAdapter implements DatabaseTypeAdapter {
                                 return uri + ";MODE=MySQL";
                             }
                         }
+                    } catch (IllegalArgumentException e) {
                     }
-
-                } catch (IllegalArgumentException e) {
                 }
             }
 

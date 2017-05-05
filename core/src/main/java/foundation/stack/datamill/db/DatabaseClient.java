@@ -45,8 +45,12 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         this.dataSource = dataSource;
     }
 
-    public DatabaseClient(DatabaseType type, String url) {
+    public DatabaseClient(DatabaseType type, @Named("url") String url) {
         this(type, url, null, null);
+    }
+
+    public DatabaseClient(@Named("url") String url) {
+        this(DatabaseType.guess(url), url);
     }
 
     public DatabaseClient(
@@ -62,6 +66,13 @@ public class DatabaseClient extends QueryBuilderImpl implements QueryRunner {
         dataSource.setJdbcUrl(adaptUrl(typeAdapter, url));
 
         this.dataSource = dataSource;
+    }
+
+    public DatabaseClient(
+            @Named("url") String url,
+            @Named("username") String username,
+            @Named("password") String password) {
+        this(DatabaseType.guess(url), url, username, password);
     }
 
     private void setupConnectionProvider() {

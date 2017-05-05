@@ -1,7 +1,5 @@
-package foundation.stack.datamill.db.impl;
+package foundation.stack.datamill.db;
 
-import foundation.stack.datamill.db.DatabaseClient;
-import foundation.stack.datamill.db.DatabaseType;
 import foundation.stack.datamill.reflection.Outline;
 import foundation.stack.datamill.reflection.OutlineBuilder;
 import org.junit.Test;
