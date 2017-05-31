@@ -122,6 +122,9 @@ public class ClientToServerChannelHandler extends ChannelInboundHandlerAdapter {
                                     logger.debug("Error occurred handling request, invoking application error handler");
                                     return errorResponse.onErrorResumeNext(Observable.just(null));
                                 }
+                                else {
+                                    logger.debug("Error occurred handling request", throwable);
+                                }
                             } else {
                                 logger.debug("Error occurred handling request - no application error handler was available to handle it - {}", throwable);
                             }
