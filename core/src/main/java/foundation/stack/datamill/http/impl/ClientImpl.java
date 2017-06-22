@@ -87,7 +87,7 @@ public class ClientImpl implements Client {
         final URI targetURI = parsedURI;
 
         return Observable.fromCallable(() -> {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
+            CloseableHttpClient httpClient = HttpClients.createSystem();
             HttpUriRequest request = buildHttpRequest(method, targetURI);
             setRequestOptions(request, options);
             setRequestHeaders(request, headers);
